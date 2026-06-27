@@ -1,6 +1,6 @@
 "use client";
 import { useState, useEffect } from "react";
-import { supabase, DEFAULT_SHOP_ID } from "@/lib/supabase";
+import { createClient } from "@/lib/supabase/client";
 import AdminLayout from "@/components/layout/AdminLayout";
 import { Card, PageHeader, Button, StatusBadge, SourceBadge, Avatar } from "@/components/ui";
 import { formatTime, relativeDay, formatPrice } from "@/lib/utils";
@@ -22,13 +22,19 @@ export default function AppointmentsPage() {
   const [filter, setFilter] = useState<Filter>("all");
   const [showModal, setShowModal] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [currentShopId, setCurrentShopId] = useState<string | null>(null);
 
-  async function load() {
+  const supabase = createClient();
+
+  async function load(shopId?: string) {
+    const id = shopId || currentShopId;
+    if (!id) return;
+
     setLoading(true);
     const { data } = await supabase
       .from("appointments")
       .select("*, customer:customers(*), service:services(*)")
-      .eq("shop_id", DEFAULT_SHOP_ID)
+      .eq("shop_id", id)
       .order("scheduled_at", { ascending: false });
 
     setAppointments((data as Apt[]) ?? []);
@@ -36,27 +42,43 @@ export default function AppointmentsPage() {
   }
 
   useEffect(() => {
-    load();
+    async function init() {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) { window.location.href = "/login"; return; }
+
+      const { data: shop } = await supabase.from("shops").select("id").eq("owner_id", user.id).single();
+      if (!shop) { setLoading(false); return; }
+
+      setCurrentShopId(shop.id);
+      load(shop.id);
+    }
+    init();
+  }, []);
+
+  useEffect(() => {
+    if (!currentShopId) return;
 
     const channel = supabase
       .channel("appointments-realtime-page")
-      .on("postgres_changes", { event: "*", schema: "public", table: "appointments", filter: `shop_id=eq.${DEFAULT_SHOP_ID}` }, () => {
+      .on("postgres_changes", { event: "*", schema: "public", table: "appointments", filter: `shop_id=eq.${currentShopId}` }, () => {
         load();
       })
       .subscribe();
 
     return () => { supabase.removeChannel(channel); };
-  }, []);
+  }, [currentShopId]);
 
   const filtered = filter === "all" ? appointments : appointments.filter((a) => a.status === filter);
 
   async function confirm(id: string) {
-    await supabase.from("appointments").update({ status: "confirmed" }).eq("id", id).eq("shop_id", DEFAULT_SHOP_ID);
+    if (!currentShopId) return;
+    await supabase.from("appointments").update({ status: "confirmed" }).eq("id", id).eq("shop_id", currentShopId);
     load();
   }
 
   async function cancel(id: string) {
-    await supabase.from("appointments").update({ status: "cancelled" }).eq("id", id).eq("shop_id", DEFAULT_SHOP_ID);
+    if (!currentShopId) return;
+    await supabase.from("appointments").update({ status: "cancelled" }).eq("id", id).eq("shop_id", currentShopId);
     load();
   }
 
@@ -133,8 +155,9 @@ export default function AppointmentsPage() {
         </Card>
       </div>
 
-      {showModal && (
+      {showModal && currentShopId && (
         <AddAppointmentModal
+          shopId={currentShopId}
           onClose={() => setShowModal(false)}
           onAdd={() => { setShowModal(false); load(); }}
         />

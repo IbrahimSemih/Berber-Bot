@@ -1,175 +1,141 @@
 "use client";
-import { useState, useRef, useEffect } from "react";
+
+import { useEffect, useState } from "react";
+import { createClient } from "@/lib/supabase/client";
 import AdminLayout from "@/components/layout/AdminLayout";
-import { Card, CardHeader, PageHeader, Badge } from "@/components/ui";
+import { PageHeader, Card, Button } from "@/components/ui";
 
-interface Message { text: string; out: boolean; time: string; }
+const API_URL = "http://localhost:3001/api/whatsapp";
 
-const SERVICES = ["✂️ Saç Kesimi", "🪒 Sakal Düzeltme", "💈 Komple Paket", "💇 Çocuk Kesimi"];
-const SLOTS: Record<string, string[]> = {
-  "✂️ Saç Kesimi":    ["09:00", "10:30", "14:00", "16:30"],
-  "🪒 Sakal Düzeltme":["10:00", "11:30", "15:00", "17:30"],
-  "💈 Komple Paket":  ["11:00", "13:30", "15:30"],
-  "💇 Çocuk Kesimi":  ["09:30", "12:00", "16:00"],
-};
+export default function WhatsappPage() {
+  const [shopId, setShopId] = useState<string | null>(null);
+  const [status, setStatus] = useState<string>("LOADING"); // LOADING, DISCONNECTED, INITIALIZING, QR_READY, CONNECTED
+  const [qrCodeUrl, setQrCodeUrl] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
 
-type Step = "idle" | "service" | "time" | "done";
+  const supabase = createClient();
 
-const now = () => new Date().toLocaleTimeString("tr-TR", { hour: "2-digit", minute: "2-digit" });
+  useEffect(() => {
+    async function loadShop() {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+      const { data: shop } = await supabase.from("shops").select("id").eq("owner_id", user.id).single();
+      if (shop) {
+        setShopId(shop.id);
+      }
+    }
+    loadShop();
+  }, [supabase]);
 
-export default function WhatsAppPage() {
-  const [messages, setMessages] = useState<Message[]>([
-    { text: "Merhaba! Randevu almak istiyorum 👋", out: false, time: now() },
-    { text: "Merhaba! 😊 Hoş geldiniz. Hangi hizmeti almak istersiniz?", out: true, time: now() },
-  ]);
-  const [step, setStep] = useState<Step>("service");
-  const [selectedService, setSelectedService] = useState<string | null>(null);
-  const [typing, setTyping] = useState(false);
-  const bottomRef = useRef<HTMLDivElement>(null);
+  // Poll status every 3 seconds if we have a shopId
+  useEffect(() => {
+    if (!shopId) return;
 
-  useEffect(() => { bottomRef.current?.scrollIntoView({ behavior: "smooth" }); }, [messages, typing]);
+    const checkStatus = async () => {
+      try {
+        const res = await fetch(`${API_URL}/status?shopId=${shopId}`);
+        const data = await res.json();
+        setStatus(data.status);
+        setQrCodeUrl(data.qrCodeUrl || null);
+        setLoading(false);
+      } catch (error) {
+        console.error("Failed to fetch WhatsApp status", error);
+        setStatus("DISCONNECTED");
+        setLoading(false);
+      }
+    };
 
-  function addMsg(text: string, out: boolean) {
-    setMessages((prev) => [...prev, { text, out, time: now() }]);
-  }
+    checkStatus();
+    const interval = setInterval(checkStatus, 3000);
+    return () => clearInterval(interval);
+  }, [shopId]);
 
-  function botReply(text: string) {
-    setTyping(true);
-    setTimeout(() => { setTyping(false); addMsg(text, true); }, 900);
-  }
+  const handleConnect = async () => {
+    if (!shopId) return;
+    setStatus("INITIALIZING");
+    try {
+      await fetch(`${API_URL}/connect`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ shopId })
+      });
+    } catch (e) {
+      console.error(e);
+      setStatus("DISCONNECTED");
+    }
+  };
 
-  function selectService(svc: string) {
-    addMsg(svc, false);
-    setSelectedService(svc);
-    setStep("time");
-    const slots = SLOTS[svc] ?? [];
-    botReply(`Güzel seçim! 😊\n\n*${svc.replace(/^\S+\s/, "")}* için müsait saatler:\n${slots.map((s, i) => `${i + 1}. ${s}`).join("\n")}\n\nBir numara gönderin.`);
-  }
-
-  function selectTime(slot: string) {
-    addMsg(slot, false);
-    setStep("done");
-    botReply(`✅ *Randevunuz oluşturuldu!*\n\n📅 Yarın, ${slot}\n💈 ${selectedService?.replace(/^\S+\s/, "")}\n📍 Maestro Berber\n\nBir gün önce hatırlatma göndereceğim! 🔔`);
-  }
-
-  function reset() {
-    setMessages([
-      { text: "Merhaba! Randevu almak istiyorum 👋", out: false, time: now() },
-      { text: "Merhaba! 😊 Hoş geldiniz. Hangi hizmeti almak istersiniz?", out: true, time: now() },
-    ]);
-    setStep("service");
-    setSelectedService(null);
-  }
-
-  const flowSteps = [
-    { num: 1, title: "Karşılama & Hizmet Seçimi", desc: "Müşteri 'randevu' veya 'merhaba' yazdığında bot devreye girer. Hizmetler buton olarak sunulur.", tag: "Tetikleyici: 'randevu', 'merhaba'" },
-    { num: 2, title: "Tarih & Saat Seçimi", desc: "Hizmet seçildikten sonra müsait slotlar getirilir. Dolu saatler otomatik gizlenir.", tag: "API: /available-slots" },
-    { num: 3, title: "Onay & Kayıt", desc: "Seçim yapıldı, randevu DB'ye yazılır. Müşteriye ve dükkan sahibine bildirim gider.", tag: "DB: INSERT appointments" },
-    { num: 4, title: "Hatırlatma (24 saat önce)", desc: "Cron job çalışır, randevudan 1 gün önce otomatik WhatsApp mesajı gönderilir.", tag: "Cron: 0 9 * * *" },
-    { num: 5, title: "İptal / Erteleme", desc: "Müşteri 'iptal' yazarsa bot yeni slot önerir. Admin panelde anlık güncellenir.", tag: "Tetikleyici: 'iptal', 'erteleme'" },
-  ];
+  const handleLogout = async () => {
+    if (!shopId) return;
+    try {
+      await fetch(`${API_URL}/logout`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ shopId })
+      });
+      setStatus("DISCONNECTED");
+      setQrCodeUrl(null);
+    } catch (e) {
+      console.error(e);
+    }
+  };
 
   return (
     <AdminLayout>
-      <PageHeader title="WhatsApp Bot">
-        <Badge color="green">Bot Aktif</Badge>
-      </PageHeader>
-
-      <div className="p-7 grid gap-5" style={{ gridTemplateColumns: "1fr 1fr" }}>
-        {/* Chat simulator */}
-        <div>
-          <p className="text-xs mb-3" style={{ color: "var(--text3)" }}>
-            Canlı Bot Simülasyonu — müşteri perspektifinden etkileşimli deneme
-          </p>
-          <div className="rounded-xl overflow-hidden" style={{ background: "#0b1a0f", border: "1px solid #1a3a1a" }}>
-            {/* Chat header */}
-            <div className="px-4 py-3 flex items-center gap-3" style={{ background: "#1a3a1a" }}>
-              <div className="w-9 h-9 rounded-full flex items-center justify-center text-lg"
-                style={{ background: "var(--accent)" }}>✂</div>
-              <div>
-                <div className="text-sm font-semibold">Maestro Berber</div>
-                <div className="text-xs" style={{ color: "#4caf7d" }}>● Bot aktif</div>
-              </div>
-              <button onClick={reset} className="ml-auto text-xs px-3 py-1 rounded-lg border transition-colors"
-                style={{ borderColor: "#2a5a2a", color: "#4caf7d", background: "transparent" }}>
-                Sıfırla
-              </button>
-            </div>
-
-            {/* Messages */}
-            <div className="p-4 flex flex-col gap-3 overflow-y-auto" style={{ minHeight: 360, maxHeight: 420 }}>
-              {messages.map((m, i) => (
-                <div key={i} className={`max-w-[78%] px-3 py-2 rounded-xl text-xs leading-relaxed whitespace-pre-line ${m.out ? "self-end" : "self-start"}`}
-                  style={{ background: m.out ? "#1a3a28" : "#1e2d1e", color: m.out ? "#e8f8e8" : "#d4f0c4", borderBottomRightRadius: m.out ? 2 : 10, borderBottomLeftRadius: m.out ? 10 : 2 }}>
-                  {m.text}
-                  <span className="block mt-1 opacity-50">{m.time}</span>
-                </div>
-              ))}
-              {typing && (
-                <div className="self-start px-3 py-2.5 rounded-xl" style={{ background: "#1e2d1e" }}>
-                  <div className="flex gap-1">
-                    {[0, 0.2, 0.4].map((d, i) => (
-                      <span key={i} className="w-1.5 h-1.5 rounded-full" style={{ background: "#4caf7d", animation: `bounce 1.2s ${d}s infinite` }} />
-                    ))}
-                  </div>
-                </div>
-              )}
-              <div ref={bottomRef} />
-            </div>
-
-            {/* Quick replies */}
-            <div className="px-4 pb-4 flex flex-wrap gap-2">
-              {step === "service" && SERVICES.map((s) => (
-                <button key={s} onClick={() => selectService(s)}
-                  className="px-3 py-1.5 rounded-full text-xs border transition-colors"
-                  style={{ borderColor: "#2a5a2a", color: "#4caf7d", background: "transparent" }}>
-                  {s}
-                </button>
-              ))}
-              {step === "time" && selectedService && (SLOTS[selectedService] ?? []).map((slot) => (
-                <button key={slot} onClick={() => selectTime(slot)}
-                  className="px-3 py-1.5 rounded-full text-xs border transition-colors"
-                  style={{ borderColor: "#2a5a2a", color: "#4caf7d", background: "transparent" }}>
-                  {slot}
-                </button>
-              ))}
-              {step === "done" && (
-                <button onClick={reset}
-                  className="px-3 py-1.5 rounded-full text-xs border transition-colors"
-                  style={{ borderColor: "#2a5a2a", color: "#4caf7d", background: "transparent" }}>
-                  🔄 Yeni Randevu
-                </button>
-              )}
-            </div>
-          </div>
-        </div>
-
-        {/* Flow steps */}
+      <PageHeader title="WhatsApp Bot Bağlantısı" />
+      <div className="p-7 max-w-2xl">
         <Card>
-          <CardHeader title="Bot Akış Adımları" />
-          <div className="p-5 flex flex-col">
-            {flowSteps.map((s, i) => (
-              <div key={s.num} className="flex gap-3 py-4 border-b last:border-0" style={{ borderColor: "var(--border)" }}>
-                <div className="w-7 h-7 rounded-full flex items-center justify-center text-xs font-black font-syne flex-shrink-0 mt-0.5"
-                  style={{ background: "var(--accent-dim)", border: "1px solid var(--accent-dim2)", color: "var(--accent)" }}>
-                  {s.num}
+          <div className="p-8 flex flex-col items-center text-center">
+            
+            {loading ? (
+              <div className="text-gray-500">Durum kontrol ediliyor...</div>
+            ) : status === "CONNECTED" ? (
+              <>
+                <div className="w-16 h-16 rounded-full bg-green-100 flex items-center justify-center text-green-600 text-3xl mb-4">
+                  ✓
                 </div>
-                <div>
-                  <div className="text-sm font-medium mb-0.5">{s.title}</div>
-                  <div className="text-xs leading-relaxed mb-2" style={{ color: "var(--text3)" }}>{s.desc}</div>
-                  <span className="text-xs px-2 py-0.5 rounded font-mono" style={{ background: "var(--bg3)", border: "1px solid var(--border2)", color: "var(--text3)" }}>
-                    {s.tag}
-                  </span>
+                <h2 className="text-2xl font-bold mb-2">WhatsApp Bağlı</h2>
+                <p className="text-gray-500 mb-8">
+                  BerberBot şu anda telefonunuza bağlı ve gelen randevu mesajlarına otomatik yanıt veriyor.
+                </p>
+                <Button variant="danger" onClick={handleLogout}>Bağlantıyı Kes</Button>
+              </>
+            ) : status === "INITIALIZING" ? (
+              <>
+                <div className="w-16 h-16 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 text-3xl mb-4 animate-pulse">
+                  ⏳
                 </div>
-              </div>
-            ))}
+                <h2 className="text-2xl font-bold mb-2">QR Kod Hazırlanıyor...</h2>
+                <p className="text-gray-500">
+                  Lütfen bekleyin, WhatsApp bağlantısı başlatılıyor. Bu işlem birkaç saniye sürebilir.
+                </p>
+              </>
+            ) : status === "QR_READY" && qrCodeUrl ? (
+              <>
+                <h2 className="text-2xl font-bold mb-2">QR Kodu Okutun</h2>
+                <p className="text-gray-500 mb-6">
+                  WhatsApp'ı açın, Ayarlar {">"} Bağlı Cihazlar menüsüne gidin ve kameranızı aşağıdaki koda tutun.
+                </p>
+                <div className="p-4 bg-white border rounded-xl shadow-sm mb-6 inline-block">
+                  <img src={qrCodeUrl} alt="WhatsApp QR Code" className="w-64 h-64" />
+                </div>
+              </>
+            ) : (
+              <>
+                <div className="w-16 h-16 rounded-full bg-gray-100 flex items-center justify-center text-gray-400 text-3xl mb-4">
+                  📱
+                </div>
+                <h2 className="text-2xl font-bold mb-2">WhatsApp Bağlantısı Yok</h2>
+                <p className="text-gray-500 mb-8">
+                  Botun otomatik olarak çalışabilmesi için işletmenizin WhatsApp hesabını sisteme bağlamanız gerekir.
+                </p>
+                <Button onClick={handleConnect}>WhatsApp'ı Bağla</Button>
+              </>
+            )}
+
           </div>
         </Card>
       </div>
-
-      <style>{`
-        @keyframes bounce { 0%,60%,100%{transform:translateY(0);opacity:.5} 30%{transform:translateY(-5px);opacity:1} }
-      `}</style>
     </AdminLayout>
   );
 }

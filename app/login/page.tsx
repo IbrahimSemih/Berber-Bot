@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
+import Link from "next/link";
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
@@ -32,78 +33,70 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
-      <div className="sm:mx-auto sm:w-full sm:max-w-md">
-        <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
-          BerberBot SaaS
-        </h2>
-        <p className="mt-2 text-center text-sm text-gray-600">
-          İşletme Yönetim Paneli
-        </p>
-      </div>
-
-      <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
-        <div className="bg-white py-8 px-4 shadow sm:rounded-lg sm:px-10">
-          <form className="space-y-6" onSubmit={handleLogin}>
-            <div>
-              <label
-                htmlFor="email"
-                className="block text-sm font-medium text-gray-700"
-              >
-                E-posta Adresi
-              </label>
-              <div className="mt-1">
-                <input
-                  id="email"
-                  name="email"
-                  type="email"
-                  autoComplete="email"
-                  required
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  className="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 text-gray-900 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-                />
-              </div>
-            </div>
-
-            <div>
-              <label
-                htmlFor="password"
-                className="block text-sm font-medium text-gray-700"
-              >
-                Şifre
-              </label>
-              <div className="mt-1">
-                <input
-                  id="password"
-                  name="password"
-                  type="password"
-                  autoComplete="current-password"
-                  required
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 text-gray-900 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-                />
-              </div>
-            </div>
-
-            {error && (
-              <div className="text-red-600 text-sm bg-red-50 p-2 rounded">
-                {error}
-              </div>
-            )}
-
-            <div>
-              <button
-                type="submit"
-                disabled={loading}
-                className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-gray-900 hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-900 disabled:opacity-50"
-              >
-                {loading ? "Giriş yapılıyor..." : "Giriş Yap"}
-              </button>
-            </div>
-          </form>
+    <div className="min-h-screen flex items-center justify-center p-4" style={{ background: "var(--bg)", color: "var(--text)" }}>
+      <div className="max-w-md w-full p-8 rounded-2xl border relative overflow-hidden" style={{ background: "var(--bg2)", borderColor: "var(--border)" }}>
+        {/* Glow effect */}
+        <div className="absolute -top-24 -right-24 w-48 h-48 rounded-full blur-[80px] pointer-events-none opacity-50" style={{ background: "var(--accent)" }} />
+        
+        <div className="text-center mb-8 relative z-10">
+          <div className="w-12 h-12 rounded-xl flex items-center justify-center text-2xl mx-auto mb-4"
+            style={{ background: "var(--accent-dim)", color: "var(--accent)" }}>✂</div>
+          <h1 className="font-heading font-bold text-3xl mb-2 tracking-tight">BerberBot</h1>
+          <p className="text-sm font-light" style={{ color: "var(--text3)" }}>
+            İşletme Yönetim Paneli
+          </p>
         </div>
+
+        <form onSubmit={handleLogin} className="space-y-5 relative z-10">
+          <div>
+            <label className="block text-sm font-medium mb-2" style={{ color: "var(--text2)" }}>
+              E-posta Adresi
+            </label>
+            <input
+              type="email"
+              required
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="isim@sirket.com"
+              className="w-full px-4 py-3 rounded-xl text-sm border focus:outline-none transition-colors"
+              style={{ background: "rgba(0,0,0,0.2)", borderColor: "var(--border)", color: "var(--text)" }}
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium mb-2" style={{ color: "var(--text2)" }}>
+              Şifre
+            </label>
+            <input
+              type="password"
+              required
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              placeholder="••••••••"
+              className="w-full px-4 py-3 rounded-xl text-sm border focus:outline-none transition-colors"
+              style={{ background: "rgba(0,0,0,0.2)", borderColor: "var(--border)", color: "var(--text)" }}
+            />
+          </div>
+
+          {error && (
+            <div className="text-sm p-3 rounded-lg border" style={{ background: "rgba(239, 68, 68, 0.1)", borderColor: "rgba(239, 68, 68, 0.2)", color: "#f87171" }}>
+              {error}
+            </div>
+          )}
+
+          <button
+            type="submit"
+            disabled={loading}
+            className="w-full py-3.5 rounded-xl text-sm font-bold transition-all disabled:opacity-50 hover:-translate-y-0.5 mt-2"
+            style={{ background: "var(--accent)", color: "#0a0a0a" }}
+          >
+            {loading ? "Giriş yapılıyor..." : "Giriş Yap"}
+          </button>
+          
+          <div className="text-center text-sm mt-6" style={{ color: "var(--text3)" }}>
+            Hesabınız yok mu? <Link href="/signup" className="font-medium hover:underline transition-colors" style={{ color: "var(--accent)" }}>Ücretsiz Dene</Link>
+          </div>
+        </form>
       </div>
     </div>
   );

@@ -26,17 +26,33 @@ export async function middleware(request: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser();
 
+  const pathname = request.nextUrl.pathname;
+
   // Protect dashboard routes
-  const protectedPaths = ["/dashboard", "/customers", "/settings"];
-  const isProtectedPath = protectedPaths.some((path) => request.nextUrl.pathname === path);
+  const protectedPaths = ["/dashboard", "/customers", "/settings", "/appointments", "/onboarding", "/whatsapp"];
+  const isProtectedPath = protectedPaths.some((path) => pathname.startsWith(path));
 
   if (isProtectedPath && !user) {
     return NextResponse.redirect(new URL("/login", request.url));
   }
 
   // If logged in and trying to access /login, redirect to dashboard
-  if (request.nextUrl.pathname === "/login" && user) {
+  if (pathname === "/login" && user) {
     return NextResponse.redirect(new URL("/dashboard", request.url));
+  }
+
+  // If logged in, on a protected page (not onboarding), check if user has a shop
+  // If no shop exists, redirect to onboarding
+  if (user && isProtectedPath && pathname !== "/onboarding") {
+    const { data: shop } = await supabase
+      .from("shops")
+      .select("id")
+      .eq("owner_id", user.id)
+      .single();
+
+    if (!shop) {
+      return NextResponse.redirect(new URL("/onboarding", request.url));
+    }
   }
 
   return response;

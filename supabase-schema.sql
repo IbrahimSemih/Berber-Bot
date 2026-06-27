@@ -88,12 +88,42 @@ ALTER TABLE customers ENABLE ROW LEVEL SECURITY;
 ALTER TABLE appointments ENABLE ROW LEVEL SECURITY;
 ALTER TABLE settings ENABLE ROW LEVEL SECURITY;
 
--- Geliştirme aşamasında herkese izin ver (canlıya geçince düzenle)
-CREATE POLICY "Allow all" ON shops FOR ALL USING (true);
-CREATE POLICY "Allow all" ON services FOR ALL USING (true);
-CREATE POLICY "Allow all" ON customers FOR ALL USING (true);
-CREATE POLICY "Allow all" ON appointments FOR ALL USING (true);
-CREATE POLICY "Allow all" ON settings FOR ALL USING (true);
+-- ── shops ──
+-- Kullanıcı sadece kendi dükkanını görebilir
+CREATE POLICY "Users can view own shop" ON shops
+  FOR SELECT USING (owner_id = auth.uid());
+
+-- Yeni kayıt olan kullanıcılar dükkan oluşturabilir
+CREATE POLICY "Users can create shop" ON shops
+  FOR INSERT WITH CHECK (owner_id = auth.uid());
+
+-- Sadece sahibi güncelleyebilir
+CREATE POLICY "Users can update own shop" ON shops
+  FOR UPDATE USING (owner_id = auth.uid());
+
+-- ── services ──
+CREATE POLICY "Users can manage own services" ON services
+  FOR ALL USING (
+    shop_id IN (SELECT id FROM shops WHERE owner_id = auth.uid())
+  );
+
+-- ── customers ──
+CREATE POLICY "Users can manage own customers" ON customers
+  FOR ALL USING (
+    shop_id IN (SELECT id FROM shops WHERE owner_id = auth.uid())
+  );
+
+-- ── appointments ──
+CREATE POLICY "Users can manage own appointments" ON appointments
+  FOR ALL USING (
+    shop_id IN (SELECT id FROM shops WHERE owner_id = auth.uid())
+  );
+
+-- ── settings ──
+CREATE POLICY "Users can manage own settings" ON settings
+  FOR ALL USING (
+    shop_id IN (SELECT id FROM shops WHERE owner_id = auth.uid())
+  );
 
 -- ─── Useful Views ─────────────────────────────────────────────────────────
 
@@ -118,3 +148,4 @@ SELECT
 FROM appointments a
 LEFT JOIN customers c ON c.id = a.customer_id
 LEFT JOIN services s ON s.id = a.service_id;
+
