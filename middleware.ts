@@ -28,6 +28,23 @@ export async function middleware(request: NextRequest) {
 
   const pathname = request.nextUrl.pathname;
 
+  // Super Admin Route Protection
+  if (pathname.startsWith("/superadmin")) {
+    const isSuperAdminAuthed = request.cookies.get("superadmin_auth")?.value === "true";
+
+    if (pathname === "/superadmin/login") {
+      if (isSuperAdminAuthed) {
+        return NextResponse.redirect(new URL("/superadmin", request.url));
+      }
+      return response;
+    }
+
+    if (!isSuperAdminAuthed) {
+      return NextResponse.redirect(new URL("/superadmin/login", request.url));
+    }
+    return response;
+  }
+
   // Protect dashboard routes
   const protectedPaths = ["/dashboard", "/customers", "/settings", "/appointments", "/onboarding", "/whatsapp"];
   const isProtectedPath = protectedPaths.some((path) => pathname.startsWith(path));
@@ -46,12 +63,16 @@ export async function middleware(request: NextRequest) {
   if (user && isProtectedPath && pathname !== "/onboarding") {
     const { data: shop } = await supabase
       .from("shops")
-      .select("id")
+      .select("id, status")
       .eq("owner_id", user.id)
       .single();
 
     if (!shop) {
       return NextResponse.redirect(new URL("/onboarding", request.url));
+    }
+
+    if (shop.status === 'banned') {
+      return NextResponse.redirect(new URL("/banned", request.url));
     }
   }
 

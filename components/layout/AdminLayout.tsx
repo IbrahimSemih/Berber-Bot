@@ -4,6 +4,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { createClient } from "@/lib/supabase/client";
 import { useEffect, useState } from "react";
+import NotificationListener from "@/app/dashboard/components/NotificationListener";
 
 const navItems = [
   { href: "/dashboard",    label: "Dashboard",     icon: "⊞" },
@@ -19,15 +20,17 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const supabase = createClient();
   const [shopName, setShopName] = useState("Yükleniyor...");
   const [shopInitials, setShopInitials] = useState("...");
+  const [currentShopId, setCurrentShopId] = useState<string | null>(null);
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   useEffect(() => {
     async function loadShop() {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
-      const { data: shop, error } = await supabase.from("shops").select("name").eq("owner_id", user.id).single();
+      const { data: shop, error } = await supabase.from("shops").select("id, name").eq("owner_id", user.id).single();
       
       if (shop) {
+        setCurrentShopId(shop.id);
         setShopName(shop.name);
         const parts = shop.name.split(" ");
         const initials = parts.length > 1 ? parts[0][0] + parts[1][0] : shop.name.substring(0, 2);
@@ -139,6 +142,9 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       <main className="md:ml-60 flex-1 flex flex-col min-h-screen pt-14 md:pt-0">
         {children}
       </main>
+
+      {/* Realtime Notifications */}
+      {currentShopId && <NotificationListener shopId={currentShopId} />}
     </div>
   );
 }

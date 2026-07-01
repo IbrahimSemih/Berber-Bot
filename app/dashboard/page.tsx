@@ -5,6 +5,7 @@ import AdminLayout from "@/components/layout/AdminLayout";
 import { StatCard, Card, CardHeader, PageHeader, Button, StatusBadge, SourceBadge, Avatar } from "@/components/ui";
 import { formatTime } from "@/lib/utils";
 import AddAppointmentModal from "@/components/AddAppointmentModal";
+import { confirmAppointmentAndNotify } from "@/app/appointments/actions";
 
 interface Apt {
   id: string;
@@ -97,7 +98,11 @@ export default function DashboardPage() {
 
   async function confirm(id: string) {
     if (!currentShopId) return;
-    await supabase.from("appointments").update({ status: "confirmed" }).eq("id", id).eq("shop_id", currentShopId);
+    try {
+      await confirmAppointmentAndNotify(id, currentShopId);
+    } catch (e) {
+      console.error(e);
+    }
     load();
   }
 

@@ -5,6 +5,9 @@ const { Client, LocalAuth } = require('whatsapp-web.js');
 const qrcode = require('qrcode');
 const { createClient } = require('@supabase/supabase-js');
 const { addDays, format, startOfDay, endOfDay, isSameDay, getDay, parse, addMinutes, isAfter, isBefore, isEqual } = require('date-fns');
+const cron = require('node-cron');
+const fs = require('fs');
+const path = require('path');
 
 const app = express();
 app.use(cors());
@@ -24,7 +27,8 @@ const STEPS = {
     IDLE: 'IDLE',
     SELECT_SERVICE: 'SELECT_SERVICE',
     SELECT_DAY: 'SELECT_DAY',
-    SELECT_TIME: 'SELECT_TIME'
+    SELECT_TIME: 'SELECT_TIME',
+    ENTER_NAME: 'ENTER_NAME'
 };
 
 // ─── Yardımcı Fonksiyonlar ──────────────────────────────────────────────────
@@ -138,13 +142,24 @@ function resetChatState(shopId, customerPhone) {
 
 // WhatsApp mesaj işleme mantığı
 async function handleIncomingMessage(shopId, msg) {
+    // WhatsApp durum (story) güncellemelerini yoksay
+    if (msg.from === 'status@broadcast') {
+        return;
+    }
+
+    console.log(`[${shopId}] Received message from ${msg.from}: ${msg.body}`);
     // Sadece gruplardan gelmeyen normal mesajları işle
     const chat = await msg.getChat();
-    if (chat.isGroup) return;
+    if (chat.isGroup) {
+        console.log(`[${shopId}] Ignoring group message from ${msg.from}`);
+        return;
+    }
 
     const phone = msg.from.replace('@c.us', '');
     const text = msg.body.trim().toLowerCase();
     const chatState = getChatState(shopId, phone);
+    
+    console.log(`[${shopId}] Chat state for ${phone}:`, chatState.step);
 
     // Eğer kullanıcı 'iptal' yazarsa her zaman başa dön
     if (text === 'iptal' || text === 'çıkış') {
@@ -156,6 +171,8 @@ async function handleIncomingMessage(shopId, msg) {
         if (chatState.step === STEPS.IDLE) {
             const triggers = ['randevu', 'kesim'];
             const isTriggered = triggers.some(t => text.includes(t));
+            
+            console.log(`[${shopId}] IDLE state, isTriggered:`, isTriggered);
 
             if (isTriggered) {
                 // 1. Hizmetleri Çek
@@ -164,6 +181,8 @@ async function handleIncomingMessage(shopId, msg) {
                     .select('*')
                     .eq('shop_id', shopId)
                     .eq('is_active', true);
+                    
+                console.log(`[${shopId}] Fetched services:`, services?.length, 'error:', error);
 
                 if (error || !services || services.length === 0) {
                     return msg.reply('Şu anda aktif hizmet bulunmuyor. Lütfen daha sonra tekrar deneyin.');
@@ -275,6 +294,19 @@ async function handleIncomingMessage(shopId, msg) {
                 return msg.reply('Lütfen yukarıdaki uygun saatlerden birini tam olarak yazın (Örn: 10:00).');
             }
 
+            chatState.data.selectedTime = selectedTime;
+            chatState.step = STEPS.ENTER_NAME;
+
+            return msg.reply('Son olarak, randevu kaydınız için lütfen *Adınızı ve Soyadınızı* yazın:');
+        }
+        else if (chatState.step === STEPS.ENTER_NAME) {
+            const customerName = msg.body.trim(); // case-sensitive for name
+            
+            if (customerName.length < 2) {
+                return msg.reply('Lütfen geçerli bir isim girin.');
+            }
+
+            const selectedTime = chatState.data.selectedTime;
             const service = chatState.data.service;
             const targetDate = chatState.data.targetDate;
             const timeParts = selectedTime.split(':');
@@ -293,12 +325,12 @@ async function handleIncomingMessage(shopId, msg) {
 
             if (existingCustomer) {
                 customerId = existingCustomer.id;
+                // Müşteri ismini güncelleyelim
+                await supabase.from('customers').update({ name: customerName }).eq('id', customerId);
             } else {
-                // İsmi şimdilik WhatsApp numarasından alalım veya "Bilinmeyen" diyelim
-                const contact = await msg.getContact();
                 const { data: newCustomer } = await supabase
                     .from('customers')
-                    .insert([{ shop_id: shopId, phone: phone, name: contact.pushname || 'Yeni Müşteri' }])
+                    .insert([{ shop_id: shopId, phone: phone, name: customerName }])
                     .select('id')
                     .single();
                 customerId = newCustomer?.id;
@@ -325,7 +357,7 @@ async function handleIncomingMessage(shopId, msg) {
             const dayName = GUN_ADLARI[getDay(targetDate)];
             const dateStr = format(targetDate, 'dd.MM.yyyy');
             resetChatState(shopId, phone);
-            return msg.reply(`✅ Harika! *${dayName}, ${dateStr}* saat *${selectedTime}* için *${service.name}* randevunuz başarıyla oluşturuldu. Bizi tercih ettiğiniz için teşekkür ederiz!`);
+            return msg.reply(`✅ Harika! *${dayName}, ${dateStr}* saat *${selectedTime}* için *${service.name}* randevunuz başarıyla oluşturuldu. Bizi tercih ettiğiniz için teşekkür ederiz, ${customerName}!`);
         }
     } catch (e) {
         console.error("Chat flow error:", e);
@@ -334,16 +366,8 @@ async function handleIncomingMessage(shopId, msg) {
     }
 }
 
-app.post('/api/whatsapp/connect', (req, res) => {
-    const { shopId } = req.body;
-    if (!shopId) return res.status(400).json({ error: 'shopId required' });
-
+function setupAndInitializeClient(shopId) {
     let state = getSessionState(shopId);
-
-    if (state.status === 'CONNECTED' || state.status === 'INITIALIZING') {
-        return res.json({ status: state.status, message: 'Already connected or initializing' });
-    }
-
     state.status = 'INITIALIZING';
     state.qrCodeUrl = null;
 
@@ -353,7 +377,19 @@ app.post('/api/whatsapp/connect', (req, res) => {
         authStrategy: new LocalAuth({ clientId: shopId }),
         puppeteer: {
             headless: true,
-            args: ['--no-sandbox', '--disable-setuid-sandbox']
+            args: [
+                '--no-sandbox', 
+                '--disable-setuid-sandbox', 
+                '--disable-dev-shm-usage', 
+                '--disable-accelerated-2d-canvas', 
+                '--no-first-run', 
+                '--no-zygote', 
+                '--disable-gpu'
+            ]
+        },
+        webVersionCache: {
+            type: 'remote',
+            remotePath: 'https://raw.githubusercontent.com/wppconnect-team/wa-version/main/html/2.2412.54.html',
         }
     });
 
@@ -365,10 +401,17 @@ app.post('/api/whatsapp/connect', (req, res) => {
         state.qrCodeUrl = await qrcode.toDataURL(qr);
     });
 
-    client.on('ready', () => {
+    client.on('ready', async () => {
         console.log(`[${shopId}] WhatsApp Client is READY!`);
         state.status = 'CONNECTED';
         state.qrCodeUrl = null;
+
+        // Numara kaydet
+        if (client.info && client.info.wid) {
+            const phoneStr = client.info.wid.user;
+            await supabase.from('settings').update({ whatsapp_number: phoneStr }).eq('shop_id', shopId);
+            console.log(`[${shopId}] Saved WhatsApp number to DB: ${phoneStr}`);
+        }
     });
 
     client.on('authenticated', () => {
@@ -395,8 +438,21 @@ app.post('/api/whatsapp/connect', (req, res) => {
         console.error(`[${shopId}] Error initializing client:`, err);
         state.status = 'DISCONNECTED';
     });
+}
 
-    res.json({ status: state.status, message: 'Initialization started' });
+app.post('/api/whatsapp/connect', (req, res) => {
+    const { shopId } = req.body;
+    if (!shopId) return res.status(400).json({ error: 'shopId required' });
+
+    let state = getSessionState(shopId);
+
+    if (state.status === 'CONNECTED' || state.status === 'INITIALIZING') {
+        return res.json({ status: state.status, message: 'Already connected or initializing' });
+    }
+
+    setupAndInitializeClient(shopId);
+
+    res.json({ status: 'INITIALIZING', message: 'Initialization started' });
 });
 
 app.get('/api/whatsapp/status', (req, res) => {
@@ -430,7 +486,146 @@ app.post('/api/whatsapp/logout', async (req, res) => {
     res.json({ success: true });
 });
 
+app.post('/api/whatsapp/send', async (req, res) => {
+    const { shopId, phone, message } = req.body;
+    
+    if (!shopId || !phone || !message) {
+        return res.status(400).json({ error: 'shopId, phone, and message are required' });
+    }
+
+    const state = getSessionState(shopId);
+    
+    if (state.status !== 'CONNECTED' || !state.client) {
+        return res.status(400).json({ error: 'WhatsApp client is not connected for this shop' });
+    }
+
+    try {
+        let phoneStr = phone.replace(/\D/g, '');
+        if (phoneStr.startsWith('0')) phoneStr = phoneStr.substring(1);
+        if (phoneStr.length === 10) phoneStr = '90' + phoneStr;
+        
+        // WhatsApp ID'sini doğrula
+        const numberId = await state.client.getNumberId(phoneStr);
+        
+        if (!numberId) {
+            console.error(`[${shopId}] Phone number ${phoneStr} is not registered on WhatsApp.`);
+            return res.status(400).json({ error: 'Bu numara WhatsApp kullanmıyor.' });
+        }
+        
+        await state.client.sendMessage(numberId._serialized, message);
+        console.log(`[${shopId}] Notification sent to ${phone}`);
+        res.json({ success: true });
+    } catch (error) {
+        console.error(`[${shopId}] Error sending notification to ${phone}:`, error);
+        res.status(500).json({ error: 'Failed to send message', details: error.message });
+    }
+});
+
+// --- Cron Job: Appointment Reminders ---
+// Her 15 dakikada bir çalışır
+cron.schedule('*/15 * * * *', async () => {
+    console.log('[CRON] Checking for reminders...');
+    try {
+        const { data: settings, error: settingsError } = await supabase
+            .from('settings')
+            .select('shop_id, reminder_hours, shop_name');
+            
+        if (settingsError || !settings) {
+            console.error('[CRON] Failed to fetch settings:', settingsError);
+            return;
+        }
+
+        for (const setting of settings) {
+            const shopId = setting.shop_id;
+            const reminderHours = setting.reminder_hours || 24;
+            
+            // Check if WhatsApp client is connected for this shop
+            const state = getSessionState(shopId);
+            if (state.status !== 'CONNECTED' || !state.client) {
+                continue;
+            }
+
+            const now = new Date();
+            const threshold = addMinutes(now, reminderHours * 60);
+
+            // Fetch appointments using the full view to get customer details
+            const { data: appointments, error: aptError } = await supabase
+                .from('appointments_full')
+                .select('*')
+                .eq('shop_id', shopId)
+                .eq('status', 'confirmed')
+                .eq('reminder_sent', false)
+                .gt('scheduled_at', now.toISOString())
+                .lte('scheduled_at', threshold.toISOString());
+
+            if (aptError) {
+                console.error(`[CRON] [${shopId}] Error fetching appointments:`, aptError);
+                continue;
+            }
+
+            if (appointments && appointments.length > 0) {
+                for (const apt of appointments) {
+                    try {
+                        let phoneStr = apt.customer_phone;
+                        let chatId;
+                        
+                        if (phoneStr.includes('@')) {
+                            // Eğer veritabanına zaten @lid veya @c.us uzantılı kaydedilmişse direkt kullan
+                            chatId = phoneStr;
+                        } else {
+                            if (phoneStr.startsWith('+')) {
+                                phoneStr = phoneStr.substring(1);
+                            }
+                            chatId = `${phoneStr}@c.us`;
+                        }
+                        
+                        const dateObj = new Date(apt.scheduled_at);
+                        const dateStr = format(dateObj, 'dd.MM.yyyy HH:mm');
+                        
+                        const message = `🔔 *Hatırlatma:* Merhaba ${apt.customer_name},\n\n*${setting.shop_name}* için *${dateStr}* tarihindeki *${apt.service_name}* randevunuzu hatırlatmak isteriz. Bizi tercih ettiğiniz için teşekkür ederiz!`;
+                        
+                        await state.client.sendMessage(chatId, message);
+                        console.log(`[CRON] [${shopId}] Reminder sent to ${apt.customer_phone} for appointment ${apt.id}`);
+
+                        // Update DB
+                        await supabase
+                            .from('appointments')
+                            .update({ reminder_sent: true })
+                            .eq('id', apt.id);
+                            
+                    } catch (err) {
+                        console.error(`[CRON] [${shopId}] Failed to send reminder to ${apt.customer_phone}:`, err);
+                    }
+                }
+            }
+        }
+    } catch (e) {
+        console.error('[CRON] Unexpected error:', e);
+    }
+});
+
+async function initializeExistingSessions() {
+    const authDir = path.join(__dirname, '.wwebjs_auth');
+    if (!fs.existsSync(authDir)) return;
+
+    const files = fs.readdirSync(authDir);
+    const sessionPrefix = 'session-';
+
+    console.log('[INIT] Scanning for existing WhatsApp sessions...');
+    
+    for (const file of files) {
+        if (file.startsWith(sessionPrefix)) {
+            const shopId = file.substring(sessionPrefix.length);
+            console.log(`[INIT] Found existing session for shop: ${shopId}, starting client...`);
+            setupAndInitializeClient(shopId);
+            // Chromium'ların aynı anda başlatılıp çökmelerini engellemek için araya gecikme ekliyoruz
+            await new Promise(resolve => setTimeout(resolve, 5000));
+        }
+    }
+}
+
 const PORT = 3001;
 app.listen(PORT, () => {
     console.log(`BerberBot WhatsApp Microservice running on http://localhost:${PORT}`);
+    initializeExistingSessions();
 });

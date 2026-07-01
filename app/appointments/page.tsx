@@ -5,6 +5,7 @@ import AdminLayout from "@/components/layout/AdminLayout";
 import { Card, PageHeader, Button, StatusBadge, SourceBadge, Avatar } from "@/components/ui";
 import { formatTime, relativeDay, formatPrice } from "@/lib/utils";
 import AddAppointmentModal from "@/components/AddAppointmentModal";
+import { confirmAppointmentAndNotify } from "./actions";
 
 type Filter = "all" | "pending" | "confirmed" | "cancelled";
 
@@ -72,7 +73,11 @@ export default function AppointmentsPage() {
 
   async function confirm(id: string) {
     if (!currentShopId) return;
-    await supabase.from("appointments").update({ status: "confirmed" }).eq("id", id).eq("shop_id", currentShopId);
+    try {
+      await confirmAppointmentAndNotify(id, currentShopId);
+    } catch (e) {
+      console.error(e);
+    }
     load();
   }
 

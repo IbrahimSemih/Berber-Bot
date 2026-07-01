@@ -225,7 +225,7 @@ export default function SettingsPage() {
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <label className="block text-xs font-semibold uppercase tracking-wide mb-1.5" style={{ color: "var(--text3)" }}>WhatsApp Numarası</label>
-                <Input value={wpNumber} onChange={(e) => setWpNumber(e.target.value)} />
+                <Input value={wpNumber} disabled placeholder="Bota bağlandığınızda otomatik dolar" />
               </div>
             </div>
           </div>
@@ -347,18 +347,20 @@ export default function SettingsPage() {
           </div>
         </Card>
 
-        {/* WhatsApp API */}
+        {/* WhatsApp Bot Connection */}
         <Card>
-          <CardHeader title="WhatsApp Cloud API Bağlantısı" />
+          <CardHeader title="WhatsApp Bot Bağlantısı" />
           <div className="p-5 flex flex-col gap-4">
-            <div className="p-4 rounded-lg text-sm" style={{ background: "var(--accent-dim)", border: "1px solid var(--accent-dim2)" }}>
-              <div className="font-semibold mb-1" style={{ color: "var(--accent)" }}>Nasıl bağlanılır?</div>
-              <ol className="list-decimal list-inside flex flex-col gap-1 text-xs" style={{ color: "var(--text2)" }}>
-                <li>developers.facebook.com → WhatsApp → API Setup</li>
-                <li>Phone Number ID ve Access Token al</li>
-                <li>.env.local dosyasına yapıştır</li>
-                <li>Webhook URL: {"`"}{process.env.NEXT_PUBLIC_APP_URL ?? "https://your-domain.com"}/api/whatsapp{"`"}</li>
-              </ol>
+            <div className="p-4 rounded-lg text-sm flex flex-col md:flex-row md:items-center justify-between gap-4" style={{ background: "var(--bg3)", border: "1px solid var(--border)" }}>
+              <div>
+                <div className="font-semibold mb-1">BerberBot'u WhatsApp'a Bağlayın</div>
+                <div className="text-xs" style={{ color: "var(--text2)" }}>
+                  Sistemin otomatik randevu oluşturabilmesi için dükkanınızın WhatsApp hesabını QR kod okutarak bağlamanız gerekmektedir.
+                </div>
+              </div>
+              <Button onClick={() => window.location.href = "/whatsapp"} className="whitespace-nowrap">
+                WhatsApp'ı Yönet
+              </Button>
             </div>
           </div>
         </Card>
