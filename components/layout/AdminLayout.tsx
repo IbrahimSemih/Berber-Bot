@@ -115,13 +115,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
               </Link>
             );
           })}
-          <div style={{ borderTop: "1px solid var(--border)", marginTop: 8, paddingTop: 8 }}>
-            <Link href="/"
-              className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-colors"
-              style={{ color: "var(--text3)" }}>
-              <span className="text-base">🏠</span> Landing Page
-            </Link>
-          </div>
+
         </nav>
 
         {/* User */}

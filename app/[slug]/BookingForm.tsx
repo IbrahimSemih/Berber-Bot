@@ -153,8 +153,7 @@ export default function BookingForm({ shop, services, settings }: any) {
                   }}
                 >
                   <div className="font-bold text-lg mb-1">{service.name}</div>
-                  <div className="text-sm font-medium flex items-center justify-between" style={{ color: "var(--text2)" }}>
-                    <span>{service.duration_minutes} Dakika</span>
+                  <div className="text-sm font-medium flex items-center justify-end" style={{ color: "var(--text2)" }}>
                     <span className="font-bold" style={{ color: "var(--text)" }}>{service.price} ₺</span>
                   </div>
                 </button>

@@ -23,8 +23,16 @@ export default function DashboardPage() {
   const [totalCustomers, setTotalCustomers] = useState(0);
   const [monthRevenue, setMonthRevenue] = useState(0);
   const [currentShopId, setCurrentShopId] = useState<string | null>(null);
+  const [shopSlug, setShopSlug] = useState<string | null>(null);
+  const [shopUrl, setShopUrl] = useState<string>("");
 
   const supabase = createClient();
+
+  useEffect(() => {
+    if (shopSlug) {
+      setShopUrl(`${window.location.origin}/${shopSlug}`);
+    }
+  }, [shopSlug]);
 
   async function load() {
     setLoading(true);
@@ -35,7 +43,7 @@ export default function DashboardPage() {
       return;
     }
 
-    const { data: shop } = await supabase.from("shops").select("id").eq("owner_id", user.id).single();
+    const { data: shop } = await supabase.from("shops").select("id, slug").eq("owner_id", user.id).single();
     if (!shop) {
       setLoading(false);
       return; // Or show error
@@ -43,6 +51,7 @@ export default function DashboardPage() {
 
     const shopId = shop.id;
     setCurrentShopId(shopId);
+    setShopSlug(shop.slug);
 
     const today = new Date().toISOString().split("T")[0];
 
@@ -124,6 +133,24 @@ export default function DashboardPage() {
       </PageHeader>
 
       <div className="p-7">
+        {shopUrl && (
+          <div className="mb-6 p-4 rounded-xl flex flex-col sm:flex-row sm:items-center justify-between gap-4" style={{ background: "var(--bg3)", border: "1px solid var(--border)" }}>
+            <div>
+              <div className="text-sm font-medium mb-1" style={{ color: "var(--text)" }}>Halka Açık Randevu Sayfanız</div>
+              <div className="text-xs" style={{ color: "var(--text3)" }}>Müşterileriniz bu link üzerinden kendi randevularını alabilirler.</div>
+            </div>
+            <div className="flex gap-3 items-center">
+              <a href={`/${shopSlug}`} target="_blank" rel="noreferrer" className="text-sm font-medium hover:underline truncate max-w-[200px] sm:max-w-xs" style={{ color: "var(--accent)" }}>
+                {shopUrl}
+              </a>
+              <Button size="sm" onClick={() => {
+                navigator.clipboard.writeText(shopUrl);
+                alert("Link kopyalandı!");
+              }}>Kopyala</Button>
+            </div>
+          </div>
+        )}
+
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
           <StatCard label="Bugünkü Randevular" value={apts.length} change="Bugün" icon="📅" />
           <StatCard label="Bekleyen Onay" value={pendingCount} change={pendingCount > 0 ? "Onay bekliyor" : "Hepsi onaylı"} icon="⏳" />

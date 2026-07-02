@@ -356,6 +356,69 @@ export default function LandingPage() {
         </motion.div>
       </section>
 
+      {/* ── FAQ (Sıkça Sorulan Sorular) ── */}
+      <section id="faq" className="px-6 md:px-20 py-16 md:py-24 relative" style={{ background: "var(--bg)" }}>
+        <motion.div initial="hidden" whileInView="visible" viewport={{ once: false, amount: 0.2 }} variants={staggerContainer} className="max-w-4xl mx-auto">
+          <motion.div variants={fadeIn} className="text-center mb-16">
+            <h2 className="font-heading font-black text-3xl md:text-5xl mb-6 tracking-tight">Sıkça Sorulan Sorular</h2>
+            <p className="text-lg font-light" style={{ color: "var(--text3)" }}>Aklınıza takılan tüm detaylar burada.</p>
+          </motion.div>
+
+          <div className="flex flex-col gap-4">
+            {[
+              { q: "Müşterilerim WhatsApp'tan nasıl randevu alacak?", a: "Müşterileriniz dükkanınıza ait numaraya sadece 'Randevu' yazarak süreci başlatabilir. Bot, uygun hizmetleri ve boş saatleri listeleyip yönlendirmelerle kaydı tamamlar." },
+              { q: "BerberBot'u kullanmak için teknik bir bilgiye ihtiyacım var mı?", a: "Hayır, hiçbir teknik bilgiye ihtiyacınız yok. Sisteme kaydolduktan sonra panelde karşınıza çıkan QR kodu kendi WhatsApp'ınızdan okutmanız yeterli." },
+              { q: "Kendi WhatsApp numaramı kullanabilir miyim?", a: "Kesinlikle evet! Müşterilerinizin halihazırda bildiği dükkan numaranızı veya kişisel numaranızı doğrudan BerberBot'a bağlayıp kullanabilirsiniz." },
+              { q: "Randevuları nereden takip edeceğim?", a: "Size özel gelişmiş Yönetim Paneli (Dashboard) üzerinden tüm randevularınızı, günlük akışınızı ve müşteri istatistiklerinizi anlık olarak akıllı telefonunuzdan veya bilgisayardan takip edebilirsiniz." },
+              { q: "Memnun kalmazsam iptal edebilir miyim?", a: "Evet, hiçbir taahhüt bulunmamaktadır. Aboneliğinizi istediğiniz zaman tek tıkla iptal edebilir ve bot kullanımını sonlandırabilirsiniz." }
+            ].map((faq, i) => (
+              <motion.details key={i} variants={fadeIn} className="group p-6 rounded-2xl border transition-all cursor-pointer"
+                style={{ background: "var(--bg2)", borderColor: "var(--border)" }}>
+                <summary className="font-heading font-bold text-lg text-white flex items-center justify-between list-none">
+                  {faq.q}
+                  <span className="transition-transform group-open:rotate-45 text-2xl" style={{ color: "var(--accent)" }}>+</span>
+                </summary>
+                <p className="mt-4 text-base leading-relaxed" style={{ color: "var(--text2)" }}>
+                  {faq.a}
+                </p>
+              </motion.details>
+            ))}
+          </div>
+        </motion.div>
+      </section>
+
+      {/* ── FINAL CTA ── */}
+      <section className="px-6 md:px-20 py-20 relative overflow-hidden">
+        <div className="absolute inset-0 z-0" style={{ background: "linear-gradient(135deg, var(--bg) 0%, #1a2408 100%)" }} />
+        <div className="absolute -top-[50%] -right-[10%] w-[800px] h-[800px] rounded-full blur-[120px] pointer-events-none opacity-30"
+          style={{ background: "radial-gradient(circle, var(--accent) 0%, transparent 70%)" }} />
+        
+        <motion.div initial="hidden" whileInView="visible" viewport={{ once: false, amount: 0.5 }} variants={fadeIn} 
+          className="relative z-10 max-w-4xl mx-auto text-center border p-12 md:p-20 rounded-[3rem] shadow-[0_20px_60px_rgba(200,240,96,0.15)]"
+          style={{ background: "rgba(20,20,20,0.6)", borderColor: "var(--border)", backdropFilter: "blur(20px)" }}>
+          
+          <h2 className="font-heading font-black text-4xl md:text-6xl mb-6 tracking-tight text-white">
+            Dükkanınızı <span style={{ color: "var(--accent)" }}>Geleceğe</span> Taşıyın
+          </h2>
+          <p className="text-xl mb-10 font-light max-w-2xl mx-auto" style={{ color: "var(--text3)" }}>
+            Siz sadece mükemmel tıraşlara odaklanın, randevu defterini, hatırlatmaları ve müşteri asistanlığını yapay zeka yönetsin.
+          </p>
+          
+          <div className="flex flex-col sm:flex-row justify-center items-center gap-5">
+            <Link href="/signup" className="px-10 py-5 rounded-2xl text-lg font-bold transition-all hover:scale-105 shadow-[0_0_30px_rgba(200,240,96,0.3)] w-full sm:w-auto"
+              style={{ background: "var(--accent)", color: "#0a0a0a" }}>
+              Ücretsiz Başla
+            </Link>
+            <Link href="/iletişim" className="px-10 py-5 rounded-2xl text-lg font-medium border transition-colors hover:bg-white/5 w-full sm:w-auto"
+              style={{ borderColor: "var(--border2)", color: "var(--text2)" }}>
+              Bizimle İletişime Geç
+            </Link>
+          </div>
+          
+          <p className="mt-8 text-sm" style={{ color: "var(--text3)" }}>Kredi kartı gerekmez. 14 gün ücretsiz deneme.</p>
+        </motion.div>
+      </section>
+
       {/* ── FOOTER ── */}
       <footer className="px-6 md:px-20 py-12 border-t mt-20" style={{ borderColor: "var(--border)", background: "var(--bg2)" }}>
         <div className="max-w-6xl mx-auto flex flex-col md:flex-row items-center gap-6 md:justify-between">

@@ -284,7 +284,7 @@ export default function SettingsPage() {
               <table className="w-full border-collapse min-w-[500px]">
                 <thead>
                   <tr style={{ background: "var(--bg3)" }}>
-                    {["Hizmet", "Süre (dk)", "Fiyat (₺)", ""].map((h) => (
+                    {["Hizmet", "Fiyat (₺)", ""].map((h) => (
                       <th key={h} className="px-4 py-2 text-left text-xs font-medium uppercase tracking-wide"
                         style={{ color: "var(--text3)", borderBottom: "1px solid var(--border)" }}>{h}</th>
                     ))}
@@ -295,9 +295,6 @@ export default function SettingsPage() {
                     <tr key={s.id} className="border-b last:border-0" style={{ borderColor: "var(--border)" }}>
                       <td className="px-4 py-3">
                         <Input value={s.name} onChange={(e) => updateService(i, "name", e.target.value)} />
-                      </td>
-                      <td className="px-4 py-3 w-28">
-                        <Input type="number" value={s.duration_minutes} onChange={(e) => updateService(i, "duration_minutes", e.target.value)} />
                       </td>
                       <td className="px-4 py-3 w-28">
                         <Input type="number" value={s.price} onChange={(e) => updateService(i, "price", e.target.value)} />
@@ -311,7 +308,7 @@ export default function SettingsPage() {
                   ))}
                   {services.length === 0 && (
                     <tr>
-                      <td colSpan={4} className="px-4 py-6 text-center text-sm" style={{ color: "var(--text3)" }}>
+                      <td colSpan={3} className="px-4 py-6 text-center text-sm" style={{ color: "var(--text3)" }}>
                         Henüz hiç hizmet eklenmemiş.
                       </td>
                     </tr>
