@@ -30,6 +30,21 @@ export default function SignupPage() {
       setError(error.message);
       setLoading(false);
     } else {
+      // Send welcome email
+      try {
+        await fetch('/api/emails/test', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ 
+            email, 
+            name: email.split('@')[0], 
+            type: 'welcome' 
+          }),
+        });
+      } catch (err) {
+        console.error("Failed to send welcome email:", err);
+      }
+      
       router.push("/onboarding");
       router.refresh();
     }

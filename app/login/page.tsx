@@ -37,7 +37,7 @@ export default function LoginPage() {
       <div className="max-w-md w-full p-8 rounded-2xl border relative overflow-hidden" style={{ background: "var(--bg2)", borderColor: "var(--border)" }}>
         {/* Glow effect */}
         <div className="absolute -top-24 -right-24 w-48 h-48 rounded-full blur-[80px] pointer-events-none opacity-50" style={{ background: "var(--accent)" }} />
-        
+
         <div className="text-center mb-8 relative z-10">
           <div className="w-12 h-12 rounded-xl flex items-center justify-center text-2xl mx-auto mb-4"
             style={{ background: "var(--accent-dim)", color: "var(--accent)" }}>✂</div>
@@ -92,9 +92,9 @@ export default function LoginPage() {
           >
             {loading ? "Giriş yapılıyor..." : "Giriş Yap"}
           </button>
-          
+
           <div className="text-center text-sm mt-6" style={{ color: "var(--text3)" }}>
-            Hesabınız yok mu? <Link href="/signup" className="font-medium hover:underline transition-colors" style={{ color: "var(--accent)" }}>Ücretsiz Dene</Link>
+            Hesabınız yok mu? <Link href="/signup" className="font-medium hover:underline transition-colors" style={{ color: "var(--accent)" }}>Kayıt Ol</Link>
           </div>
         </form>
       </div>
