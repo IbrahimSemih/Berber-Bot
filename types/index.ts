@@ -17,6 +17,15 @@ export interface Service {
   price: number;
 }
 
+export interface Staff {
+  id: string;
+  shop_id: string;
+  name: string;
+  phone?: string;
+  is_active: boolean;
+  created_at: string;
+}
+
 export interface Customer {
   id: string;
   shop_id: string;
@@ -36,6 +45,9 @@ export interface Appointment {
   customer?: Customer;
   service_id: string;
   service?: Service;
+  staff_id?: string | null;
+  staff?: Staff;
+  staff_name?: string; // appointments_full view'dan gelebilir
   scheduled_at: string; // ISO datetime
   status: AppointmentStatus;
   source: AppointmentSource;

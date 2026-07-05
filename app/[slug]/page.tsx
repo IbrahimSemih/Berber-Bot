@@ -3,6 +3,8 @@ import { notFound } from "next/navigation";
 import BookingForm from "./BookingForm";
 
 export const dynamic = "force-dynamic";
+export const fetchCache = "force-no-store";
+export const revalidate = 0;
 
 export default async function PublicShopPage({ params }: { params: { slug: string } }) {
   const supabase = createAdminClient();
@@ -39,6 +41,14 @@ export default async function PublicShopPage({ params }: { params: { slug: strin
     .eq("is_active", true)
     .order("name");
 
+  // Fetch active staff
+  const { data: staffList } = await supabase
+    .from("staff")
+    .select("id, name")
+    .eq("shop_id", shop.id)
+    .eq("is_active", true)
+    .order("name");
+
   if (!services || services.length === 0) {
     return (
       <div className="min-h-screen flex items-center justify-center p-4 bg-gray-50">
@@ -64,7 +74,7 @@ export default async function PublicShopPage({ params }: { params: { slug: strin
           <p className="text-sm font-medium" style={{ color: "var(--text2)" }}>Online Randevu Sistemi</p>
         </div>
 
-        <BookingForm shop={shop} services={services} settings={settings} />
+        <BookingForm shop={shop} services={services} settings={settings} staffList={staffList || []} />
       </div>
     </div>
   );

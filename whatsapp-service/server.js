@@ -22,10 +22,36 @@ const supabase = createClient(
 const sessions = {}; // WhatsApp Client sessions: { shopId: { client, status, qrCodeUrl } }
 const chatStates = {}; // Customer chat states: { shopId_customerPhone: { step, data } }
 
-// Adımlar: IDLE -> SELECT_SERVICE -> SELECT_DAY -> SELECT_TIME -> CONFIRMATION
+// Açık olan günleri listeleme yardımcı fonksiyonu (Tekrarı önlemek için)
+async function askForDay(shopId, phone, chatState, msg, prefixMsg = "") {
+    const { days, workingHours } = await getAvailableDays(shopId);
+    chatState.data.workingHours = workingHours;
+
+    if (days.length === 0) {
+        resetChatState(shopId, phone);
+        return msg.reply('Şu anda uygun gün bulunmuyor. Lütfen daha sonra tekrar deneyin.');
+    }
+
+    chatState.data.availableDays = days;
+
+    let reply = `${prefixMsg}\n\nLütfen randevu almak istediğiniz günün *numarasını* yazın:\n\n`;
+    days.forEach((d, i) => {
+        const dayName = GUN_ADLARI[getDay(d)];
+        const dateStr = format(d, 'dd.MM.yyyy');
+        const isToday = isSameDay(d, new Date());
+        const label = isToday ? 'Bugün' : (isSameDay(d, addDays(new Date(), 1)) ? 'Yarın' : dayName);
+        reply += `${i + 1}. ${label} — ${dateStr} (${dayName})\n`;
+    });
+
+    chatState.step = STEPS.SELECT_DAY;
+    return msg.reply(reply);
+}
+
+// Adımlar: IDLE -> SELECT_SERVICE -> SELECT_STAFF -> SELECT_DAY -> SELECT_TIME -> ENTER_NAME
 const STEPS = {
     IDLE: 'IDLE',
     SELECT_SERVICE: 'SELECT_SERVICE',
+    SELECT_STAFF: 'SELECT_STAFF',
     SELECT_DAY: 'SELECT_DAY',
     SELECT_TIME: 'SELECT_TIME',
     ENTER_NAME: 'ENTER_NAME'
@@ -86,22 +112,57 @@ function generateTimeSlots(date, workingHours, serviceDurationMinutes) {
 
 /**
  * Belirli bir gün ve dükkan için DB'deki mevcut randevuları çekip
- * dolu olan saat dizisini döndürür.
+ * dolu olan saat dizisini döndürür. Personel kapasitesini dikkate alır.
  */
-async function getBookedTimes(shopId, date) {
+async function getBookedTimes(shopId, date, selectedStaffId = null) {
     const dayStart = startOfDay(date).toISOString();
     const dayEnd = endOfDay(date).toISOString();
 
+    // 1. Dükkandaki aktif personel sayısını bul
+    const { data: staffData } = await supabase
+        .from('staff')
+        .select('id')
+        .eq('shop_id', shopId)
+        .eq('is_active', true);
+    
+    // Eğer hiç personel eklenmemişse varsayılan kapasite 1'dir.
+    const totalCapacity = staffData && staffData.length > 0 ? staffData.length : 1;
+
+    // 2. O günkü tüm randevuları çek
     const { data: appointments } = await supabase
         .from('appointments')
-        .select('scheduled_at')
+        .select('scheduled_at, staff_id')
         .eq('shop_id', shopId)
         .in('status', ['pending', 'confirmed'])
         .gte('scheduled_at', dayStart)
         .lte('scheduled_at', dayEnd);
 
-    if (!appointments) return [];
-    return appointments.map(a => format(new Date(a.scheduled_at), 'HH:mm'));
+    if (!appointments || appointments.length === 0) return [];
+
+    // Saat bazında randevu sayılarını ve kimlere atandığını grupla
+    const timeGroups = {};
+    appointments.forEach(a => {
+        const timeStr = format(new Date(a.scheduled_at), 'HH:mm');
+        if (!timeGroups[timeStr]) timeGroups[timeStr] = { count: 0, staffIds: [] };
+        timeGroups[timeStr].count += 1;
+        if (a.staff_id) timeGroups[timeStr].staffIds.push(a.staff_id);
+    });
+
+    const bookedSlots = [];
+    
+    for (const [time, data] of Object.entries(timeGroups)) {
+        // Eğer o saatteki randevu sayısı toplam kapasiteye ulaştıysa (veya aştıysa), o saat herkes için doludur.
+        if (data.count >= totalCapacity) {
+            bookedSlots.push(time);
+        } else if (selectedStaffId) {
+            // Kapasite var ama kullanıcının seçtiği personel o saatte dolu mu?
+            if (data.staffIds.includes(selectedStaffId)) {
+                bookedSlots.push(time);
+            }
+        }
+    }
+
+    return bookedSlots;
 }
 
 /**
@@ -213,28 +274,45 @@ async function handleIncomingMessage(shopId, msg) {
             const selectedService = services[selectedIndex];
             chatState.data.service = selectedService;
 
-            // Açık olan günleri DB'den çek ve listele
-            const { days, workingHours } = await getAvailableDays(shopId);
-            chatState.data.workingHours = workingHours;
+            // Personelleri çek
+            const { data: staffList } = await supabase
+                .from('staff')
+                .select('*')
+                .eq('shop_id', shopId)
+                .eq('is_active', true);
+            
+            if (staffList && staffList.length > 0) {
+                chatState.data.staffList = staffList;
+                let reply = `*${selectedService.name}* hizmetini seçtiniz.\n\nLütfen randevu almak istediğiniz personelin numarasını yazın:\n\n`;
+                reply += `0. Fark Etmez (İlk Müsait)\n`;
+                staffList.forEach((st, i) => {
+                    reply += `${i + 1}. ${st.name}\n`;
+                });
+                chatState.step = STEPS.SELECT_STAFF;
+                return msg.reply(reply);
+            } else {
+                chatState.data.selectedStaffId = null;
+                return await askForDay(shopId, phone, chatState, msg, `*${selectedService.name}* hizmetini seçtiniz.`);
+            }
+        }
+        else if (chatState.step === STEPS.SELECT_STAFF) {
+            const selectedIndex = parseInt(text);
+            const staffList = chatState.data.staffList;
 
-            if (days.length === 0) {
-                resetChatState(shopId, phone);
-                return msg.reply('Şu anda uygun gün bulunmuyor. Lütfen daha sonra tekrar deneyin.');
+            if (isNaN(selectedIndex) || selectedIndex < 0 || selectedIndex > staffList.length) {
+                return msg.reply('Lütfen geçerli bir numara girin (Örn: 1 veya 0).');
             }
 
-            chatState.data.availableDays = days;
+            if (selectedIndex === 0) {
+                chatState.data.selectedStaffId = null;
+                chatState.data.selectedStaffName = "Fark Etmez";
+            } else {
+                const selectedStaff = staffList[selectedIndex - 1];
+                chatState.data.selectedStaffId = selectedStaff.id;
+                chatState.data.selectedStaffName = selectedStaff.name;
+            }
 
-            let reply = `*${selectedService.name}* hizmetini seçtiniz.\n\nLütfen randevu almak istediğiniz günün *numarasını* yazın:\n\n`;
-            days.forEach((d, i) => {
-                const dayName = GUN_ADLARI[getDay(d)];
-                const dateStr = format(d, 'dd.MM.yyyy');
-                const isToday = isSameDay(d, new Date());
-                const label = isToday ? 'Bugün' : (isSameDay(d, addDays(new Date(), 1)) ? 'Yarın' : dayName);
-                reply += `${i + 1}. ${label} — ${dateStr} (${dayName})\n`;
-            });
-
-            chatState.step = STEPS.SELECT_DAY;
-            return msg.reply(reply);
+            return await askForDay(shopId, phone, chatState, msg, `Personel tercihi: *${chatState.data.selectedStaffName}*.`);
         }
         else if (chatState.step === STEPS.SELECT_DAY) {
             const selectedIndex = parseInt(text) - 1;
@@ -256,8 +334,8 @@ async function handleIncomingMessage(shopId, msg) {
             // 2. Bugünse geçmiş saatleri çıkar
             allSlots = filterPastTimesIfToday(selectedDate, allSlots);
 
-            // 3. DB'den dolu saatleri çek ve çıkar
-            const bookedTimes = await getBookedTimes(shopId, selectedDate);
+            // 3. DB'den dolu saatleri çek ve çıkar (Personel bazlı)
+            const bookedTimes = await getBookedTimes(shopId, selectedDate, chatState.data.selectedStaffId);
             const availableTimes = allSlots.filter(slot => !bookedTimes.includes(slot));
 
             if (availableTimes.length === 0) {
@@ -343,6 +421,7 @@ async function handleIncomingMessage(shopId, msg) {
                     shop_id: shopId,
                     customer_id: customerId,
                     service_id: service.id,
+                    staff_id: chatState.data.selectedStaffId || null,
                     scheduled_at: targetDate.toISOString(),
                     status: 'confirmed',
                     source: 'whatsapp'

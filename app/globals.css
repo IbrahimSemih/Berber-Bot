@@ -3,6 +3,8 @@
 @tailwind utilities;
 
 :root {
+  --font-dm: "DM Sans", sans-serif;
+  --font-heading: "Plus Jakarta Sans", sans-serif;
   --bg: #0a0a0a;
   --bg2: #111111;
   --bg3: #1a1a1a;

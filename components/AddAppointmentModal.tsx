@@ -4,6 +4,7 @@ import { Button, Input, Select } from "@/components/ui";
 import { createClient } from "@/lib/supabase/client";
 
 interface Service { id: string; name: string; price: number; duration_minutes: number; }
+interface Staff { id: string; name: string; }
 interface Props { shopId: string; onClose: () => void; onAdd: () => void; }
 
 export default function AddAppointmentModal({ shopId, onClose, onAdd }: Props) {
@@ -13,6 +14,8 @@ export default function AddAppointmentModal({ shopId, onClose, onAdd }: Props) {
   const [time, setTime] = useState("09:00");
   const [serviceId, setServiceId] = useState("");
   const [services, setServices] = useState<Service[]>([]);
+  const [staffId, setStaffId] = useState("");
+  const [staffList, setStaffList] = useState<Staff[]>([]);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
 
@@ -22,6 +25,10 @@ export default function AddAppointmentModal({ shopId, onClose, onAdd }: Props) {
     supabase.from("services").select("*").eq("shop_id", shopId).eq("is_active", true).then(({ data }) => {
       setServices(data ?? []);
       if (data?.[0]) setServiceId(data[0].id);
+    });
+
+    supabase.from("staff").select("*").eq("shop_id", shopId).eq("is_active", true).then(({ data }) => {
+      setStaffList(data ?? []);
     });
   }, [shopId, supabase]);
 
@@ -52,6 +59,7 @@ export default function AddAppointmentModal({ shopId, onClose, onAdd }: Props) {
         shop_id: shopId,
         customer_id: customer.id,
         service_id: serviceId,
+        staff_id: staffId || null,
         scheduled_at: `${date}T${time}:00`,
         status: "confirmed",
         source: "manual",
@@ -101,6 +109,15 @@ export default function AddAppointmentModal({ shopId, onClose, onAdd }: Props) {
             <Select value={serviceId} onChange={(e) => setServiceId(e.target.value)}>
               {services.map((s) => (
                 <option key={s.id} value={s.id}>{s.name} — ₺{s.price}</option>
+              ))}
+            </Select>
+          </div>
+          <div>
+            <label className="block text-xs font-semibold uppercase tracking-wide mb-1.5" style={{ color: "var(--text3)" }}>Personel</label>
+            <Select value={staffId} onChange={(e) => setStaffId(e.target.value)}>
+              <option value="">Fark Etmez / Atanmadı</option>
+              {staffList.map((st) => (
+                <option key={st.id} value={st.id}>{st.name}</option>
               ))}
             </Select>
           </div>

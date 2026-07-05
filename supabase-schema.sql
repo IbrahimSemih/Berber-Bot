@@ -23,6 +23,16 @@ CREATE TABLE IF NOT EXISTS services (
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
+-- 1.5 Staff (Personeller)
+CREATE TABLE IF NOT EXISTS staff (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  shop_id UUID REFERENCES shops(id) ON DELETE CASCADE,
+  name TEXT NOT NULL,
+  phone TEXT,
+  is_active BOOLEAN DEFAULT true,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
 -- 2. Customers (Müşteriler)
 CREATE TABLE IF NOT EXISTS customers (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -39,6 +49,7 @@ CREATE TABLE IF NOT EXISTS appointments (
   shop_id UUID REFERENCES shops(id) ON DELETE CASCADE,
   customer_id UUID REFERENCES customers(id) ON DELETE CASCADE,
   service_id UUID REFERENCES services(id) ON DELETE CASCADE,
+  staff_id UUID REFERENCES staff(id) ON DELETE SET NULL,
   scheduled_at TIMESTAMPTZ NOT NULL,
   status TEXT NOT NULL DEFAULT 'pending' CHECK (status IN ('pending','confirmed','cancelled','completed')),
   source TEXT NOT NULL DEFAULT 'whatsapp' CHECK (source IN ('whatsapp','manual')),
@@ -46,6 +57,9 @@ CREATE TABLE IF NOT EXISTS appointments (
   reminder_sent BOOLEAN DEFAULT false,
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
+
+-- Tablo zaten varsa staff_id kolonunu güvenle eklemek için:
+ALTER TABLE appointments ADD COLUMN IF NOT EXISTS staff_id UUID REFERENCES staff(id) ON DELETE SET NULL;
 
 -- 4. Settings (Dükkan Ayarları)
 CREATE TABLE IF NOT EXISTS settings (
@@ -84,42 +98,57 @@ ON CONFLICT DO NOTHING;
 -- ─── Row Level Security (RLS) ─────────────────────────────────────────────
 ALTER TABLE shops ENABLE ROW LEVEL SECURITY;
 ALTER TABLE services ENABLE ROW LEVEL SECURITY;
+ALTER TABLE staff ENABLE ROW LEVEL SECURITY;
 ALTER TABLE customers ENABLE ROW LEVEL SECURITY;
 ALTER TABLE appointments ENABLE ROW LEVEL SECURITY;
 ALTER TABLE settings ENABLE ROW LEVEL SECURITY;
 
 -- ── shops ──
 -- Kullanıcı sadece kendi dükkanını görebilir
+DROP POLICY IF EXISTS "Users can view own shop" ON shops;
 CREATE POLICY "Users can view own shop" ON shops
   FOR SELECT USING (owner_id = auth.uid());
 
 -- Yeni kayıt olan kullanıcılar dükkan oluşturabilir
+DROP POLICY IF EXISTS "Users can create shop" ON shops;
 CREATE POLICY "Users can create shop" ON shops
   FOR INSERT WITH CHECK (owner_id = auth.uid());
 
 -- Sadece sahibi güncelleyebilir
+DROP POLICY IF EXISTS "Users can update own shop" ON shops;
 CREATE POLICY "Users can update own shop" ON shops
   FOR UPDATE USING (owner_id = auth.uid());
 
 -- ── services ──
+DROP POLICY IF EXISTS "Users can manage own services" ON services;
 CREATE POLICY "Users can manage own services" ON services
   FOR ALL USING (
     shop_id IN (SELECT id FROM shops WHERE owner_id = auth.uid())
   );
 
+-- ── staff ──
+DROP POLICY IF EXISTS "Users can manage own staff" ON staff;
+CREATE POLICY "Users can manage own staff" ON staff
+  FOR ALL USING (
+    shop_id IN (SELECT id FROM shops WHERE owner_id = auth.uid())
+  );
+
 -- ── customers ──
+DROP POLICY IF EXISTS "Users can manage own customers" ON customers;
 CREATE POLICY "Users can manage own customers" ON customers
   FOR ALL USING (
     shop_id IN (SELECT id FROM shops WHERE owner_id = auth.uid())
   );
 
 -- ── appointments ──
+DROP POLICY IF EXISTS "Users can manage own appointments" ON appointments;
 CREATE POLICY "Users can manage own appointments" ON appointments
   FOR ALL USING (
     shop_id IN (SELECT id FROM shops WHERE owner_id = auth.uid())
   );
 
 -- ── settings ──
+DROP POLICY IF EXISTS "Users can manage own settings" ON settings;
 CREATE POLICY "Users can manage own settings" ON settings
   FOR ALL USING (
     shop_id IN (SELECT id FROM shops WHERE owner_id = auth.uid())
@@ -144,8 +173,11 @@ SELECT
   s.id as service_id,
   s.name as service_name,
   s.duration_minutes,
-  s.price
+  s.price,
+  st.id as staff_id,
+  st.name as staff_name
 FROM appointments a
 LEFT JOIN customers c ON c.id = a.customer_id
-LEFT JOIN services s ON s.id = a.service_id;
+LEFT JOIN services s ON s.id = a.service_id
+LEFT JOIN staff st ON st.id = a.staff_id;
 

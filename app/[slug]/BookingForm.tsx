@@ -1,7 +1,7 @@
 "use client";
 
-import { useState } from "react";
-import { createBooking } from "./actions";
+import { useState, useEffect } from "react";
+import { createBooking, getBookedSlots } from "./actions";
 import { format, addDays, startOfToday, parse, isBefore, addMinutes, isAfter, isEqual } from "date-fns";
 import { tr } from "date-fns/locale";
 
@@ -12,9 +12,11 @@ interface Service {
   price: number;
 }
 
-export default function BookingForm({ shop, services, settings }: any) {
+export default function BookingForm({ shop, services, settings, staffList }: any) {
   const [step, setStep] = useState(1);
   const [selectedService, setSelectedService] = useState<Service | null>(null);
+  const [selectedStaffId, setSelectedStaffId] = useState<string | null>(null);
+  const [bookedSlots, setBookedSlots] = useState<string[]>([]);
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [selectedTime, setSelectedTime] = useState<string | null>(null);
   
@@ -24,6 +26,23 @@ export default function BookingForm({ shop, services, settings }: any) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
+
+  const hasStaff = staffList && staffList.length > 0;
+  const stepTitles = hasStaff 
+    ? ["Hizmet", "Personel", "Zaman", "Bilgiler"] 
+    : ["Hizmet", "Zaman", "Bilgiler"];
+
+  const STAFF_STEP = hasStaff ? 2 : -1;
+  const DATE_STEP = hasStaff ? 3 : 2;
+  const INFO_STEP = hasStaff ? 4 : 3;
+
+  useEffect(() => {
+    if (selectedDate) {
+      getBookedSlots(shop.id, selectedDate.toISOString(), selectedStaffId).then(setBookedSlots);
+    } else {
+      setBookedSlots([]);
+    }
+  }, [selectedDate, selectedStaffId, shop.id]);
 
   // Generate next 14 days
   const today = startOfToday();
@@ -51,9 +70,12 @@ export default function BookingForm({ shop, services, settings }: any) {
       // Don't add slots that exceed closing time
       if (isAfter(slotEnd, endTime)) break;
       
+      const timeStr = format(currentSlot, "HH:mm");
       // If it's today, only show future times
       if (isAfter(currentSlot, now) || !isEqual(selectedDate, today)) {
-        slots.push(format(currentSlot, "HH:mm"));
+        if (!bookedSlots.includes(timeStr)) {
+          slots.push(timeStr);
+        }
       }
       
       // Advance by 30 mins (standard slot interval)
@@ -79,6 +101,7 @@ export default function BookingForm({ shop, services, settings }: any) {
     const result = await createBooking({
       shopId: shop.id,
       serviceId: selectedService.id,
+      staffId: selectedStaffId,
       customerName,
       customerPhone,
       scheduledAt
@@ -116,18 +139,19 @@ export default function BookingForm({ shop, services, settings }: any) {
     <div className="rounded-3xl border overflow-hidden" style={{ background: "var(--bg2)", borderColor: "var(--border)" }}>
       {/* Progress */}
       <div className="flex border-b" style={{ borderColor: "var(--border)" }}>
-        {[1, 2, 3].map((num) => (
-          <div key={num} className="flex-1 py-4 text-center text-xs font-bold uppercase tracking-widest relative"
-            style={{ 
-              color: step >= num ? "var(--text)" : "var(--text3)",
-              background: step === num ? "rgba(255,255,255,0.02)" : "transparent"
-            }}>
-            <span className="opacity-50 mr-1">0{num}</span> {
-              num === 1 ? "Hizmet" : num === 2 ? "Zaman" : "Bilgiler"
-            }
-            {step >= num && <div className="absolute bottom-0 left-0 w-full h-0.5" style={{ background: "var(--accent)" }} />}
-          </div>
-        ))}
+        {stepTitles.map((title, i) => {
+          const num = i + 1;
+          return (
+            <div key={num} className="flex-1 py-4 text-center text-xs font-bold uppercase tracking-widest relative"
+              style={{ 
+                color: step >= num ? "var(--text)" : "var(--text3)",
+                background: step === num ? "rgba(255,255,255,0.02)" : "transparent"
+              }}>
+              <span className="opacity-50 mr-1">0{num}</span> {title}
+              {step >= num && <div className="absolute bottom-0 left-0 w-full h-0.5" style={{ background: "var(--accent)" }} />}
+            </div>
+          );
+        })}
       </div>
 
       <div className="p-8">
@@ -145,7 +169,7 @@ export default function BookingForm({ shop, services, settings }: any) {
               {services.map((service: Service) => (
                 <button
                   key={service.id}
-                  onClick={() => { setSelectedService(service); setStep(2); }}
+                  onClick={() => { setSelectedService(service); setStep(hasStaff ? STAFF_STEP : DATE_STEP); }}
                   className="p-5 text-left rounded-2xl border transition-all hover:-translate-y-1"
                   style={{ 
                     background: selectedService?.id === service.id ? "var(--accent-dim)" : "var(--bg3)",
@@ -162,12 +186,49 @@ export default function BookingForm({ shop, services, settings }: any) {
           </div>
         )}
 
+        {/* STEP 1.5: STAFF */}
+        {step === STAFF_STEP && (
+          <div className="space-y-4">
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-xl font-heading font-bold">Personel Seçimi</h2>
+              <button onClick={() => setStep(1)} className="text-xs font-bold px-3 py-1.5 rounded-lg border hover:bg-white/5" style={{ borderColor: "var(--border)", color: "var(--text2)" }}>Geri</button>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <button
+                onClick={() => { setSelectedStaffId(null); setStep(DATE_STEP); }}
+                className="p-5 text-left rounded-2xl border transition-all hover:-translate-y-1 flex items-center gap-3"
+                style={{ 
+                  background: selectedStaffId === null ? "var(--accent-dim)" : "var(--bg3)",
+                  borderColor: selectedStaffId === null ? "var(--accent)" : "var(--border)"
+                }}
+              >
+                <div className="w-10 h-10 rounded-full flex items-center justify-center font-bold" style={{ background: "var(--bg2)", color: "var(--text)" }}>?</div>
+                <div className="font-bold text-lg">Fark Etmez</div>
+              </button>
+              {staffList.map((staff: any) => (
+                <button
+                  key={staff.id}
+                  onClick={() => { setSelectedStaffId(staff.id); setStep(DATE_STEP); }}
+                  className="p-5 text-left rounded-2xl border transition-all hover:-translate-y-1 flex items-center gap-3"
+                  style={{ 
+                    background: selectedStaffId === staff.id ? "var(--accent-dim)" : "var(--bg3)",
+                    borderColor: selectedStaffId === staff.id ? "var(--accent)" : "var(--border)"
+                  }}
+                >
+                  <div className="w-10 h-10 rounded-full flex items-center justify-center font-bold" style={{ background: "var(--bg2)", color: "var(--accent)" }}>{staff.name.charAt(0).toUpperCase()}</div>
+                  <div className="font-bold text-lg">{staff.name}</div>
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+
         {/* STEP 2: DATE & TIME */}
-        {step === 2 && (
+        {step === DATE_STEP && (
           <div>
             <div className="flex items-center justify-between mb-6">
               <h2 className="text-xl font-heading font-bold">Uygun Bir Zaman Seçin</h2>
-              <button onClick={() => setStep(1)} className="text-xs font-bold px-3 py-1.5 rounded-lg border hover:bg-white/5" style={{ borderColor: "var(--border)", color: "var(--text2)" }}>Geri</button>
+              <button onClick={() => setStep(hasStaff ? STAFF_STEP : 1)} className="text-xs font-bold px-3 py-1.5 rounded-lg border hover:bg-white/5" style={{ borderColor: "var(--border)", color: "var(--text2)" }}>Geri</button>
             </div>
             
             <div className="mb-6">
@@ -231,7 +292,7 @@ export default function BookingForm({ shop, services, settings }: any) {
 
             {selectedTime && (
               <button 
-                onClick={() => setStep(3)}
+                onClick={() => setStep(INFO_STEP)}
                 className="w-full mt-8 py-4 rounded-xl font-bold transition-all hover:-translate-y-0.5"
                 style={{ background: "var(--accent)", color: "#0a0a0a" }}
               >
@@ -242,11 +303,11 @@ export default function BookingForm({ shop, services, settings }: any) {
         )}
 
         {/* STEP 3: CUSTOMER INFO */}
-        {step === 3 && (
+        {step === INFO_STEP && (
           <div>
             <div className="flex items-center justify-between mb-6">
               <h2 className="text-xl font-heading font-bold">Kişisel Bilgileriniz</h2>
-              <button onClick={() => setStep(2)} className="text-xs font-bold px-3 py-1.5 rounded-lg border hover:bg-white/5" style={{ borderColor: "var(--border)", color: "var(--text2)" }}>Geri</button>
+              <button onClick={() => setStep(DATE_STEP)} className="text-xs font-bold px-3 py-1.5 rounded-lg border hover:bg-white/5" style={{ borderColor: "var(--border)", color: "var(--text2)" }}>Geri</button>
             </div>
 
             <form onSubmit={handleBooking} className="space-y-5">
@@ -289,6 +350,12 @@ export default function BookingForm({ shop, services, settings }: any) {
                   <span>Hizmet:</span>
                   <span className="font-medium text-white">{selectedService?.name}</span>
                 </div>
+                {hasStaff && (
+                  <div className="text-sm flex justify-between mb-1" style={{ color: "var(--text2)" }}>
+                    <span>Personel:</span>
+                    <span className="font-medium text-white">{selectedStaffId ? staffList.find((s: any) => s.id === selectedStaffId)?.name : "Fark Etmez"}</span>
+                  </div>
+                )}
                 <div className="text-sm flex justify-between" style={{ color: "var(--text2)" }}>
                   <span>Tarih & Saat:</span>
                   <span className="font-medium text-white">

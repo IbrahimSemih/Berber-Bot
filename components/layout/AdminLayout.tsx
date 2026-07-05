@@ -10,6 +10,7 @@ const navItems = [
   { href: "/dashboard",    label: "Dashboard",     icon: "⊞" },
   { href: "/appointments", label: "Randevular",     icon: "📅" },
   { href: "/customers",    label: "Müşteriler",     icon: "👥" },
+  { href: "/staff",        label: "Personeller",    icon: "✂️" },
   { href: "/whatsapp",     label: "WhatsApp Bot",   icon: "💬" },
   { href: "/settings",     label: "Ayarlar",        icon: "⚙" },
 ];
