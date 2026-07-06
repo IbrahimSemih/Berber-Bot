@@ -117,9 +117,9 @@ export function StatCard({ label, value, change, changeDir, icon }: {
 // ─── Page Header ──────────────────────────────────────────────────────────────
 export function PageHeader({ title, children }: { title: string; children?: React.ReactNode }) {
   return (
-    <div className="h-16 flex items-center px-7 gap-3 sticky top-0 z-40"
+    <div className="h-16 flex items-center px-4 sm:px-7 gap-2 sm:gap-3 sticky top-0 z-40"
       style={{ background: "var(--bg2)", borderBottom: "1px solid var(--border)" }}>
-      <h1 className="font-syne font-bold text-lg flex-1">{title}</h1>
+      <h1 className="font-syne font-bold text-base sm:text-lg flex-1 truncate">{title}</h1>
       {children}
     </div>
   );

@@ -235,8 +235,8 @@ export default function SettingsPage() {
         <Card>
           <CardHeader title="Çalışma Günleri & Saatleri" />
           <div className="p-5 flex flex-col gap-2">
-            <div className="grid grid-cols-[auto_1fr_1fr] gap-4 mb-2 px-2 text-xs font-semibold uppercase tracking-wide" style={{ color: "var(--text3)" }}>
-              <div className="w-32">Gün</div>
+            <div className="grid grid-cols-[90px_1fr_1fr] sm:grid-cols-[auto_1fr_1fr] gap-2 sm:gap-4 mb-2 px-1 sm:px-2 text-[10px] sm:text-xs font-semibold uppercase tracking-wide" style={{ color: "var(--text3)" }}>
+              <div className="w-[90px] sm:w-32">Gün</div>
               <div>Açılış</div>
               <div>Kapanış</div>
             </div>
@@ -244,15 +244,15 @@ export default function SettingsPage() {
             {DAYS.map(day => {
               const wh = workingHours.find(w => w.day === day.value) || { is_open: false, start: "09:00", end: "20:00" };
               return (
-                <div key={day.value} className="grid grid-cols-[auto_1fr_1fr] gap-4 items-center p-2 rounded-lg transition-colors border"
+                <div key={day.value} className="grid grid-cols-[90px_1fr_1fr] sm:grid-cols-[auto_1fr_1fr] gap-2 sm:gap-4 items-center p-1 sm:p-2 rounded-lg transition-colors border"
                   style={{ 
                     borderColor: "var(--border)",
                     background: wh.is_open ? "var(--bg)" : "var(--bg3)",
                     opacity: wh.is_open ? 1 : 0.6
                   }}>
-                  <div className="w-32 flex items-center gap-3">
+                  <div className="w-[90px] sm:w-32 flex flex-col sm:flex-row items-start sm:items-center gap-1 sm:gap-3">
                     <Toggle checked={wh.is_open} onChange={(val) => updateWorkingHour(day.value, "is_open", val)} />
-                    <span className="text-sm font-medium">{day.label}</span>
+                    <span className="text-[11px] sm:text-sm font-medium">{day.label}</span>
                   </div>
                   <div>
                     <Input 

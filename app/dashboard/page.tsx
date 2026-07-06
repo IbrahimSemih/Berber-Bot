@@ -126,7 +126,7 @@ export default function DashboardPage() {
   return (
     <AdminLayout>
       <PageHeader title="Dashboard">
-        <span className="text-sm" style={{ color: "var(--text3)" }}>
+        <span className="hidden sm:inline text-sm" style={{ color: "var(--text3)" }}>
           {new Date().toLocaleDateString("tr-TR", { weekday: "long", day: "numeric", month: "long", year: "numeric" })}
         </span>
         <Button onClick={() => setShowModal(true)}>+ Randevu Ekle</Button>
