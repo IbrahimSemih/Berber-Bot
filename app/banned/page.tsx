@@ -18,7 +18,7 @@ export default function BannedPage() {
           Lütfen detaylı bilgi için bizimle iletişime geçin.
         </p>
         <Link href="/">
-          <Button variant="outline" className="w-full">
+          <Button variant="ghost" className="w-full">
             Ana Sayfaya Dön
           </Button>
         </Link>
