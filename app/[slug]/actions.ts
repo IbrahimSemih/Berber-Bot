@@ -44,6 +44,7 @@ export async function createBooking(data: {
     }
 
     // 2. Create appointment
+    const cancelToken = crypto.randomUUID().replace(/-/g, '').substring(0, 10);
     const { error: appointmentError } = await supabase
       .from("appointments")
       .insert({
@@ -55,11 +56,21 @@ export async function createBooking(data: {
         status: "pending",
         source: "manual", // representing web booking
         notes: "Web Randevu Sayfasından alındı",
+        cancel_token: cancelToken
       });
 
     if (appointmentError) {
       throw new Error("Randevu oluşturulamadı: " + appointmentError.message);
     }
+
+    // Bildirim oluştur (Yeni randevu talebi)
+    await supabase
+      .from("notifications")
+      .insert({
+        shop_id: data.shopId,
+        type: 'new_booking',
+        message: `🔔 ${data.customerName.trim()} web üzerinden yeni bir randevu talebi oluşturdu. (${new Date(data.scheduledAt).toLocaleDateString("tr-TR")} saat ${new Date(data.scheduledAt).toLocaleTimeString("tr-TR", { hour: '2-digit', minute: '2-digit' })})`
+      });
 
     return { success: true };
   } catch (error: any) {

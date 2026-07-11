@@ -55,11 +55,13 @@ CREATE TABLE IF NOT EXISTS appointments (
   source TEXT NOT NULL DEFAULT 'whatsapp' CHECK (source IN ('whatsapp','manual')),
   notes TEXT,
   reminder_sent BOOLEAN DEFAULT false,
+  cancel_token TEXT UNIQUE,
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
 -- Tablo zaten varsa staff_id kolonunu güvenle eklemek için:
 ALTER TABLE appointments ADD COLUMN IF NOT EXISTS staff_id UUID REFERENCES staff(id) ON DELETE SET NULL;
+ALTER TABLE appointments ADD COLUMN IF NOT EXISTS cancel_token TEXT UNIQUE;
 
 -- 4. Settings (Dükkan Ayarları)
 CREATE TABLE IF NOT EXISTS settings (
@@ -77,6 +79,17 @@ CREATE TABLE IF NOT EXISTS settings (
   notify_cancel BOOLEAN DEFAULT true,
   updated_at TIMESTAMPTZ DEFAULT NOW()
 );
+
+-- 5. Notifications (Bildirimler)
+CREATE TABLE IF NOT EXISTS notifications (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  shop_id UUID REFERENCES shops(id) ON DELETE CASCADE,
+  type TEXT NOT NULL, -- 'cancel', 'new_booking', etc.
+  message TEXT NOT NULL,
+  is_read BOOLEAN DEFAULT false,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
 
 -- ─── Seed Data ────────────────────────────────────────────────────────────
 
@@ -102,6 +115,7 @@ ALTER TABLE staff ENABLE ROW LEVEL SECURITY;
 ALTER TABLE customers ENABLE ROW LEVEL SECURITY;
 ALTER TABLE appointments ENABLE ROW LEVEL SECURITY;
 ALTER TABLE settings ENABLE ROW LEVEL SECURITY;
+ALTER TABLE notifications ENABLE ROW LEVEL SECURITY;
 
 -- ── shops ──
 -- Kullanıcı sadece kendi dükkanını görebilir
@@ -154,6 +168,13 @@ CREATE POLICY "Users can manage own settings" ON settings
     shop_id IN (SELECT id FROM shops WHERE owner_id = auth.uid())
   );
 
+-- ── notifications ──
+DROP POLICY IF EXISTS "Users can manage own notifications" ON notifications;
+CREATE POLICY "Users can manage own notifications" ON notifications
+  FOR ALL USING (
+    shop_id IN (SELECT id FROM shops WHERE owner_id = auth.uid())
+  );
+
 -- ─── Useful Views ─────────────────────────────────────────────────────────
 
 -- Randevular + müşteri + hizmet bilgisiyle
@@ -166,6 +187,7 @@ SELECT
   a.source,
   a.notes,
   a.reminder_sent,
+  a.cancel_token,
   a.created_at,
   c.id as customer_id,
   c.name as customer_name,
@@ -175,9 +197,20 @@ SELECT
   s.duration_minutes,
   s.price,
   st.id as staff_id,
-  st.name as staff_name
+  st.name as staff_name,
+  sh.name as shop_name
 FROM appointments a
 LEFT JOIN customers c ON c.id = a.customer_id
 LEFT JOIN services s ON s.id = a.service_id
-LEFT JOIN staff st ON st.id = a.staff_id;
+LEFT JOIN staff st ON st.id = a.staff_id
+LEFT JOIN shops sh ON sh.id = a.shop_id;
+
+-- ─── Realtime ─────────────────────────────────────────────────────────────
+-- Bildirimlerin anında gelmesi için supabase_realtime publication'a ekliyoruz
+BEGIN;
+  DROP PUBLICATION IF EXISTS supabase_realtime;
+  CREATE PUBLICATION supabase_realtime;
+COMMIT;
+ALTER PUBLICATION supabase_realtime ADD TABLE notifications;
+
 

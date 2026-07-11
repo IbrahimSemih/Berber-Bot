@@ -13,6 +13,7 @@ const navItems = [
   { href: "/customers",    label: "Müşteriler",     icon: "👥" },
   { href: "/staff",        label: "Personeller",    icon: "✂️" },
   { href: "/whatsapp",     label: "WhatsApp Bot",   icon: "💬" },
+  { href: "/notifications",label: "Bildirimler",    icon: "🔔" },
   { href: "/settings",     label: "Ayarlar",        icon: "⚙" },
 ];
 
@@ -24,6 +25,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const [shopInitials, setShopInitials] = useState("...");
   const [currentShopId, setCurrentShopId] = useState<string | null>(null);
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [unreadCount, setUnreadCount] = useState(0);
 
   useEffect(() => {
     async function loadShop() {
@@ -37,6 +39,16 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         const parts = shop.name.split(" ");
         const initials = parts.length > 1 ? parts[0][0] + parts[1][0] : shop.name.substring(0, 2);
         setShopInitials(initials.toUpperCase());
+
+        // Fetch initial unread count
+        const { count } = await supabase
+          .from("notifications")
+          .select("id", { count: "exact", head: true })
+          .eq("shop_id", shop.id)
+          .eq("is_read", false);
+        
+        setUnreadCount(count || 0);
+
       } else {
         // No shop found, user needs to complete onboarding
         router.push("/onboarding");
@@ -113,7 +125,14 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                   : { color: "var(--text2)" }
                 }>
                 <span className="text-base leading-none">{item.icon}</span>
-                {item.label}
+                <div className="flex-1 flex items-center justify-between">
+                  <span>{item.label}</span>
+                  {item.href === "/notifications" && unreadCount > 0 && (
+                    <span className="bg-red-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full">
+                      {unreadCount}
+                    </span>
+                  )}
+                </div>
               </Link>
             );
           })}
@@ -140,7 +159,12 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       </main>
 
       {/* Realtime Notifications */}
-      {currentShopId && <NotificationListener shopId={currentShopId} />}
+      {currentShopId && (
+        <NotificationListener 
+          shopId={currentShopId} 
+          onNewNotification={() => setUnreadCount(prev => prev + 1)} 
+        />
+      )}
     </div>
   );
 }

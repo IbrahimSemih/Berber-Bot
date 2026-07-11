@@ -10,7 +10,7 @@ export default async function PublicShopPage({ params }: { params: { slug: strin
   const supabase = createAdminClient();
 
   // Reserved slugs that should not trigger the public booking page
-  const reservedSlugs = ["login", "dashboard", "banned", "superadmin", "onboarding", "customers", "appointments", "settings", "whatsapp"];
+  const reservedSlugs = ["login", "dashboard", "banned", "superadmin", "onboarding", "customers", "appointments", "settings", "whatsapp", "r", "analytics"];
   if (reservedSlugs.includes(params.slug)) {
     return notFound();
   }

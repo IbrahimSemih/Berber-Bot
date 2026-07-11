@@ -8,6 +8,7 @@ const { addDays, format, startOfDay, endOfDay, isSameDay, getDay, parse, addMinu
 const cron = require('node-cron');
 const fs = require('fs');
 const path = require('path');
+const crypto = require('crypto');
 
 const app = express();
 app.use(cors());
@@ -415,6 +416,7 @@ async function handleIncomingMessage(shopId, msg) {
             }
 
             // 2. Randevuyu kaydet
+            const cancelToken = crypto.randomUUID().replace(/-/g, '').substring(0, 10);
             const { error: aptError } = await supabase
                 .from('appointments')
                 .insert([{
@@ -424,7 +426,8 @@ async function handleIncomingMessage(shopId, msg) {
                     staff_id: chatState.data.selectedStaffId || null,
                     scheduled_at: targetDate.toISOString(),
                     status: 'confirmed',
-                    source: 'whatsapp'
+                    source: 'whatsapp',
+                    cancel_token: cancelToken
                 }]);
 
             if (aptError) {
@@ -436,7 +439,11 @@ async function handleIncomingMessage(shopId, msg) {
             const dayName = GUN_ADLARI[getDay(targetDate)];
             const dateStr = format(targetDate, 'dd.MM.yyyy');
             resetChatState(shopId, phone);
-            return msg.reply(`✅ Harika! *${dayName}, ${dateStr}* saat *${selectedTime}* için *${service.name}* randevunuz başarıyla oluşturuldu. Bizi tercih ettiğiniz için teşekkür ederiz, ${customerName}!`);
+            
+            const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
+            const cancelLink = `${appUrl}/r/${cancelToken}`;
+            
+            return msg.reply(`✅ Harika! *${dayName}, ${dateStr}* saat *${selectedTime}* için *${service.name}* randevunuz başarıyla oluşturuldu.\n\nRandevunuzu görüntülemek veya iptal etmek için: ${cancelLink}\n\nBizi tercih ettiğiniz için teşekkür ederiz, ${customerName}!`);
         }
     } catch (e) {
         console.error("Chat flow error:", e);

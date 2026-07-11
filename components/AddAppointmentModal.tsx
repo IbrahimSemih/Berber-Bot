@@ -55,6 +55,7 @@ export default function AddAppointmentModal({ shopId, onClose, onAdd }: Props) {
       if (cErr) throw cErr;
 
       // Randevuyu kaydet
+      const cancelToken = crypto.randomUUID().replace(/-/g, '').substring(0, 10);
       const { error: aErr } = await supabase.from("appointments").insert({
         shop_id: shopId,
         customer_id: customer.id,
@@ -63,6 +64,7 @@ export default function AddAppointmentModal({ shopId, onClose, onAdd }: Props) {
         scheduled_at: `${date}T${time}:00`,
         status: "confirmed",
         source: "manual",
+        cancel_token: cancelToken,
       });
       if (aErr) throw aErr;
 

@@ -8,18 +8,7 @@ export async function confirmAppointmentAndNotify(appointmentId: string, shopId:
     process.env.SUPABASE_SERVICE_ROLE_KEY!
   );
 
-  // 1. Durumu güncelle
-  const { error: updateError } = await supabase
-    .from("appointments")
-    .update({ status: "confirmed" })
-    .eq("id", appointmentId)
-    .eq("shop_id", shopId);
-
-  if (updateError) {
-    throw new Error("Randevu güncellenemedi: " + updateError.message);
-  }
-
-  // 2. Randevu detaylarını çek (müşteri ve dükkan bilgisi için)
+  // 1. Randevu detaylarını çek (müşteri ve dükkan bilgisi için)
   const { data: apt, error: fetchError } = await supabase
     .from("appointments")
     .select("*, customer:customers(*), shop:shops(name)")
@@ -28,12 +17,27 @@ export async function confirmAppointmentAndNotify(appointmentId: string, shopId:
 
   if (fetchError || !apt || !apt.customer) {
     console.error("Randevu detayları çekilemedi, bildirim gönderilmiyor.");
-    return { success: true, notified: false }; // Update succeeded, but no notification
+    return { success: false, error: "Randevu detayları çekilemedi" };
+  }
+
+  let cancelToken = apt.cancel_token;
+  if (!cancelToken) {
+    cancelToken = crypto.randomUUID().replace(/-/g, '').substring(0, 10);
+  }
+
+  // 2. Durumu güncelle ve cancel_token'ı kaydet (eğer yoksa eklenmiş olur)
+  const { error: updateError } = await supabase
+    .from("appointments")
+    .update({ status: "confirmed", cancel_token: cancelToken })
+    .eq("id", appointmentId)
+    .eq("shop_id", shopId);
+
+  if (updateError) {
+    throw new Error("Randevu güncellenemedi: " + updateError.message);
   }
 
   // Sadece web üzerinden (manuel) oluşturulanlar için mesaj atalım
   // Veya WhatsApp üzerinden de alınsa "Onaylandı" diyebiliriz.
-  // Müşteri WhatsApp'tan aldıysa zaten anında onay dönüyor olabilir, ama `pending` ise ona da bildirim gidebilir.
   if (apt.status === "pending" || apt.status === "confirmed") {
     const customerName = apt.customer.name || "Değerli Müşterimiz";
     const shopName = apt.shop?.name || "Berber";
@@ -42,7 +46,10 @@ export async function confirmAppointmentAndNotify(appointmentId: string, shopId:
     const dateObj = new Date(apt.scheduled_at);
     const dateStr = dateObj.toLocaleDateString("tr-TR") + " saat " + dateObj.toLocaleTimeString("tr-TR", { hour: '2-digit', minute: '2-digit' });
 
-    const message = `✅ *Randevunuz Onaylandı!*\n\nMerhaba ${customerName},\n*${shopName}* için *${dateStr}* tarihindeki randevunuz işletme tarafından onaylanmıştır.\n\nBizi tercih ettiğiniz için teşekkür ederiz. Bekliyoruz!`;
+    const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
+    const cancelLink = `${appUrl}/r/${cancelToken}`;
+
+    const message = `✅ *Randevunuz Onaylandı!*\n\nMerhaba ${customerName},\n*${shopName}* için *${dateStr}* tarihindeki randevunuz işletme tarafından onaylanmıştır.\n\nRandevunuzu görüntülemek veya iptal etmek için: ${cancelLink}\n\nBizi tercih ettiğiniz için teşekkür ederiz. Bekliyoruz!`;
 
     try {
       // whatsapp-service'e istek at

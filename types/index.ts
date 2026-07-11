@@ -53,6 +53,8 @@ export interface Appointment {
   source: AppointmentSource;
   notes?: string;
   created_at: string;
+  updated_at?: string;
+  cancel_token?: string;
 }
 
 export interface DashboardStats {
