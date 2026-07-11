@@ -8,6 +8,7 @@ import NotificationListener from "@/app/dashboard/components/NotificationListene
 
 const navItems = [
   { href: "/dashboard",    label: "Dashboard",     icon: "⊞" },
+  { href: "/analytics",    label: "Analitik",      icon: "📊" },
   { href: "/appointments", label: "Randevular",     icon: "📅" },
   { href: "/customers",    label: "Müşteriler",     icon: "👥" },
   { href: "/staff",        label: "Personeller",    icon: "✂️" },

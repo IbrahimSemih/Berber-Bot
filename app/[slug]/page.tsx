@@ -64,7 +64,7 @@ export default async function PublicShopPage({ params }: { params: { slug: strin
     <div className="min-h-screen" style={{ background: "var(--bg)", color: "var(--text)" }}>
       {/* Glow */}
       <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-3xl h-64 rounded-full blur-[120px] pointer-events-none opacity-20" style={{ background: "var(--accent)" }} />
-      
+
       <div className="max-w-2xl mx-auto px-4 py-12 relative z-10">
         <div className="text-center mb-10">
           <div className="w-16 h-16 rounded-2xl flex items-center justify-center text-3xl mx-auto mb-4 font-bold shadow-xl" style={{ background: "var(--bg3)", color: "var(--accent)" }}>

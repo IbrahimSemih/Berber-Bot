@@ -124,7 +124,7 @@ async function getBookedTimes(shopId, date, selectedStaffId = null) {
         .select('id')
         .eq('shop_id', shopId)
         .eq('is_active', true);
-    
+
     // Eğer hiç personel eklenmemişse varsayılan kapasite 1'dir.
     const totalCapacity = staffData && staffData.length > 0 ? staffData.length : 1;
 
@@ -149,7 +149,7 @@ async function getBookedTimes(shopId, date, selectedStaffId = null) {
     });
 
     const bookedSlots = [];
-    
+
     for (const [time, data] of Object.entries(timeGroups)) {
         // Eğer o saatteki randevu sayısı toplam kapasiteye ulaştıysa (veya aştıysa), o saat herkes için doludur.
         if (data.count >= totalCapacity) {
@@ -219,7 +219,7 @@ async function handleIncomingMessage(shopId, msg) {
     const phone = msg.from.replace('@c.us', '');
     const text = msg.body.trim().toLowerCase();
     const chatState = getChatState(shopId, phone);
-    
+
     console.log(`[${shopId}] Chat state for ${phone}:`, chatState.step);
 
     // Eğer kullanıcı 'iptal' yazarsa her zaman başa dön
@@ -232,7 +232,7 @@ async function handleIncomingMessage(shopId, msg) {
         if (chatState.step === STEPS.IDLE) {
             const triggers = ['randevu', 'kesim'];
             const isTriggered = triggers.some(t => text.includes(t));
-            
+
             console.log(`[${shopId}] IDLE state, isTriggered:`, isTriggered);
 
             if (isTriggered) {
@@ -242,7 +242,7 @@ async function handleIncomingMessage(shopId, msg) {
                     .select('*')
                     .eq('shop_id', shopId)
                     .eq('is_active', true);
-                    
+
                 console.log(`[${shopId}] Fetched services:`, services?.length, 'error:', error);
 
                 if (error || !services || services.length === 0) {
@@ -280,7 +280,7 @@ async function handleIncomingMessage(shopId, msg) {
                 .select('*')
                 .eq('shop_id', shopId)
                 .eq('is_active', true);
-            
+
             if (staffList && staffList.length > 0) {
                 chatState.data.staffList = staffList;
                 let reply = `*${selectedService.name}* hizmetini seçtiniz.\n\nLütfen randevu almak istediğiniz personelin numarasını yazın:\n\n`;
@@ -379,7 +379,7 @@ async function handleIncomingMessage(shopId, msg) {
         }
         else if (chatState.step === STEPS.ENTER_NAME) {
             const customerName = msg.body.trim(); // case-sensitive for name
-            
+
             if (customerName.length < 2) {
                 return msg.reply('Lütfen geçerli bir isim girin.');
             }
@@ -457,12 +457,12 @@ function setupAndInitializeClient(shopId) {
         puppeteer: {
             headless: true,
             args: [
-                '--no-sandbox', 
-                '--disable-setuid-sandbox', 
-                '--disable-dev-shm-usage', 
-                '--disable-accelerated-2d-canvas', 
-                '--no-first-run', 
-                '--no-zygote', 
+                '--no-sandbox',
+                '--disable-setuid-sandbox',
+                '--disable-dev-shm-usage',
+                '--disable-accelerated-2d-canvas',
+                '--no-first-run',
+                '--no-zygote',
                 '--disable-gpu'
             ]
         },
@@ -567,13 +567,13 @@ app.post('/api/whatsapp/logout', async (req, res) => {
 
 app.post('/api/whatsapp/send', async (req, res) => {
     const { shopId, phone, message } = req.body;
-    
+
     if (!shopId || !phone || !message) {
         return res.status(400).json({ error: 'shopId, phone, and message are required' });
     }
 
     const state = getSessionState(shopId);
-    
+
     if (state.status !== 'CONNECTED' || !state.client) {
         return res.status(400).json({ error: 'WhatsApp client is not connected for this shop' });
     }
@@ -582,15 +582,15 @@ app.post('/api/whatsapp/send', async (req, res) => {
         let phoneStr = phone.replace(/\D/g, '');
         if (phoneStr.startsWith('0')) phoneStr = phoneStr.substring(1);
         if (phoneStr.length === 10) phoneStr = '90' + phoneStr;
-        
+
         // WhatsApp ID'sini doğrula
         const numberId = await state.client.getNumberId(phoneStr);
-        
+
         if (!numberId) {
             console.error(`[${shopId}] Phone number ${phoneStr} is not registered on WhatsApp.`);
             return res.status(400).json({ error: 'Bu numara WhatsApp kullanmıyor.' });
         }
-        
+
         await state.client.sendMessage(numberId._serialized, message);
         console.log(`[${shopId}] Notification sent to ${phone}`);
         res.json({ success: true });
@@ -608,7 +608,7 @@ cron.schedule('*/15 * * * *', async () => {
         const { data: settings, error: settingsError } = await supabase
             .from('settings')
             .select('shop_id, reminder_hours, shop_name');
-            
+
         if (settingsError || !settings) {
             console.error('[CRON] Failed to fetch settings:', settingsError);
             return;
@@ -617,7 +617,7 @@ cron.schedule('*/15 * * * *', async () => {
         for (const setting of settings) {
             const shopId = setting.shop_id;
             const reminderHours = setting.reminder_hours || 24;
-            
+
             // Check if WhatsApp client is connected for this shop
             const state = getSessionState(shopId);
             if (state.status !== 'CONNECTED' || !state.client) {
@@ -647,7 +647,7 @@ cron.schedule('*/15 * * * *', async () => {
                     try {
                         let phoneStr = apt.customer_phone;
                         let chatId;
-                        
+
                         if (phoneStr.includes('@')) {
                             // Eğer veritabanına zaten @lid veya @c.us uzantılı kaydedilmişse direkt kullan
                             chatId = phoneStr;
@@ -657,12 +657,12 @@ cron.schedule('*/15 * * * *', async () => {
                             }
                             chatId = `${phoneStr}@c.us`;
                         }
-                        
+
                         const dateObj = new Date(apt.scheduled_at);
                         const dateStr = format(dateObj, 'dd.MM.yyyy HH:mm');
-                        
+
                         const message = `🔔 *Hatırlatma:* Merhaba ${apt.customer_name},\n\n*${setting.shop_name}* için *${dateStr}* tarihindeki *${apt.service_name}* randevunuzu hatırlatmak isteriz. Bizi tercih ettiğiniz için teşekkür ederiz!`;
-                        
+
                         await state.client.sendMessage(chatId, message);
                         console.log(`[CRON] [${shopId}] Reminder sent to ${apt.customer_phone} for appointment ${apt.id}`);
 
@@ -671,7 +671,7 @@ cron.schedule('*/15 * * * *', async () => {
                             .from('appointments')
                             .update({ reminder_sent: true })
                             .eq('id', apt.id);
-                            
+
                     } catch (err) {
                         console.error(`[CRON] [${shopId}] Failed to send reminder to ${apt.customer_phone}:`, err);
                     }
@@ -691,7 +691,7 @@ async function initializeExistingSessions() {
     const sessionPrefix = 'session-';
 
     console.log('[INIT] Scanning for existing WhatsApp sessions...');
-    
+
     for (const file of files) {
         if (file.startsWith(sessionPrefix)) {
             const shopId = file.substring(sessionPrefix.length);

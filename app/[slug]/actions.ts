@@ -81,7 +81,7 @@ export async function getBookedSlots(shopId: string, dateStr: string, staffId?: 
     .select('id')
     .eq('shop_id', shopId)
     .eq('is_active', true);
-  
+
   const totalCapacity = staffData && staffData.length > 0 ? staffData.length : 1;
 
   // 2. Randevuları çek
@@ -107,7 +107,7 @@ export async function getBookedSlots(shopId: string, dateStr: string, staffId?: 
   });
 
   const bookedSlots: string[] = [];
-  
+
   for (const [time, data] of Object.entries(timeGroups)) {
     if (data.count >= totalCapacity) {
       bookedSlots.push(time);

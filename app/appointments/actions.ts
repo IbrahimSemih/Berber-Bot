@@ -37,7 +37,7 @@ export async function confirmAppointmentAndNotify(appointmentId: string, shopId:
   if (apt.status === "pending" || apt.status === "confirmed") {
     const customerName = apt.customer.name || "Değerli Müşterimiz";
     const shopName = apt.shop?.name || "Berber";
-    
+
     // Tarihi formatla (basitçe)
     const dateObj = new Date(apt.scheduled_at);
     const dateStr = dateObj.toLocaleDateString("tr-TR") + " saat " + dateObj.toLocaleTimeString("tr-TR", { hour: '2-digit', minute: '2-digit' });
