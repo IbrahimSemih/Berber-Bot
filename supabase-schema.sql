@@ -1,8 +1,3 @@
--- ============================================================
--- BerberBot — Supabase Database Schema
--- Supabase SQL Editor'a kopyalayıp çalıştır
--- ============================================================
-
 -- 0. Shops (Dükkanlar)
 CREATE TABLE IF NOT EXISTS shops (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -31,6 +26,17 @@ CREATE TABLE IF NOT EXISTS staff (
   phone TEXT,
   is_active BOOLEAN DEFAULT true,
   created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- 1.6 Staff Leaves (Personel İzinleri)
+CREATE TABLE IF NOT EXISTS staff_leaves (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  shop_id UUID REFERENCES shops(id) ON DELETE CASCADE,
+  staff_id UUID REFERENCES staff(id) ON DELETE CASCADE,
+  start_date DATE NOT NULL,
+  end_date DATE NOT NULL,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  CONSTRAINT end_date_after_start_date CHECK (end_date >= start_date)
 );
 
 -- 2. Customers (Müşteriler)
@@ -112,6 +118,7 @@ ON CONFLICT DO NOTHING;
 ALTER TABLE shops ENABLE ROW LEVEL SECURITY;
 ALTER TABLE services ENABLE ROW LEVEL SECURITY;
 ALTER TABLE staff ENABLE ROW LEVEL SECURITY;
+ALTER TABLE staff_leaves ENABLE ROW LEVEL SECURITY;
 ALTER TABLE customers ENABLE ROW LEVEL SECURITY;
 ALTER TABLE appointments ENABLE ROW LEVEL SECURITY;
 ALTER TABLE settings ENABLE ROW LEVEL SECURITY;
@@ -143,6 +150,13 @@ CREATE POLICY "Users can manage own services" ON services
 -- ── staff ──
 DROP POLICY IF EXISTS "Users can manage own staff" ON staff;
 CREATE POLICY "Users can manage own staff" ON staff
+  FOR ALL USING (
+    shop_id IN (SELECT id FROM shops WHERE owner_id = auth.uid())
+  );
+
+-- ── staff_leaves ──
+DROP POLICY IF EXISTS "Users can manage own staff_leaves" ON staff_leaves;
+CREATE POLICY "Users can manage own staff_leaves" ON staff_leaves
   FOR ALL USING (
     shop_id IN (SELECT id FROM shops WHERE owner_id = auth.uid())
   );

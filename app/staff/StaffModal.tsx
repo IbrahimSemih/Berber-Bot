@@ -1,6 +1,6 @@
 "use client";
 import { useState } from "react";
-import { Button, Input, Toggle } from "@/components/ui";
+import { Button, Input } from "@/components/ui";
 import { createClient } from "@/lib/supabase/client";
 import { Staff } from "@/types";
 
@@ -77,13 +77,7 @@ export default function StaffModal({ shopId, existingStaff, onClose, onSuccess }
             <Input value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="+90 5XX XXX XX XX" />
           </div>
           
-          <div className="flex items-center justify-between p-3 rounded-lg" style={{ background: "var(--bg3)", border: "1px solid var(--border2)" }}>
-            <div>
-              <div className="text-sm font-medium">Aktif mi?</div>
-              <div className="text-xs" style={{ color: "var(--text3)" }}>Pasife alınan personeller randevu alamaz.</div>
-            </div>
-            <Toggle checked={isActive} onChange={setIsActive} />
-          </div>
+
 
           {error && <div className="text-xs px-3 py-2 rounded-lg" style={{ background: "rgba(255,95,87,0.1)", color: "var(--red)" }}>{error}</div>}
         </div>

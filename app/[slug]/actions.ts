@@ -86,14 +86,58 @@ export async function getBookedSlots(shopId: string, dateStr: string, staffId?: 
   const dayEnd = new Date(date);
   dayEnd.setHours(23, 59, 59, 999);
 
-  // 1. Kapasite bul
+  // 1. Personelleri al (sadece aktif olanlar)
   const { data: staffData } = await supabase
     .from('staff')
     .select('id')
     .eq('shop_id', shopId)
     .eq('is_active', true);
 
-  const totalCapacity = staffData && staffData.length > 0 ? staffData.length : 1;
+  if (!staffData || staffData.length === 0) {
+    const allTimes = [];
+    for (let h = 9; h < 20; h++) {
+      allTimes.push(`${String(h).padStart(2, "0")}:00`);
+      allTimes.push(`${String(h).padStart(2, "0")}:30`);
+    }
+    return { bookedSlots: allTimes, isStaffOnLeave: false };
+  }
+
+  // 1.5 O gün izinli olan personelleri bul
+  // start_date <= dateStr AND end_date >= dateStr
+  const queryDate = dateStr.split("T")[0]; // YYYY-MM-DD
+  const { data: leaves } = await supabase
+    .from('staff_leaves')
+    .select('staff_id')
+    .eq('shop_id', shopId)
+    .lte('start_date', queryDate)
+    .gte('end_date', queryDate);
+
+  const staffOnLeave = new Set(leaves?.map(l => l.staff_id) || []);
+  
+  // Aktif personellerden o gün izinli olanları çıkar
+  const availableStaff = staffData.filter(s => !staffOnLeave.has(s.id));
+  
+  // Eğer hiç müsait personel kalmadıysa o gün tamamen kapalıdır, tüm saatleri dolu dön
+  if (availableStaff.length === 0) {
+    const allTimes = [];
+    for (let h = 9; h < 20; h++) {
+      allTimes.push(`${String(h).padStart(2, "0")}:00`);
+      allTimes.push(`${String(h).padStart(2, "0")}:30`);
+    }
+    return { bookedSlots: allTimes, isStaffOnLeave: true };
+  }
+
+  // Eğer spesifik bir personel seçilmişse ve o personel izinliyse, yine her saati dolu dön
+  if (staffId && staffOnLeave.has(staffId)) {
+    const allTimes = [];
+    for (let h = 9; h < 20; h++) {
+      allTimes.push(`${String(h).padStart(2, "0")}:00`);
+      allTimes.push(`${String(h).padStart(2, "0")}:30`);
+    }
+    return { bookedSlots: allTimes, isStaffOnLeave: true };
+  }
+
+  const totalCapacity = availableStaff.length;
 
   // 2. Randevuları çek
   const { data: appointments } = await supabase
@@ -104,7 +148,7 @@ export async function getBookedSlots(shopId: string, dateStr: string, staffId?: 
     .gte('scheduled_at', dayStart.toISOString())
     .lte('scheduled_at', dayEnd.toISOString());
 
-  if (!appointments || appointments.length === 0) return [];
+  if (!appointments || appointments.length === 0) return { bookedSlots: [], isStaffOnLeave: false };
 
   // 3. Grupla ve kapasiteye/personele göre doluları bul
   const timeGroups: Record<string, { count: number, staffIds: string[] }> = {};
@@ -127,5 +171,5 @@ export async function getBookedSlots(shopId: string, dateStr: string, staffId?: 
     }
   }
 
-  return bookedSlots;
+  return { bookedSlots, isStaffOnLeave: false };
 }

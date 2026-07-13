@@ -17,6 +17,7 @@ export default function BookingForm({ shop, services, settings, staffList }: any
   const [selectedService, setSelectedService] = useState<Service | null>(null);
   const [selectedStaffId, setSelectedStaffId] = useState<string | null>(null);
   const [bookedSlots, setBookedSlots] = useState<string[]>([]);
+  const [isStaffOnLeave, setIsStaffOnLeave] = useState<boolean>(false);
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [selectedTime, setSelectedTime] = useState<string | null>(null);
   
@@ -38,9 +39,13 @@ export default function BookingForm({ shop, services, settings, staffList }: any
 
   useEffect(() => {
     if (selectedDate) {
-      getBookedSlots(shop.id, selectedDate.toISOString(), selectedStaffId).then(setBookedSlots);
+      getBookedSlots(shop.id, selectedDate.toISOString(), selectedStaffId).then((res) => {
+        setBookedSlots(res.bookedSlots);
+        setIsStaffOnLeave(res.isStaffOnLeave || false);
+      });
     } else {
       setBookedSlots([]);
+      setIsStaffOnLeave(false);
     }
   }, [selectedDate, selectedStaffId, shop.id]);
 
@@ -263,7 +268,12 @@ export default function BookingForm({ shop, services, settings, staffList }: any
               <div>
                 <div className="text-sm font-bold mb-3 uppercase tracking-wider" style={{ color: "var(--text3)" }}>Saat</div>
                 <div className="grid grid-cols-4 sm:grid-cols-6 gap-3">
-                  {getAvailableTimes().length > 0 ? (
+                  {isStaffOnLeave ? (
+                    <div className="col-span-4 sm:col-span-6 p-4 rounded-xl text-sm font-medium border text-center animate-in fade-in zoom-in duration-300"
+                      style={{ background: "rgba(255,165,0,0.1)", borderColor: "rgba(255,165,0,0.3)", color: "#ffb74d" }}>
+                      ⚠️ Seçtiğiniz personel bu tarihte izinlidir. Lütfen başka bir gün seçin veya geri dönüp farklı bir personel tercih edin.
+                    </div>
+                  ) : getAvailableTimes().length > 0 ? (
                     getAvailableTimes().map((time, i) => {
                       const isSelected = selectedTime === time;
                       return (

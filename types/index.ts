@@ -26,6 +26,15 @@ export interface Staff {
   created_at: string;
 }
 
+export interface StaffLeave {
+  id: string;
+  shop_id: string;
+  staff_id: string;
+  start_date: string; // YYYY-MM-DD
+  end_date: string;   // YYYY-MM-DD
+  created_at?: string;
+}
+
 export interface Customer {
   id: string;
   shop_id: string;
