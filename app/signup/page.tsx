@@ -5,6 +5,8 @@ import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import Link from "next/link";
 import { Eye, EyeOff } from "lucide-react";
+import { signupSchema } from "@/lib/validations";
+import { motion } from "framer-motion";
 
 export default function SignupPage() {
   const [email, setEmail] = useState("");
@@ -15,6 +17,7 @@ export default function SignupPage() {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
+  const [isExiting, setIsExiting] = useState(false);
   const router = useRouter();
   const supabase = createClient();
 
@@ -23,13 +26,15 @@ export default function SignupPage() {
     setLoading(true);
     setError(null);
 
-    if (password !== passwordConfirm) {
-      setError("Şifreler birbiriyle eşleşmiyor.");
+    // Client-side Zod validation
+    const validation = signupSchema.safeParse({ email, password, passwordConfirm });
+    if (!validation.success) {
+      setError(validation.error.issues[0].message);
       setLoading(false);
       return;
     }
 
-    const { error } = await supabase.auth.signUp({
+    const { error: authError } = await supabase.auth.signUp({
       email,
       password,
       options: {
@@ -37,9 +42,9 @@ export default function SignupPage() {
       },
     });
 
-    if (error) {
+    if (authError) {
       // Bazen Supabase bilinmeyen hatalarda {} (boş obje stringi) dönebiliyor
-      let errorMsg = error.message;
+      let errorMsg = authError.message;
       if (errorMsg === "{}" || !errorMsg) {
         errorMsg = "Kayıt olurken bir hata oluştu. E-posta adresi kullanımda veya şifre çok zayıf olabilir.";
       }
@@ -50,9 +55,23 @@ export default function SignupPage() {
     }
   };
 
+  const handleNavToLogin = (e: React.MouseEvent) => {
+    e.preventDefault();
+    setIsExiting(true);
+    setTimeout(() => {
+      router.push("/login");
+    }, 400); // 400ms animasyon süresi
+  };
+
   return (
-    <div className="min-h-screen flex items-center justify-center p-4" style={{ background: "var(--bg)", color: "var(--text)" }}>
-      <div className="max-w-md w-full p-8 rounded-2xl border relative overflow-hidden" style={{ background: "var(--bg2)", borderColor: "var(--border)" }}>
+    <div className="min-h-screen flex items-center justify-center p-4" style={{ background: "var(--bg)", color: "var(--text)", perspective: "1000px" }}>
+      <motion.div 
+        initial={{ rotateY: 90, opacity: 0, scale: 0.9 }}
+        animate={isExiting ? { rotateY: -90, opacity: 0, scale: 0.9 } : { rotateY: 0, opacity: 1, scale: 1 }}
+        transition={{ duration: 0.4, ease: "easeInOut" }}
+        className="max-w-md w-full p-8 rounded-2xl border relative overflow-hidden" 
+        style={{ background: "var(--bg2)", borderColor: "var(--border)", transformStyle: "preserve-3d" }}
+      >
         {/* Glow effect */}
         <div className="absolute -bottom-24 -left-24 w-48 h-48 rounded-full blur-[80px] pointer-events-none opacity-50" style={{ background: "var(--accent)" }} />
         
@@ -162,11 +181,14 @@ export default function SignupPage() {
           </button>
           
           <div className="text-center text-sm mt-6" style={{ color: "var(--text3)" }}>
-            Zaten hesabınız var mı? <Link href="/login" className="font-medium hover:underline transition-colors" style={{ color: "var(--accent)" }}>Giriş Yap</Link>
+            Zaten hesabınız var mı?{" "}
+            <a href="/login" onClick={handleNavToLogin} className="font-medium hover:underline transition-colors cursor-pointer" style={{ color: "var(--accent)" }}>
+              Giriş Yap
+            </a>
           </div>
         </form>
         )}
-      </div>
+      </motion.div>
     </div>
   );
 }

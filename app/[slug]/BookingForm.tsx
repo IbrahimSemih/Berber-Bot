@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { createBooking, getBookedSlots } from "./actions";
 import { format, addDays, startOfToday, parse, isBefore, addMinutes, isAfter, isEqual } from "date-fns";
 import { tr } from "date-fns/locale";
+import { bookingSchema } from "@/lib/validations";
 
 interface Service {
   id: string;
@@ -99,6 +100,14 @@ export default function BookingForm({ shop, services, settings, staffList }: any
 
     setLoading(true);
     setError(null);
+
+    // Client-side validation for phone and name
+    const validation = bookingSchema.safeParse({ customerName, phone: customerPhone });
+    if (!validation.success) {
+      setError(validation.error.issues[0].message);
+      setLoading(false);
+      return;
+    }
 
     // Create datetime string for scheduledAt
     const scheduledAt = parse(selectedTime, "HH:mm", selectedDate).toISOString();

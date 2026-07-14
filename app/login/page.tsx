@@ -5,13 +5,17 @@ import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import Link from "next/link";
 import { Eye, EyeOff } from "lucide-react";
+import { loginSchema } from "@/lib/validations";
+import { motion } from "framer-motion";
 
 export default function LoginPage() {
+
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [isExiting, setIsExiting] = useState(false);
   const router = useRouter();
   const supabase = createClient();
 
@@ -20,13 +24,21 @@ export default function LoginPage() {
     setLoading(true);
     setError(null);
 
-    const { error } = await supabase.auth.signInWithPassword({
+    // Client-side Zod validation
+    const validation = loginSchema.safeParse({ email, password });
+    if (!validation.success) {
+      setError(validation.error.issues[0].message);
+      setLoading(false);
+      return;
+    }
+
+    const { error: authError } = await supabase.auth.signInWithPassword({
       email,
       password,
     });
 
-    if (error) {
-      setError(error.message);
+    if (authError) {
+      setError(authError.message);
       setLoading(false);
     } else {
       router.push("/dashboard");
@@ -34,9 +46,23 @@ export default function LoginPage() {
     }
   };
 
+  const handleNavToSignup = (e: React.MouseEvent) => {
+    e.preventDefault();
+    setIsExiting(true);
+    setTimeout(() => {
+      router.push("/signup");
+    }, 400); // 400ms animasyon süresi
+  };
+
   return (
-    <div className="min-h-screen flex items-center justify-center p-4" style={{ background: "var(--bg)", color: "var(--text)" }}>
-      <div className="max-w-md w-full p-8 rounded-2xl border relative overflow-hidden" style={{ background: "var(--bg2)", borderColor: "var(--border)" }}>
+    <div className="min-h-screen flex items-center justify-center p-4" style={{ background: "var(--bg)", color: "var(--text)", perspective: "1000px" }}>
+      <motion.div 
+        initial={{ rotateY: -90, opacity: 0, scale: 0.9 }}
+        animate={isExiting ? { rotateY: 90, opacity: 0, scale: 0.9 } : { rotateY: 0, opacity: 1, scale: 1 }}
+        transition={{ duration: 0.4, ease: "easeInOut" }}
+        className="max-w-md w-full p-8 rounded-2xl border relative overflow-hidden" 
+        style={{ background: "var(--bg2)", borderColor: "var(--border)", transformStyle: "preserve-3d" }}
+      >
         {/* Glow effect */}
         <div className="absolute -top-24 -right-24 w-48 h-48 rounded-full blur-[80px] pointer-events-none opacity-50" style={{ background: "var(--accent)" }} />
 
@@ -112,10 +138,13 @@ export default function LoginPage() {
           </button>
 
           <div className="text-center text-sm mt-6" style={{ color: "var(--text3)" }}>
-            Hesabınız yok mu? <Link href="/signup" className="font-medium hover:underline transition-colors" style={{ color: "var(--accent)" }}>Kayıt Ol</Link>
+            Hesabınız yok mu?{" "}
+            <a href="/signup" onClick={handleNavToSignup} className="font-medium hover:underline transition-colors cursor-pointer" style={{ color: "var(--accent)" }}>
+              Kayıt Ol
+            </a>
           </div>
         </form>
-      </div>
+      </motion.div>
     </div>
   );
 }
