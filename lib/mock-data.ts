@@ -1,5 +1,5 @@
 import { Appointment, Customer, DashboardStats, Service } from "@/types";
-import { DEFAULT_SHOP_ID } from "@/lib/supabase";
+const DEFAULT_SHOP_ID = "00000000-0000-0000-0000-000000000000";
 
 export const mockServices: Service[] = [
   { id: "1", shop_id: DEFAULT_SHOP_ID, name: "Saç Kesimi", duration_minutes: 30, price: 150 },
