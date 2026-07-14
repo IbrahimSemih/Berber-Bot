@@ -4,6 +4,8 @@ import AdminLayout from "@/components/layout/AdminLayout";
 import { Card, CardHeader, PageHeader, Button, Input } from "@/components/ui";
 import { createClient } from "@/lib/supabase/client";
 import { deleteAccountAction } from "./actions";
+import { toast } from "react-hot-toast";
+import { AlertTriangle } from "lucide-react";
 
 export default function ProfilePage() {
   const [email, setEmail] = useState("");
@@ -43,18 +45,31 @@ export default function ProfilePage() {
     setLoading(false);
   };
 
-  const handleDelete = async () => {
-    if (confirm("Hesabınızı ve tüm dükkan/randevu verilerinizi silmek istediğinize emin misiniz? Bu işlem geri alınamaz!")) {
-      if (!userId) return;
-      setLoading(true);
-      const result = await deleteAccountAction(userId);
-      if (result.success) {
-        window.location.href = "/login";
-      } else {
-        setMessage({ text: "Hesap silinemedi: " + result.error, type: "error" });
-        setLoading(false);
-      }
-    }
+  const handleDelete = () => {
+    toast((t) => (
+      <div className="flex flex-col gap-3">
+        <div className="flex items-center gap-2">
+          <AlertTriangle className="text-red-500 w-5 h-5" />
+          <span className="font-bold">Tehlikeli İşlem</span>
+        </div>
+        <p className="text-sm">Hesabınızı ve tüm dükkan/randevu verilerinizi silmek istediğinize emin misiniz? Bu işlem geri alınamaz!</p>
+        <div className="flex justify-end gap-2 mt-2">
+          <Button variant="ghost" size="sm" onClick={() => toast.dismiss(t.id)}>İptal</Button>
+          <Button variant="danger" size="sm" onClick={async () => {
+            toast.dismiss(t.id);
+            if (!userId) return;
+            setLoading(true);
+            const result = await deleteAccountAction(userId);
+            if (result.success) {
+              window.location.href = "/login";
+            } else {
+              setMessage({ text: "Hesap silinemedi: " + result.error, type: "error" });
+              setLoading(false);
+            }
+          }}>Evet, Hesabımı Sil</Button>
+        </div>
+      </div>
+    ), { duration: Infinity });
   };
 
   return (

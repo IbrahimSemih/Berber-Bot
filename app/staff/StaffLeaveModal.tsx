@@ -3,6 +3,8 @@ import { useState, useEffect } from "react";
 import { Button, Input } from "@/components/ui";
 import { Staff, StaffLeave } from "@/types";
 import { getStaffLeaves, addStaffLeave, deleteStaffLeave } from "./leaveActions";
+import { toast } from "react-hot-toast";
+import { AlertTriangle } from "lucide-react";
 
 interface Props {
   shopId: string;
@@ -52,13 +54,28 @@ export default function StaffLeaveModal({ shopId, staff, onClose }: Props) {
   }
 
   async function handleDelete(leaveId: string) {
-    if (!confirm("Bu izni silmek istediğinize emin misiniz?")) return;
-    const res = await deleteStaffLeave(leaveId);
-    if (res.success) {
-      loadLeaves();
-    } else {
-      alert("Silinirken hata oluştu: " + res.error);
-    }
+    toast((t) => (
+      <div className="flex flex-col gap-3">
+        <div className="flex items-center gap-2">
+          <AlertTriangle className="text-red-500 w-5 h-5" />
+          <span className="font-bold">Emin misiniz?</span>
+        </div>
+        <p className="text-sm">Bu izni silmek istediğinize emin misiniz?</p>
+        <div className="flex justify-end gap-2 mt-2">
+          <Button variant="ghost" size="sm" onClick={() => toast.dismiss(t.id)}>İptal</Button>
+          <Button variant="danger" size="sm" onClick={async () => {
+            toast.dismiss(t.id);
+            const res = await deleteStaffLeave(leaveId);
+            if (res.success) {
+              toast.success("İzin başarıyla silindi.");
+              loadLeaves();
+            } else {
+              toast.error("Silinirken hata oluştu: " + res.error);
+            }
+          }}>Evet, Sil</Button>
+        </div>
+      </div>
+    ), { duration: Infinity });
   }
 
   return (

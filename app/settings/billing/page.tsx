@@ -2,7 +2,11 @@ import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import Link from "next/link";
-import { Check, AlertTriangle, CreditCard, Clock } from "lucide-react";
+import { Check, AlertTriangle, CreditCard, Clock, Zap } from "lucide-react";
+import { createAdminClient } from "@/lib/supabase/admin";
+import { getShopUsageAndLimits } from "@/lib/plan-limits";
+import AdminLayout from "@/components/layout/AdminLayout";
+import { PageHeader } from "@/components/ui";
 
 export default async function BillingPage({ searchParams }: { searchParams: { success?: string, error?: string } }) {
   const supabase = createServerClient(
@@ -40,25 +44,32 @@ export default async function BillingPage({ searchParams }: { searchParams: { su
   const currentPeriodEnd = shop.current_period_end ? new Date(shop.current_period_end) : null;
   const now = new Date();
 
-  const isTrialExpired = isTrialing && trialEnd && trialEnd < now;
-  const isActiveExpired = isActive && currentPeriodEnd && currentPeriodEnd < now;
-  
-  const isLocked = (!isActive && !isTrialing) || isTrialExpired || isActiveExpired;
-
   // Format dates safely
   const formatDate = (date: Date | null) => {
     if (!date) return "Belirsiz";
     return new Intl.DateTimeFormat('tr-TR', { day: 'numeric', month: 'long', year: 'numeric' }).format(date);
   };
 
+  const adminClient = createAdminClient();
+  const shopLimits = await getShopUsageAndLimits(adminClient, shop.id);
+  const { plan, usage, limits, isLocked } = shopLimits;
+  
+  const isTrialExpired = isTrialing && trialEnd && trialEnd < now;
+  
+  const calculatePercentage = (current: number, max: number) => {
+    if (max === Infinity) return 0;
+    return Math.min(100, Math.round((current / max) * 100));
+  };
+
   return (
-    <div className="max-w-4xl mx-auto space-y-8">
-      <div>
-        <h1 className="text-3xl font-bold mb-2">Abonelik ve Fatura</h1>
-        <p style={{ color: "var(--text2)" }}>
-          Dükkanınızın abonelik durumunu ve ödemelerinizi buradan yönetebilirsiniz.
-        </p>
-      </div>
+    <AdminLayout>
+      <PageHeader title="Abonelik ve Fatura" />
+      <div className="p-7 max-w-4xl mx-auto space-y-8">
+        <div>
+          <p style={{ color: "var(--text2)" }}>
+            Dükkanınızın abonelik durumunu ve ödemelerinizi buradan yönetebilirsiniz.
+          </p>
+        </div>
 
       {searchParams.success && (
         <div className="p-4 rounded-xl flex items-center gap-3 border" style={{ background: "rgba(34, 197, 94, 0.1)", borderColor: "rgba(34, 197, 94, 0.2)", color: "#22c55e" }}>
@@ -93,7 +104,7 @@ export default async function BillingPage({ searchParams }: { searchParams: { su
             <div>
               <p className="text-sm font-medium mb-1" style={{ color: "var(--text3)" }}>Mevcut Planınız</p>
               <h2 className="text-2xl font-bold flex items-center gap-2">
-                {isActive ? "BerberBot PRO" : "BerberBot Trial"}
+                {plan.name}
                 {isActive && <span className="px-2 py-1 text-[10px] uppercase rounded-full bg-green-500/20 text-green-500 tracking-wider">Aktif</span>}
                 {isTrialing && !isTrialExpired && <span className="px-2 py-1 text-[10px] uppercase rounded-full bg-blue-500/20 text-blue-500 tracking-wider">Deneme Sürümü</span>}
               </h2>
@@ -103,7 +114,7 @@ export default async function BillingPage({ searchParams }: { searchParams: { su
             </div>
           </div>
 
-          <div className="space-y-4">
+          <div className="space-y-4 mb-6">
             <div className="flex justify-between pb-4 border-b" style={{ borderColor: "var(--border)" }}>
               <span style={{ color: "var(--text2)" }}>Durum</span>
               <span className="font-medium">
@@ -116,36 +127,85 @@ export default async function BillingPage({ searchParams }: { searchParams: { su
                 {isActive ? formatDate(currentPeriodEnd) : formatDate(trialEnd)}
               </span>
             </div>
-            <div className="flex justify-between">
-              <span style={{ color: "var(--text2)" }}>Fiyatlandırma</span>
-              <span className="font-medium">₺299 / Ay</span>
+            <div className="flex justify-between pb-4 border-b" style={{ borderColor: "var(--border)" }}>
+              <span style={{ color: "var(--text2)" }}>Aylık Tutar</span>
+              <span className="font-medium">₺{plan.price} / Ay</span>
+            </div>
+          </div>
+
+          <div className="space-y-6">
+            <h3 className="font-bold text-sm" style={{ color: "var(--text2)" }}>Kullanım Durumu (Bu Ay)</h3>
+            
+            {/* Appointments Progress */}
+            <div>
+              <div className="flex justify-between text-sm mb-2">
+                <span>Randevu Sayısı</span>
+                <span className="font-medium">
+                  {usage.appointments} / {limits.appointments === Infinity ? "Sınırsız" : limits.appointments}
+                </span>
+              </div>
+              <div className="h-2 w-full rounded-full overflow-hidden" style={{ background: "var(--bg3)" }}>
+                <div 
+                  className={`h-full rounded-full transition-all duration-500 ${!shopLimits.canAddAppointment ? 'bg-red-500' : 'bg-blue-500'}`}
+                  style={{ width: `${calculatePercentage(usage.appointments, limits.appointments)}%` }} 
+                />
+              </div>
+            </div>
+
+            {/* Staff Progress */}
+            <div>
+              <div className="flex justify-between text-sm mb-2">
+                <span>Personel Kapasitesi</span>
+                <span className="font-medium">
+                  {usage.staff} / {limits.staff === Infinity ? "Sınırsız" : limits.staff}
+                </span>
+              </div>
+              <div className="h-2 w-full rounded-full overflow-hidden" style={{ background: "var(--bg3)" }}>
+                <div 
+                  className={`h-full rounded-full transition-all duration-500 ${!shopLimits.canAddStaff ? 'bg-red-500' : 'bg-purple-500'}`}
+                  style={{ width: `${calculatePercentage(usage.staff, limits.staff)}%` }} 
+                />
+              </div>
             </div>
           </div>
         </div>
 
         {/* Upgrade Card */}
-        <div className="p-6 rounded-2xl border relative overflow-hidden" style={{ background: "var(--bg2)", borderColor: "var(--accent)" }}>
-          <div className="absolute top-0 right-0 w-32 h-32 rounded-full blur-[50px] opacity-20 pointer-events-none" style={{ background: "var(--accent)" }} />
-          
-          <h3 className="text-xl font-bold mb-2">PRO Plana Yükselt</h3>
-          <p className="text-sm mb-6" style={{ color: "var(--text2)" }}>
-            Aylık 299₺ karşılığında tüm özellikleri sınırsız kullanın.
-          </p>
+        {plan.id !== "pro" && plan.id !== "franchise" ? (
+          <div className="p-6 rounded-2xl border relative overflow-hidden flex flex-col" style={{ background: "var(--bg2)", borderColor: "var(--accent)" }}>
+            <div className="absolute top-0 right-0 w-32 h-32 rounded-full blur-[50px] opacity-20 pointer-events-none" style={{ background: "var(--accent)" }} />
+            
+            <h3 className="text-xl font-bold mb-2">PRO Plana Yükselt</h3>
+            <p className="text-sm mb-6" style={{ color: "var(--text2)" }}>
+              Sınırları kaldırın ve dükkanınızı tam potansiyeliyle yönetin.
+            </p>
 
-          <ul className="space-y-3 mb-8 text-sm">
-            <li className="flex items-center gap-2"><Check className="w-4 h-4 text-green-500" /> Sınırsız randevu yönetimi</li>
-            <li className="flex items-center gap-2"><Check className="w-4 h-4 text-green-500" /> Merkezi WhatsApp bildirimleri</li>
-            <li className="flex items-center gap-2"><Check className="w-4 h-4 text-green-500" /> Sınırsız personel ekleme</li>
-            <li className="flex items-center gap-2"><Check className="w-4 h-4 text-green-500" /> İptal riskini azaltan hatırlatıcılar</li>
-          </ul>
+            <ul className="space-y-3 mb-8 text-sm flex-1">
+              <li className="flex items-center gap-2"><Check className="w-4 h-4 text-green-500" /> Sınırsız randevu yönetimi</li>
+              <li className="flex items-center gap-2"><Check className="w-4 h-4 text-green-500" /> Merkezi WhatsApp bildirimleri</li>
+              <li className="flex items-center gap-2"><Check className="w-4 h-4 text-green-500" /> Sınırsız personel ekleme</li>
+              <li className="flex items-center gap-2"><Check className="w-4 h-4 text-green-500" /> İptal riskini azaltan hatırlatıcılar</li>
+            </ul>
 
-          <a href="/api/payment/checkout" className="w-full py-3.5 rounded-xl text-sm font-bold flex items-center justify-center gap-2 transition-all hover:-translate-y-0.5 shadow-lg block text-center" style={{ background: "var(--accent)", color: "#0a0a0a" }}>
-            <CreditCard className="w-4 h-4" />
-            Kredi Kartı ile Güvenli Ödeme Yap
-          </a>
-          <p className="text-[10px] text-center mt-3 opacity-60">iyzico güvencesiyle 256-bit SSL şifreleme</p>
-        </div>
+            <a href="/api/payment/checkout" className="w-full py-3.5 rounded-xl text-sm font-bold flex items-center justify-center gap-2 transition-all hover:-translate-y-0.5 shadow-lg block text-center mt-auto" style={{ background: "var(--accent)", color: "#0a0a0a" }}>
+              <Zap className="w-4 h-4" />
+              Sadece ₺349 / Ay
+            </a>
+            <p className="text-[10px] text-center mt-3 opacity-60">iyzico güvencesiyle 256-bit SSL şifreleme</p>
+          </div>
+        ) : (
+          <div className="p-6 rounded-2xl border flex flex-col items-center justify-center text-center" style={{ background: "var(--bg2)", borderColor: "var(--border)" }}>
+            <div className="w-16 h-16 rounded-full flex items-center justify-center mb-4" style={{ background: "rgba(34, 197, 94, 0.1)", color: "#22c55e" }}>
+              <Check className="w-8 h-8" />
+            </div>
+            <h3 className="text-xl font-bold mb-2">Harika Gidiyorsunuz!</h3>
+            <p className="text-sm max-w-xs" style={{ color: "var(--text2)" }}>
+              Şu anda en yüksek kapasiteli plandasınız. Tüm özellikleri sınırsız kullanabilirsiniz.
+            </p>
+          </div>
+        )}
       </div>
-    </div>
+      </div>
+    </AdminLayout>
   );
 }

@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { Toaster } from "react-hot-toast";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -16,6 +17,22 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       </head>
       <body className="font-dm bg-bg text-txt antialiased">
         {children}
+        <Toaster 
+          position="bottom-right"
+          toastOptions={{
+            style: {
+              background: 'var(--bg2)',
+              color: 'var(--text)',
+              border: '1px solid var(--border)',
+            },
+            success: {
+              iconTheme: {
+                primary: 'var(--accent)',
+                secondary: '#0a0a0a',
+              },
+            },
+          }}
+        />
       </body>
     </html>
   );

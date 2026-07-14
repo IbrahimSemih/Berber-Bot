@@ -4,6 +4,7 @@ import AdminLayout from "@/components/layout/AdminLayout";
 import { Card, CardHeader, PageHeader, Button, Toggle, Input } from "@/components/ui";
 import { createClient } from "@/lib/supabase/client";
 import { Service, Settings, WorkingHour } from "@/types";
+import { toast } from "react-hot-toast";
 
 const DAYS = [
   { value: 1, label: "Pazartesi" },
@@ -135,14 +136,14 @@ export default function SettingsPage() {
     if (settingsId) {
       const { error } = await supabase.from("settings").update(settingsPayload).eq("id", settingsId);
       if (error) {
-        alert("Ayarlar güncellenirken hata oluştu (SQL kolonlarını eklediniz mi?): " + error.message);
+        toast.error("Ayarlar güncellenirken hata oluştu: " + error.message);
         setSaving(false);
         return;
       }
     } else {
       const { error } = await supabase.from("settings").insert([{ ...settingsPayload, shop_id: currentShopId }]);
       if (error) {
-        alert("Ayarlar eklenirken hata oluştu: " + error.message);
+        toast.error("Ayarlar eklenirken hata oluştu: " + error.message);
         setSaving(false);
         return;
       }
@@ -171,7 +172,7 @@ export default function SettingsPage() {
     if (servicesToUpdate.length > 0) {
       const { error } = await supabase.from("services").upsert(servicesToUpdate);
       if (error) {
-        alert("Mevcut hizmetler güncellenirken hata oluştu: " + error.message);
+        toast.error("Mevcut hizmetler güncellenirken hata oluştu: " + error.message);
         setSaving(false);
         return;
       }
@@ -180,7 +181,7 @@ export default function SettingsPage() {
     if (servicesToInsert.length > 0) {
       const { error } = await supabase.from("services").insert(servicesToInsert);
       if (error) {
-        alert("Yeni hizmetler eklenirken hata oluştu: " + error.message);
+        toast.error("Yeni hizmetler eklenirken hata oluştu: " + error.message);
         setSaving(false);
         return;
       }

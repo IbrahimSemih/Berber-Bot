@@ -2,6 +2,8 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { toast } from 'react-hot-toast';
+import { AlertTriangle } from 'lucide-react';
 
 interface CancelFormProps {
   token: string;
@@ -13,37 +15,49 @@ export default function CancelForm({ token }: CancelFormProps) {
   const [isSuccess, setIsSuccess] = useState(false);
   const router = useRouter();
 
-  const handleCancel = async () => {
-    if (!confirm('Randevunuzu iptal etmek istediğinize emin misiniz?')) {
-      return;
-    }
+  const handleCancel = () => {
+    toast((t) => (
+      <div className="flex flex-col gap-3">
+        <div className="flex items-center gap-2">
+          <AlertTriangle className="text-red-500 w-5 h-5" />
+          <span className="font-bold text-white">Emin misiniz?</span>
+        </div>
+        <p className="text-sm text-neutral-300">Randevunuzu iptal etmek istediğinize emin misiniz?</p>
+        <div className="flex justify-end gap-2 mt-2">
+          <button className="px-3 py-1.5 text-xs rounded border border-neutral-700 text-neutral-300 hover:bg-neutral-800" onClick={() => toast.dismiss(t.id)}>Hayır, Vazgeç</button>
+          <button className="px-3 py-1.5 text-xs rounded bg-red-500/20 text-red-500 border border-red-500/30 hover:bg-red-500/30" onClick={async () => {
+            toast.dismiss(t.id);
+            setIsLoading(true);
+            setError(null);
 
-    setIsLoading(true);
-    setError(null);
+            try {
+              const res = await fetch('/api/appointments/cancel', {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ token }),
+              });
 
-    try {
-      const res = await fetch('/api/appointments/cancel', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ token }),
-      });
+              const data = await res.json();
 
-      const data = await res.json();
+              if (!res.ok) {
+                throw new Error(data.error || 'İptal işlemi başarısız oldu.');
+              }
 
-      if (!res.ok) {
-        throw new Error(data.error || 'İptal işlemi başarısız oldu.');
-      }
-
-      setIsSuccess(true);
-      // Başarılı olursa sayfayı yenile, böylece iptal edildiği durumu gösterilsin
-      router.refresh();
-    } catch (err: any) {
-      setError(err.message);
-    } finally {
-      setIsLoading(false);
-    }
+              setIsSuccess(true);
+              router.refresh();
+              toast.success("Randevunuz iptal edildi.");
+            } catch (err: any) {
+              setError(err.message);
+              toast.error(err.message);
+            } finally {
+              setIsLoading(false);
+            }
+          }}>Evet, İptal Et</button>
+        </div>
+      </div>
+    ), { duration: Infinity });
   };
 
   if (isSuccess) {

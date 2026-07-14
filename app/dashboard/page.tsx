@@ -6,6 +6,7 @@ import { StatCard, Card, CardHeader, PageHeader, Button, StatusBadge, SourceBadg
 import { formatTime } from "@/lib/utils";
 import AddAppointmentModal from "@/components/AddAppointmentModal";
 import { confirmAppointmentAndNotify } from "@/app/appointments/actions";
+import { toast } from "react-hot-toast";
 
 interface Apt {
   id: string;
@@ -145,7 +146,7 @@ export default function DashboardPage() {
               </a>
               <Button size="sm" onClick={() => {
                 navigator.clipboard.writeText(shopUrl);
-                alert("Link kopyalandı!");
+                toast.success("Link kopyalandı!");
               }}>Kopyala</Button>
             </div>
           </div>

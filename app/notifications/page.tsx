@@ -4,6 +4,8 @@ import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { markAsRead, markAllAsRead, clearAllNotifications } from "./actions";
 import AdminLayout from "@/components/layout/AdminLayout";
+import { toast } from "react-hot-toast";
+import { AlertTriangle } from "lucide-react";
 
 interface Notification {
   id: string;
@@ -84,10 +86,24 @@ export default function NotificationsPage() {
 
   const handleClearAll = async () => {
     if (!shopId) return;
-    if (confirm("Tüm bildirimleri silmek istediğinize emin misiniz?")) {
-      setNotifications([]);
-      await clearAllNotifications(shopId);
-    }
+    toast((t) => (
+      <div className="flex flex-col gap-3">
+        <div className="flex items-center gap-2">
+          <AlertTriangle className="text-red-500 w-5 h-5" />
+          <span className="font-bold">Emin misiniz?</span>
+        </div>
+        <p className="text-sm">Tüm bildirimleri silmek istediğinize emin misiniz?</p>
+        <div className="flex justify-end gap-2 mt-2">
+          <button className="px-3 py-1.5 text-xs rounded border border-neutral-700 hover:bg-neutral-800" onClick={() => toast.dismiss(t.id)}>İptal</button>
+          <button className="px-3 py-1.5 text-xs rounded bg-red-500/20 text-red-500 border border-red-500/30 hover:bg-red-500/30" onClick={async () => {
+            toast.dismiss(t.id);
+            setNotifications([]);
+            await clearAllNotifications(shopId);
+            toast.success("Bildirimler temizlendi.");
+          }}>Evet, Temizle</button>
+        </div>
+      </div>
+    ), { duration: Infinity });
   };
 
   if (loading) {

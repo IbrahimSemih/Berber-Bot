@@ -6,6 +6,9 @@ import { createClient } from "@/lib/supabase/client";
 import { Staff } from "@/types";
 import StaffModal from "./StaffModal";
 import StaffLeaveModal from "./StaffLeaveModal";
+import { getShopLimitsAction } from "./actions";
+import { toast } from "react-hot-toast";
+import { AlertTriangle } from "lucide-react";
 
 export default function StaffPage() {
   const [staffList, setStaffList] = useState<Staff[]>([]);
@@ -46,7 +49,17 @@ export default function StaffPage() {
     loadData();
   }, []);
 
-  const openNewModal = () => {
+  const openNewModal = async () => {
+    // Check limit first
+    const res = await getShopLimitsAction();
+    if (res?.data && !res.data.canAddStaff) {
+      toast.error(
+        `Personel ekleme limitine ulaştınız. Mevcut planınız (${res.data.plan.name}) en fazla ${res.data.limits.staff} personele izin veriyor. Lütfen Ayarlar > Fatura bölümünden planınızı yükseltin.`,
+        { duration: 6000 }
+      );
+      return;
+    }
+
     setEditingStaff(null);
     setModalOpen(true);
   };
@@ -61,10 +74,25 @@ export default function StaffPage() {
     setLeaveModalOpen(true);
   };
 
-  const handleDelete = async (id: string) => {
-    if (!confirm("Bu personeli silmek istediğinize emin misiniz? (Personelin geçmiş randevuları 'Fark Etmez' olarak kalacaktır)")) return;
-    await supabase.from("staff").delete().eq("id", id);
-    loadData();
+  const handleDelete = (id: string) => {
+    toast((t) => (
+      <div className="flex flex-col gap-3">
+        <div className="flex items-center gap-2">
+          <AlertTriangle className="text-red-500 w-5 h-5" />
+          <span className="font-bold">Emin misiniz?</span>
+        </div>
+        <p className="text-sm">Bu personeli silmek istediğinize emin misiniz? Geçmiş randevuları 'Fark Etmez' olarak kalacaktır.</p>
+        <div className="flex justify-end gap-2 mt-2">
+          <Button variant="ghost" size="sm" onClick={() => toast.dismiss(t.id)}>İptal</Button>
+          <Button variant="danger" size="sm" onClick={async () => {
+            toast.dismiss(t.id);
+            await supabase.from("staff").delete().eq("id", id);
+            toast.success("Personel başarıyla silindi");
+            loadData();
+          }}>Evet, Sil</Button>
+        </div>
+      </div>
+    ), { duration: Infinity });
   };
 
   const handleToggleAvailability = async (id: string, currentStatus: boolean) => {
@@ -74,8 +102,10 @@ export default function StaffPage() {
     // DB Update
     const { error } = await supabase.from("staff").update({ is_active: !currentStatus }).eq("id", id);
     if (error) {
-      alert("Durum güncellenirken bir hata oluştu: " + error.message);
+      toast.error("Durum güncellenirken bir hata oluştu: " + error.message);
       loadData(); // Revert on error
+    } else {
+      toast.success(currentStatus ? "Personel izne ayrıldı" : "Personel aktif edildi");
     }
   };
 

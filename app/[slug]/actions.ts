@@ -3,6 +3,7 @@
 import { createAdminClient } from "@/lib/supabase/admin";
 import { bookingLimiter, getIp } from "@/lib/rate-limit";
 import { headers } from "next/headers";
+import { getShopUsageAndLimits } from "@/lib/plan-limits";
 
 export async function createBooking(data: {
   shopId: string;
@@ -21,6 +22,17 @@ export async function createBooking(data: {
   const supabase = createAdminClient();
 
   try {
+    // 0. Check shop limits and lock status
+    const shopLimits = await getShopUsageAndLimits(supabase, data.shopId);
+    
+    if (shopLimits.isLocked) {
+      return { success: false, error: "Bu dükkan şu anda online randevu kabul etmemektedir. Lütfen telefon ile iletişime geçiniz." };
+    }
+
+    if (!shopLimits.canAddAppointment) {
+      return { success: false, error: "Bu dükkan aylık online randevu kapasitesini doldurmuştur. Lütfen telefon ile iletişime geçiniz." };
+    }
+
     // 1. Find or create customer
     let customerId = null;
 

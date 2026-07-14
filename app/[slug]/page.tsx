@@ -1,6 +1,7 @@
 import { createAdminClient } from "@/lib/supabase/admin";
 import { notFound } from "next/navigation";
 import BookingForm from "./BookingForm";
+import { getShopUsageAndLimits } from "@/lib/plan-limits";
 
 export const dynamic = "force-dynamic";
 export const fetchCache = "force-no-store";
@@ -60,6 +61,9 @@ export default async function PublicShopPage({ params }: { params: { slug: strin
     );
   }
 
+  // Check shop usage and lock status
+  const shopLimits = await getShopUsageAndLimits(supabase, shop.id);
+
   return (
     <div className="min-h-screen" style={{ background: "var(--bg)", color: "var(--text)" }}>
       {/* Glow */}
@@ -74,7 +78,16 @@ export default async function PublicShopPage({ params }: { params: { slug: strin
           <p className="text-sm font-medium" style={{ color: "var(--text2)" }}>Online Randevu Sistemi</p>
         </div>
 
-        <BookingForm shop={shop} services={services} settings={settings} staffList={staffList || []} />
+        {shopLimits.isLocked ? (
+          <div className="text-center p-8 rounded-2xl border" style={{ background: "var(--bg2)", borderColor: "var(--border)" }}>
+            <h2 className="text-xl font-bold mb-3">Randevu Alımı Kapalı</h2>
+            <p style={{ color: "var(--text2)" }}>
+              Bu dükkan şu anda online randevu kabul etmemektedir. Randevu almak için lütfen işletme ile telefon üzerinden iletişime geçiniz.
+            </p>
+          </div>
+        ) : (
+          <BookingForm shop={shop} services={services} settings={settings} staffList={staffList || []} />
+        )}
       </div>
     </div>
   );
