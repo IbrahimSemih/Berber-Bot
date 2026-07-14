@@ -36,6 +36,12 @@ body {
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 3px; }
 
+/* Hide native browser password eye icons */
+input[type="password"]::-ms-reveal,
+input[type="password"]::-ms-clear {
+  display: none;
+}
+
 @layer utilities {
   .font-syne { font-family: var(--font-syne), sans-serif; }
   .font-dm   { font-family: var(--font-dm), sans-serif; }

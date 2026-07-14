@@ -4,11 +4,14 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import Link from "next/link";
+import { Eye, EyeOff } from "lucide-react";
 
 export default function SignupPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [passwordConfirm, setPasswordConfirm] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [showPasswordConfirm, setShowPasswordConfirm] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
@@ -95,30 +98,52 @@ export default function SignupPage() {
             <label className="block text-sm font-medium mb-2" style={{ color: "var(--text2)" }}>
               Şifre
             </label>
-            <input
-              type="password"
-              required
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              placeholder="En az 6 karakter"
-              className="w-full px-4 py-3 rounded-xl text-sm border focus:outline-none transition-colors"
-              style={{ background: "rgba(0,0,0,0.2)", borderColor: "var(--border)", color: "var(--text)" }}
-            />
+            <div className="relative">
+              <input
+                type={showPassword ? "text" : "password"}
+                required
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="En az 6 karakter"
+                className="w-full px-4 py-3 rounded-xl text-sm border focus:outline-none transition-colors pr-12"
+                style={{ background: "rgba(0,0,0,0.2)", borderColor: "var(--border)", color: "var(--text)" }}
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 p-1.5 rounded-lg transition-colors hover:bg-white/10"
+                style={{ color: "var(--text2)" }}
+                aria-label={showPassword ? "Şifreyi gizle" : "Şifreyi göster"}
+              >
+                {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+              </button>
+            </div>
           </div>
 
           <div>
             <label className="block text-sm font-medium mb-2" style={{ color: "var(--text2)" }}>
               Şifre (Tekrar)
             </label>
-            <input
-              type="password"
-              required
-              value={passwordConfirm}
-              onChange={(e) => setPasswordConfirm(e.target.value)}
-              placeholder="Şifrenizi tekrar girin"
-              className="w-full px-4 py-3 rounded-xl text-sm border focus:outline-none transition-colors"
-              style={{ background: "rgba(0,0,0,0.2)", borderColor: "var(--border)", color: "var(--text)" }}
-            />
+            <div className="relative">
+              <input
+                type={showPasswordConfirm ? "text" : "password"}
+                required
+                value={passwordConfirm}
+                onChange={(e) => setPasswordConfirm(e.target.value)}
+                placeholder="Şifrenizi tekrar girin"
+                className="w-full px-4 py-3 rounded-xl text-sm border focus:outline-none transition-colors pr-12"
+                style={{ background: "rgba(0,0,0,0.2)", borderColor: "var(--border)", color: "var(--text)" }}
+              />
+              <button
+                type="button"
+                onClick={() => setShowPasswordConfirm(!showPasswordConfirm)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 p-1.5 rounded-lg transition-colors hover:bg-white/10"
+                style={{ color: "var(--text2)" }}
+                aria-label={showPasswordConfirm ? "Şifreyi gizle" : "Şifreyi göster"}
+              >
+                {showPasswordConfirm ? <EyeOff size={18} /> : <Eye size={18} />}
+              </button>
+            </div>
           </div>
 
           {error && (
