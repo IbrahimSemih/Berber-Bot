@@ -76,6 +76,11 @@ export default function LoginPage() {
               className="w-full px-4 py-3 rounded-xl text-sm border focus:outline-none transition-colors"
               style={{ background: "rgba(0,0,0,0.2)", borderColor: "var(--border)", color: "var(--text)" }}
             />
+            <div className="text-right mt-1.5">
+              <Link href="/forgot-password" className="text-xs hover:underline" style={{ color: "var(--accent)" }}>
+                Şifremi Unuttum
+              </Link>
+            </div>
           </div>
 
           {error && (

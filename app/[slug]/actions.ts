@@ -1,6 +1,8 @@
 "use server";
 
 import { createAdminClient } from "@/lib/supabase/admin";
+import { bookingLimiter, getIp } from "@/lib/rate-limit";
+import { headers } from "next/headers";
 
 export async function createBooking(data: {
   shopId: string;
@@ -10,6 +12,12 @@ export async function createBooking(data: {
   customerPhone: string;
   scheduledAt: string;
 }) {
+  const ip = getIp(undefined, headers());
+  const { success } = await bookingLimiter.limit(`booking_${ip}`);
+  if (!success) {
+    return { success: false, error: "Çok fazla randevu talebi gönderdiniz. Lütfen bir süre bekleyip tekrar deneyin." };
+  }
+
   const supabase = createAdminClient();
 
   try {

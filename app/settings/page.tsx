@@ -344,23 +344,6 @@ export default function SettingsPage() {
           </div>
         </Card>
 
-        {/* WhatsApp Bot Connection */}
-        <Card>
-          <CardHeader title="WhatsApp Bot Bağlantısı" />
-          <div className="p-5 flex flex-col gap-4">
-            <div className="p-4 rounded-lg text-sm flex flex-col md:flex-row md:items-center justify-between gap-4" style={{ background: "var(--bg3)", border: "1px solid var(--border)" }}>
-              <div>
-                <div className="font-semibold mb-1">BerberBot'u WhatsApp'a Bağlayın</div>
-                <div className="text-xs" style={{ color: "var(--text2)" }}>
-                  Sistemin otomatik randevu oluşturabilmesi için dükkanınızın WhatsApp hesabını QR kod okutarak bağlamanız gerekmektedir.
-                </div>
-              </div>
-              <Button onClick={() => window.location.href = "/whatsapp"} className="whitespace-nowrap">
-                WhatsApp'ı Yönet
-              </Button>
-            </div>
-          </div>
-        </Card>
       </div>
     </AdminLayout>
   );

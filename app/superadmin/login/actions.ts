@@ -1,24 +1,38 @@
 "use server";
 
-import { cookies } from "next/headers";
+import { cookies, headers } from "next/headers";
 import { redirect } from "next/navigation";
+import bcrypt from "bcryptjs";
+import { signSuperAdminToken } from "@/lib/auth";
+import { authLimiter, getIp } from "@/lib/rate-limit";
 
 export async function loginSuperAdmin(formData: FormData) {
+  // Rate limiting check
+  const ip = getIp(undefined, headers());
+  const { success } = await authLimiter.limit(`superadmin_login_${ip}`);
+  
+  if (!success) {
+    return { error: "Çok fazla deneme yaptınız. Lütfen 15 dakika sonra tekrar deneyin." };
+  }
+
   const email = formData.get("email") as string;
   const password = formData.get("password") as string;
 
   const validEmail = process.env.SUPERADMIN_EMAIL;
-  const validPassword = process.env.SUPERADMIN_PASSWORD;
+  const validPasswordHash = process.env.SUPERADMIN_PASSWORD_HASH;
 
-  if (!validEmail || !validPassword) {
+  if (!validEmail || !validPasswordHash) {
     return { error: "Sistem yapılandırma hatası: Yönetici bilgileri tanımlanmamış." };
   }
 
-  if (email === validEmail && password === validPassword) {
-    cookies().set("superadmin_auth", "true", {
+  if (email === validEmail && bcrypt.compareSync(password, validPasswordHash)) {
+    const token = await signSuperAdminToken(24 * 7); // 1 week expiration
+    
+    cookies().set("superadmin_auth", token, {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
-      path: "/",
+      sameSite: "strict",
+      path: "/superadmin",
       maxAge: 60 * 60 * 24 * 7, // 1 week
     });
     

@@ -1,5 +1,6 @@
 import { type NextRequest } from "next/server";
 import { updateSession } from "@/lib/supabase/middleware";
+import { verifySuperAdminToken } from "@/lib/auth";
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse } from "next/server";
 
@@ -30,7 +31,8 @@ export async function middleware(request: NextRequest) {
 
   // Super Admin Route Protection
   if (pathname.startsWith("/superadmin")) {
-    const isSuperAdminAuthed = request.cookies.get("superadmin_auth")?.value === "true";
+    const token = request.cookies.get("superadmin_auth")?.value;
+    const isSuperAdminAuthed = token ? await verifySuperAdminToken(token) : false;
 
     if (pathname === "/superadmin/login") {
       if (isSuperAdminAuthed) {
@@ -40,7 +42,10 @@ export async function middleware(request: NextRequest) {
     }
 
     if (!isSuperAdminAuthed) {
-      return NextResponse.redirect(new URL("/superadmin/login", request.url));
+      // Clear invalid/expired cookie
+      const redirectResponse = NextResponse.redirect(new URL("/superadmin/login", request.url));
+      redirectResponse.cookies.delete("superadmin_auth");
+      return redirectResponse;
     }
     return response;
   }
@@ -63,7 +68,7 @@ export async function middleware(request: NextRequest) {
   if (user && isProtectedPath && pathname !== "/onboarding") {
     const { data: shop } = await supabase
       .from("shops")
-      .select("id, status")
+      .select("id, status, subscription_status, trial_end, current_period_end")
       .eq("owner_id", user.id)
       .single();
 
@@ -73,6 +78,34 @@ export async function middleware(request: NextRequest) {
 
     if (shop.status === 'banned') {
       return NextResponse.redirect(new URL("/banned", request.url));
+    }
+
+    // Paywall Check
+    // If they are on a protected path that is NOT settings (we must allow them to go to settings to pay)
+    if (!pathname.startsWith("/settings") && !pathname.startsWith("/api/payment")) {
+      const isTrialing = shop.subscription_status === 'trialing';
+      const isActive = shop.subscription_status === 'active';
+      const now = new Date();
+      
+      let hasAccess = false;
+
+      if (isActive) {
+        if (shop.current_period_end && new Date(shop.current_period_end) > now) {
+          hasAccess = true;
+        } else if (!shop.current_period_end) {
+          // Fallback if active but no period end
+          hasAccess = true;
+        }
+      } else if (isTrialing) {
+        if (shop.trial_end && new Date(shop.trial_end) > now) {
+          hasAccess = true;
+        }
+      }
+
+      if (!hasAccess) {
+        // Redirection to billing
+        return NextResponse.redirect(new URL("/settings/billing", request.url));
+      }
     }
   }
 

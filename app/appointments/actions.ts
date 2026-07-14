@@ -1,6 +1,7 @@
 "use server";
 
 import { createClient } from "@supabase/supabase-js";
+import { sendWhatsAppMessage } from "@/lib/whatsapp";
 
 export async function confirmAppointmentAndNotify(appointmentId: string, shopId: string) {
   const supabase = createClient(
@@ -51,24 +52,9 @@ export async function confirmAppointmentAndNotify(appointmentId: string, shopId:
 
     const message = `✅ *Randevunuz Onaylandı!*\n\nMerhaba ${customerName},\n*${shopName}* için *${dateStr}* tarihindeki randevunuz işletme tarafından onaylanmıştır.\n\nRandevunuzu görüntülemek veya iptal etmek için: ${cancelLink}\n\nBizi tercih ettiğiniz için teşekkür ederiz. Bekliyoruz!`;
 
-    try {
-      // whatsapp-service'e istek at
-      const res = await fetch("http://localhost:3001/api/whatsapp/send", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          shopId: shopId,
-          phone: apt.customer.phone,
-          message: message,
-        }),
-      });
-
-      if (!res.ok) {
-        console.error("WhatsApp bildirim hatası:", await res.text());
-        return { success: true, notified: false };
-      }
-    } catch (err) {
-      console.error("WhatsApp servisine bağlanılamadı:", err);
+    const result = await sendWhatsAppMessage(apt.customer.phone, message);
+    if (!result.success) {
+      console.error("WhatsApp bildirim hatası:", result.error);
       return { success: true, notified: false };
     }
   }

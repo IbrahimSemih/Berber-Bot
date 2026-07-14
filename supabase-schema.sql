@@ -7,6 +7,15 @@ CREATE TABLE IF NOT EXISTS shops (
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
+-- SaaS Abonelik Kolonları (Varolan tabloya ekleme)
+ALTER TABLE shops ADD COLUMN IF NOT EXISTS plan_id TEXT DEFAULT 'pro';
+ALTER TABLE shops ADD COLUMN IF NOT EXISTS subscription_status TEXT DEFAULT 'trialing';
+ALTER TABLE shops DROP CONSTRAINT IF EXISTS shops_subscription_status_check;
+ALTER TABLE shops ADD CONSTRAINT shops_subscription_status_check CHECK (subscription_status IN ('trialing','active','past_due','canceled'));
+ALTER TABLE shops ADD COLUMN IF NOT EXISTS trial_end TIMESTAMPTZ;
+ALTER TABLE shops ADD COLUMN IF NOT EXISTS current_period_end TIMESTAMPTZ;
+ALTER TABLE shops ADD COLUMN IF NOT EXISTS iyzico_customer_reference_code TEXT;
+
 -- 1. Services (Hizmetler)
 CREATE TABLE IF NOT EXISTS services (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -96,9 +105,21 @@ CREATE TABLE IF NOT EXISTS notifications (
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
+-- 6. Payments (Ödemeler)
+CREATE TABLE IF NOT EXISTS payments (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  shop_id UUID REFERENCES shops(id) ON DELETE CASCADE,
+  amount DECIMAL(10,2) NOT NULL,
+  currency TEXT DEFAULT 'TRY',
+  payment_id TEXT, -- İyzico'dan dönen paymentId
+  status TEXT NOT NULL, -- 'success', 'failure'
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
 
 -- ─── Seed Data ────────────────────────────────────────────────────────────
 
+/*
 INSERT INTO shops (id, name, slug) VALUES 
   ('11111111-1111-1111-1111-111111111111', 'Maestro Berber', 'maestro-berber')
 ON CONFLICT (slug) DO NOTHING;
@@ -113,6 +134,7 @@ ON CONFLICT DO NOTHING;
 INSERT INTO settings (shop_id, shop_name) VALUES 
   ('11111111-1111-1111-1111-111111111111', 'Maestro Berber')
 ON CONFLICT DO NOTHING;
+*/
 
 -- ─── Row Level Security (RLS) ─────────────────────────────────────────────
 ALTER TABLE shops ENABLE ROW LEVEL SECURITY;
@@ -123,6 +145,7 @@ ALTER TABLE customers ENABLE ROW LEVEL SECURITY;
 ALTER TABLE appointments ENABLE ROW LEVEL SECURITY;
 ALTER TABLE settings ENABLE ROW LEVEL SECURITY;
 ALTER TABLE notifications ENABLE ROW LEVEL SECURITY;
+ALTER TABLE payments ENABLE ROW LEVEL SECURITY;
 
 -- ── shops ──
 -- Kullanıcı sadece kendi dükkanını görebilir
@@ -186,6 +209,13 @@ CREATE POLICY "Users can manage own settings" ON settings
 DROP POLICY IF EXISTS "Users can manage own notifications" ON notifications;
 CREATE POLICY "Users can manage own notifications" ON notifications
   FOR ALL USING (
+    shop_id IN (SELECT id FROM shops WHERE owner_id = auth.uid())
+  );
+
+-- ── payments ──
+DROP POLICY IF EXISTS "Users can view own payments" ON payments;
+CREATE POLICY "Users can view own payments" ON payments
+  FOR SELECT USING (
     shop_id IN (SELECT id FROM shops WHERE owner_id = auth.uid())
   );
 

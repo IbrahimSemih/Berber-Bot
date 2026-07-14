@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
+import { sendWhatsAppMessage } from '@/lib/whatsapp';
 
 // Admin client oluştur (Auth bypass için, çünkü token zaten secret)
 const supabaseAdmin = createClient(
@@ -49,18 +50,9 @@ export async function POST(request: Request) {
       
       const message = `❌ *Randevunuz İptal Edildi*\n\nMerhaba ${appointment.customer_name || 'Değerli Müşterimiz'},\n*${appointment.shop_name || 'Berber'}* için *${dateStr}* tarihindeki *${appointment.service_name}* randevunuz iptal edilmiştir.\n\nYeni bir randevu almak için bizimle tekrar iletişime geçebilirsiniz.`;
 
-      try {
-        await fetch("http://localhost:3001/api/whatsapp/send", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            shopId: appointment.shop_id,
-            phone: appointment.customer_phone,
-            message: message,
-          }),
-        });
-      } catch (err) {
-        console.error("WhatsApp iptal bildirimi gönderilemedi:", err);
+      const result = await sendWhatsAppMessage(appointment.customer_phone, message);
+      if (!result.success) {
+        console.error("WhatsApp iptal bildirimi gönderilemedi:", result.error);
       }
     }
 

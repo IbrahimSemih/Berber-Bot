@@ -12,9 +12,9 @@ const navItems = [
   { href: "/appointments", label: "Randevular",     icon: "📅" },
   { href: "/customers",    label: "Müşteriler",     icon: "👥" },
   { href: "/staff",        label: "Personeller",    icon: "✂️" },
-  { href: "/whatsapp",     label: "WhatsApp Bot",   icon: "💬" },
   { href: "/notifications",label: "Bildirimler",    icon: "🔔" },
   { href: "/settings",     label: "Ayarlar",        icon: "⚙" },
+  { href: "/settings/billing", label: "Fatura & Abonelik", icon: "💳" },
 ];
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
@@ -141,14 +141,16 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
         {/* User */}
         <div className="p-4" style={{ borderTop: "1px solid var(--border)" }}>
-          <div className="flex items-center gap-3 p-2 rounded-lg cursor-pointer hover:opacity-80 transition-opacity">
-            <div className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-black font-heading"
-              style={{ background: "linear-gradient(135deg, var(--accent) 0%, #80c020 100%)", color: "#0a0a0a" }}>{shopInitials}</div>
-            <div className="flex-1">
-              <div className="text-sm font-medium truncate max-w-[120px]">{shopName}</div>
-              <div className="text-xs" style={{ color: "var(--text3)" }}>Dükkan Sahibi</div>
-            </div>
-            <button onClick={handleLogout} className="text-xs text-red-500 hover:text-red-600 px-2 py-1 bg-red-50 rounded">Çıkış</button>
+          <div className="flex items-center gap-3 p-2 rounded-lg transition-opacity">
+            <Link href="/profile" className="flex items-center gap-3 flex-1 hover:opacity-80">
+              <div className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-black font-heading"
+                style={{ background: "linear-gradient(135deg, var(--accent) 0%, #80c020 100%)", color: "#0a0a0a" }}>{shopInitials}</div>
+              <div className="flex-1">
+                <div className="text-sm font-medium truncate max-w-[120px]">{shopName}</div>
+                <div className="text-xs" style={{ color: "var(--text3)" }}>Profilim</div>
+              </div>
+            </Link>
+            <button onClick={handleLogout} className="text-xs text-red-500 hover:text-red-600 px-2 py-1 bg-red-50 rounded z-10 relative">Çıkış</button>
           </div>
         </div>
       </aside>

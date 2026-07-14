@@ -8,8 +8,10 @@ import Link from "next/link";
 export default function SignupPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [passwordConfirm, setPasswordConfirm] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [success, setSuccess] = useState(false);
   const router = useRouter();
   const supabase = createClient();
 
@@ -17,6 +19,12 @@ export default function SignupPage() {
     e.preventDefault();
     setLoading(true);
     setError(null);
+
+    if (password !== passwordConfirm) {
+      setError("Şifreler birbiriyle eşleşmiyor.");
+      setLoading(false);
+      return;
+    }
 
     const { error } = await supabase.auth.signUp({
       email,
@@ -27,26 +35,15 @@ export default function SignupPage() {
     });
 
     if (error) {
-      setError(error.message);
+      // Bazen Supabase bilinmeyen hatalarda {} (boş obje stringi) dönebiliyor
+      let errorMsg = error.message;
+      if (errorMsg === "{}" || !errorMsg) {
+        errorMsg = "Kayıt olurken bir hata oluştu. E-posta adresi kullanımda veya şifre çok zayıf olabilir.";
+      }
+      setError(errorMsg);
       setLoading(false);
     } else {
-      // Send welcome email
-      try {
-        await fetch('/api/emails/test', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ 
-            email, 
-            name: email.split('@')[0], 
-            type: 'welcome' 
-          }),
-        });
-      } catch (err) {
-        console.error("Failed to send welcome email:", err);
-      }
-      
-      router.push("/onboarding");
-      router.refresh();
+      setSuccess(true);
     }
   };
 
@@ -65,7 +62,20 @@ export default function SignupPage() {
           </p>
         </div>
 
-        <form onSubmit={handleSignup} className="space-y-5 relative z-10">
+        {success ? (
+          <div className="text-center space-y-4 relative z-10">
+            <div className="w-16 h-16 rounded-full flex items-center justify-center text-3xl mx-auto mb-4"
+              style={{ background: "var(--accent)", color: "#0a0a0a" }}>✓</div>
+            <h2 className="text-2xl font-bold">Lütfen E-postanızı Doğrulayın</h2>
+            <p className="text-sm" style={{ color: "var(--text2)" }}>
+              <b>{email}</b> adresine bir doğrulama linki gönderdik. Hesabınızı aktifleştirmek için lütfen e-postanızı kontrol edin ve linke tıklayın.
+            </p>
+            <Link href="/login" className="inline-block mt-4 py-3 px-6 rounded-xl text-sm font-bold transition-all" style={{ background: "var(--bg3)", color: "var(--text)" }}>
+              Giriş Ekranına Dön
+            </Link>
+          </div>
+        ) : (
+          <form onSubmit={handleSignup} className="space-y-5 relative z-10">
           <div>
             <label className="block text-sm font-medium mb-2" style={{ color: "var(--text2)" }}>
               E-posta Adresi
@@ -90,7 +100,22 @@ export default function SignupPage() {
               required
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              placeholder="••••••••"
+              placeholder="En az 6 karakter"
+              className="w-full px-4 py-3 rounded-xl text-sm border focus:outline-none transition-colors"
+              style={{ background: "rgba(0,0,0,0.2)", borderColor: "var(--border)", color: "var(--text)" }}
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium mb-2" style={{ color: "var(--text2)" }}>
+              Şifre (Tekrar)
+            </label>
+            <input
+              type="password"
+              required
+              value={passwordConfirm}
+              onChange={(e) => setPasswordConfirm(e.target.value)}
+              placeholder="Şifrenizi tekrar girin"
               className="w-full px-4 py-3 rounded-xl text-sm border focus:outline-none transition-colors"
               style={{ background: "rgba(0,0,0,0.2)", borderColor: "var(--border)", color: "var(--text)" }}
             />
@@ -115,6 +140,7 @@ export default function SignupPage() {
             Zaten hesabınız var mı? <Link href="/login" className="font-medium hover:underline transition-colors" style={{ color: "var(--accent)" }}>Giriş Yap</Link>
           </div>
         </form>
+        )}
       </div>
     </div>
   );

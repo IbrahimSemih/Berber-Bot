@@ -29,7 +29,7 @@ export const WelcomeEmail = ({ name }: WelcomeEmailProps) => (
           Aşağıdaki butona tıklayarak rehberimize göz atabilir ve sisteminizi dakikalar içinde kurabilirsiniz:
         </Text>
         <Section style={buttonContainer}>
-          <Link href="https://berberbot.com/rehber" style={button}>
+          <Link href={`${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/rehber`} style={button}>
             Kullanım Rehberine Git
           </Link>
         </Section>
