@@ -19,13 +19,13 @@ export async function loginSuperAdmin(formData: FormData) {
   const password = formData.get("password") as string;
 
   const validEmail = process.env.SUPERADMIN_EMAIL;
-  const validPasswordHash = process.env.SUPERADMIN_PASSWORD_HASH;
+  const validPassword = process.env.SUPERADMIN_PASSWORD;
 
-  if (!validEmail || !validPasswordHash) {
+  if (!validEmail || !validPassword) {
     return { error: "Sistem yapılandırma hatası: Yönetici bilgileri tanımlanmamış." };
   }
 
-  if (email === validEmail && bcrypt.compareSync(password, validPasswordHash)) {
+  if (email === validEmail && password === validPassword) {
     const token = await signSuperAdminToken(24 * 7); // 1 week expiration
     
     cookies().set("superadmin_auth", token, {

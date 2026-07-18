@@ -6,6 +6,7 @@ import { cn } from "@/lib/utils";
 const navItems = [
   { href: "/superadmin", label: "Genel Bakış", icon: "📊" },
   { href: "/superadmin/shops", label: "Dükkanlar", icon: "🏪" },
+  { href: "/superadmin/analytics", label: "Platform Analitiği", icon: "📈" },
 ];
 
 import { logoutSuperAdmin } from "./login/actions";

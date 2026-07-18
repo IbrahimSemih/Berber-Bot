@@ -5,6 +5,14 @@ import "./globals.css";
 export const metadata: Metadata = {
   title: "BerberBot — WhatsApp Randevu Sistemi",
   description: "Berber dükkanınız için WhatsApp üzerinden otomatik randevu sistemi",
+  openGraph: {
+    title: "BerberBot — WhatsApp Randevu Sistemi",
+    description: "Berber dükkanınız için WhatsApp üzerinden otomatik randevu sistemi",
+    url: "https://berberbot.com",
+    siteName: "BerberBot",
+    locale: "tr_TR",
+    type: "website",
+  },
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
