@@ -52,8 +52,8 @@ cp .env.local.example .env.local
 NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
 NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key
 SUPABASE_SERVICE_ROLE_KEY=your-service-role-key
-WHATSAPP_ACCESS_TOKEN=your-token
-WHATSAPP_PHONE_NUMBER_ID=your-phone-id
+WHATSAPP_TOKEN=your-token
+WHATSAPP_PHONE_ID=your-phone-id
 WHATSAPP_VERIFY_TOKEN=rastgele-bir-string-yaz
 ```
 

@@ -32,7 +32,10 @@ export async function GET(req: NextRequest) {
     return NextResponse.redirect(new URL("/onboarding", req.url));
   }
 
-  const result = await initiatePayment(shop.id, user.email || "", shop.name);
+  const forwardedFor = req.headers.get("x-forwarded-for");
+  const clientIp = forwardedFor ? forwardedFor.split(",")[0].trim() : (req.ip || undefined);
+
+  const result = await initiatePayment(shop.id, user.email || "", shop.name, clientIp);
 
   if (result.success && result.checkoutFormContent) {
     const html = `

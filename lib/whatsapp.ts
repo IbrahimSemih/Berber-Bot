@@ -1,19 +1,22 @@
 // lib/whatsapp.ts
-export async function sendWhatsAppMessage(to: string, message: string) {
+
+function formatPhoneNumber(to: string) {
+  let formattedPhone = to.replace(/\D/g, "");
+  if (formattedPhone.startsWith("0")) {
+    formattedPhone = "90" + formattedPhone.substring(1);
+  } else if (!formattedPhone.startsWith("90") && formattedPhone.length === 10) {
+    formattedPhone = "90" + formattedPhone;
+  }
+  return formattedPhone;
+}
+
+async function sendWhatsAppPayload(payload: Record<string, unknown>) {
   const WHATSAPP_TOKEN = process.env.WHATSAPP_TOKEN;
   const WHATSAPP_PHONE_ID = process.env.WHATSAPP_PHONE_ID;
 
   if (!WHATSAPP_TOKEN || !WHATSAPP_PHONE_ID) {
     console.error("WhatsApp credentials are not configured in .env.local");
     return { success: false, error: "Missing credentials" };
-  }
-
-  // Numarayı temizle ve formatla (Türkiye için +90 veya 90)
-  let formattedPhone = to.replace(/\D/g, "");
-  if (formattedPhone.startsWith("0")) {
-    formattedPhone = "90" + formattedPhone.substring(1);
-  } else if (!formattedPhone.startsWith("90") && formattedPhone.length === 10) {
-    formattedPhone = "90" + formattedPhone;
   }
 
   try {
@@ -25,15 +28,7 @@ export async function sendWhatsAppMessage(to: string, message: string) {
           Authorization: `Bearer ${WHATSAPP_TOKEN}`,
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({
-          messaging_product: "whatsapp",
-          to: formattedPhone,
-          type: "text",
-          text: {
-            preview_url: false,
-            body: message,
-          },
-        }),
+        body: JSON.stringify(payload),
       }
     );
 
@@ -49,4 +44,45 @@ export async function sendWhatsAppMessage(to: string, message: string) {
     console.error("Failed to send WhatsApp message via Cloud API:", error);
     return { success: false, error: error.message };
   }
+}
+
+// Serbest metin mesajı: SADECE müşteri son 24 saat içinde bize yazdıysa çalışır
+// (WhatsApp "customer service window" kuralı). İşletme tarafından başlatılan
+// randevu onayı/iptali gibi proaktif mesajlarda bunun yerine
+// sendWhatsAppTemplate kullanılmalı, aksi halde Meta mesajı reddeder.
+export async function sendWhatsAppMessage(to: string, message: string) {
+  return sendWhatsAppPayload({
+    messaging_product: "whatsapp",
+    to: formatPhoneNumber(to),
+    type: "text",
+    text: {
+      preview_url: false,
+      body: message,
+    },
+  });
+}
+
+// Meta'da onaylanmış bir mesaj şablonu (örn. "randevu_onay") ile mesaj gönderir.
+// bodyParams sırasıyla şablondaki {{1}}, {{2}}, {{3}}... değişkenlerine karşılık gelir.
+export async function sendWhatsAppTemplate(
+  to: string,
+  templateName: string,
+  bodyParams: string[],
+  languageCode: string = "tr"
+) {
+  return sendWhatsAppPayload({
+    messaging_product: "whatsapp",
+    to: formatPhoneNumber(to),
+    type: "template",
+    template: {
+      name: templateName,
+      language: { code: languageCode },
+      components: [
+        {
+          type: "body",
+          parameters: bodyParams.map((text) => ({ type: "text", text })),
+        },
+      ],
+    },
+  });
 }

@@ -1,7 +1,7 @@
 "use server";
 
 import { createClient } from "@supabase/supabase-js";
-import { sendWhatsAppMessage } from "@/lib/whatsapp";
+import { sendWhatsAppTemplate } from "@/lib/whatsapp";
 
 export async function confirmAppointmentAndNotify(appointmentId: string, shopId: string) {
   const supabase = createClient(
@@ -50,9 +50,13 @@ export async function confirmAppointmentAndNotify(appointmentId: string, shopId:
     const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
     const cancelLink = `${appUrl}/r/${cancelToken}`;
 
-    const message = `✅ *Randevunuz Onaylandı!*\n\nMerhaba ${customerName},\n*${shopName}* için *${dateStr}* tarihindeki randevunuz işletme tarafından onaylanmıştır.\n\nRandevunuzu görüntülemek veya iptal etmek için: ${cancelLink}\n\nBizi tercih ettiğiniz için teşekkür ederiz. Bekliyoruz!`;
-
-    const result = await sendWhatsAppMessage(apt.customer.phone, message);
+    // Meta'da onaylı "randevu_onay" şablonu: {{1}}=isim, {{2}}=tarih, {{3}}=dükkan, {{4}}=link
+    const result = await sendWhatsAppTemplate(apt.customer.phone, "randevu_onay", [
+      customerName,
+      dateStr,
+      shopName,
+      cancelLink,
+    ]);
     if (!result.success) {
       console.error("WhatsApp bildirim hatası:", result.error);
       return { success: true, notified: false };

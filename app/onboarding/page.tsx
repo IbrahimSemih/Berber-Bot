@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
+import { sendOnboardingWelcomeEmailAction } from "./actions";
 
 function generateSlug(name: string) {
   return name
@@ -174,15 +175,7 @@ export default function OnboardingPage() {
     // Send welcome email now that onboarding is complete
     if (userEmail) {
       try {
-        await fetch('/api/emails/test', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ 
-            email: userEmail, 
-            name: userEmail.split('@')[0], 
-            type: 'welcome' 
-          }),
-        });
+        await sendOnboardingWelcomeEmailAction();
       } catch (err) {
         console.error("Failed to send welcome email:", err);
       }
