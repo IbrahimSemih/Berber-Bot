@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
-import { sendWhatsAppMessage } from '@/lib/whatsapp';
+import { sendWhatsAppTemplate } from '@/lib/whatsapp';
 
 // Admin client oluştur (Auth bypass için, çünkü token zaten secret)
 const supabaseAdmin = createClient(
@@ -43,14 +43,18 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'İptal işlemi başarısız oldu.' }, { status: 500 });
     }
 
-    // Müşteriye WhatsApp'tan iptal bildirimi gönder
+    // Müşteriye WhatsApp'tan iptal bildirimi gönder (Meta'da onaylı "randevu_iptal" şablonu)
     if (appointment.customer_phone) {
       const dateObj = new Date(appointment.scheduled_at);
       const dateStr = dateObj.toLocaleDateString("tr-TR") + " saat " + dateObj.toLocaleTimeString("tr-TR", { hour: '2-digit', minute: '2-digit' });
-      
-      const message = `❌ *Randevunuz İptal Edildi*\n\nMerhaba ${appointment.customer_name || 'Değerli Müşterimiz'},\n*${appointment.shop_name || 'Berber'}* için *${dateStr}* tarihindeki *${appointment.service_name}* randevunuz iptal edilmiştir.\n\nYeni bir randevu almak için bizimle tekrar iletişime geçebilirsiniz.`;
 
-      const result = await sendWhatsAppMessage(appointment.customer_phone, message);
+      // {{1}}=isim, {{2}}=tarih, {{3}}=hizmet, {{4}}=dükkan
+      const result = await sendWhatsAppTemplate(appointment.customer_phone, "randevu_iptal", [
+        appointment.customer_name || 'Değerli Müşterimiz',
+        dateStr,
+        appointment.service_name || 'randevu',
+        appointment.shop_name || 'Berber',
+      ]);
       if (!result.success) {
         console.error("WhatsApp iptal bildirimi gönderilemedi:", result.error);
       }

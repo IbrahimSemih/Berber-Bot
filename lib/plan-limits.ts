@@ -5,6 +5,7 @@ export const PLANS = {
     id: "starter",
     name: "Başlangıç",
     price: 199,
+    yearlyPrice: 1990,
     maxAppointments: 200,
     maxStaff: 1,
   },
@@ -12,6 +13,7 @@ export const PLANS = {
     id: "pro",
     name: "Profesyonel",
     price: 349,
+    yearlyPrice: 3490,
     maxAppointments: Infinity,
     maxStaff: Infinity,
   },
@@ -19,12 +21,26 @@ export const PLANS = {
     id: "franchise",
     name: "Franchise",
     price: 799,
+    yearlyPrice: 7990,
     maxAppointments: Infinity,
     maxStaff: Infinity,
   }
 } as const;
 
 export type PlanId = keyof typeof PLANS;
+
+export type BillingInterval = "monthly" | "yearly";
+
+// Yıllık plan: 12 ay yerine 10 ay öde (2 ay bedava). Yıllık ödemede ilk 30 gün koşulsuz iade.
+export const YEARLY_REFUND_DAYS = 30;
+
+export function parseBillingInterval(value: string | null | undefined): BillingInterval {
+  return value === "yearly" ? "yearly" : "monthly";
+}
+
+export function getPlanPrice(planId: PlanId, interval: BillingInterval) {
+  return interval === "yearly" ? PLANS[planId].yearlyPrice : PLANS[planId].price;
+}
 
 export async function getShopUsageAndLimits(supabase: SupabaseClient, shopId: string) {
   // 1. Get shop details

@@ -2,8 +2,15 @@
 
 import { createAdminClient } from "@/lib/supabase/admin";
 import { revalidatePath } from "next/cache";
+import { cookies } from "next/headers";
+import { verifySuperAdminToken } from "@/lib/auth";
 
 export async function toggleShopStatus(shopId: string, currentStatus: string) {
+  const token = cookies().get("superadmin_auth")?.value;
+  if (!token || !(await verifySuperAdminToken(token))) {
+    return { success: false, error: "Yetkisiz işlem." };
+  }
+
   const supabase = createAdminClient();
   const newStatus = currentStatus === "banned" ? "active" : "banned";
 

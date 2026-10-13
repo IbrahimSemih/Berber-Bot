@@ -55,6 +55,7 @@ SUPABASE_SERVICE_ROLE_KEY=your-service-role-key
 WHATSAPP_TOKEN=your-token
 WHATSAPP_PHONE_ID=your-phone-id
 WHATSAPP_VERIFY_TOKEN=rastgele-bir-string-yaz
+CRON_SECRET=rastgele-uzun-bir-string-yaz
 ```
 
 ### 3. Supabase veritabanını kur

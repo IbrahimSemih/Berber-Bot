@@ -10,6 +10,8 @@ export const createCheckoutForm = (params: {
   price: string;
   paidPrice: string;
   basketId: string;
+  itemId: string;
+  itemName: string;
   buyer: {
     id: string;
     name: string;
@@ -67,8 +69,8 @@ export const createCheckoutForm = (params: {
       },
       basketItems: [
         {
-          id: 'PRO_PLAN_1_MONTH',
-          name: 'BerberBot Pro Abonelik (1 Aylık)',
+          id: params.itemId,
+          name: params.itemName,
           category1: 'Yazılım',
           category2: 'SaaS',
           itemType: Iyzipay.BASKET_ITEM_TYPE.VIRTUAL,
@@ -78,6 +80,23 @@ export const createCheckoutForm = (params: {
     };
 
     iyzipay.checkoutFormInitialize.create(request as any, function (err: any, result: any) {
+      if (err) reject(err);
+      else resolve(result);
+    });
+  });
+};
+
+// Ödemenin tamamını iade eder (iyzico Refund V2, paymentId ile).
+export const refundPayment = (params: { paymentId: string; price: string; conversationId: string; ip: string }) => {
+  return new Promise<any>((resolve, reject) => {
+    (iyzipay as any).refundV2.create({
+      locale: Iyzipay.LOCALE.TR,
+      conversationId: params.conversationId,
+      paymentId: params.paymentId,
+      price: params.price,
+      currency: Iyzipay.CURRENCY.TRY,
+      ip: params.ip,
+    }, function (err: any, result: any) {
       if (err) reject(err);
       else resolve(result);
     });

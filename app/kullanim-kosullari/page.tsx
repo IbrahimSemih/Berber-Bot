@@ -130,6 +130,9 @@ export default function KullanimKosullariPage() {
               <li>Fiyat değişiklikleri en az 30 gün önceden bildirilir</li>
               <li>Abonelik, kullanıcı tarafından herhangi bir zamanda iptal edilebilir</li>
               <li>İptal durumunda, mevcut dönemin sonuna kadar hizmetten yararlanılabilir</li>
+              <li>Yıllık planlar, aylık fiyatın 10 katı üzerinden (2 ay bedava) tek seferde faturalandırılır ve otomatik olarak yenilenmez</li>
+              <li>Yıllık plan satın alımından itibaren ilk 30 gün içinde iptal talebinde ücretin tamamı koşulsuz iade edilir; 30. günden sonra iade yapılmaz, hizmet dönem sonuna kadar devam eder</li>
+              <li>Aylık planlarda yapılan ödemeler için iade yapılmaz; iptal halinde hizmet ödenen dönemin sonuna kadar sürer</li>
               <li>Ücretsiz deneme süresi sona erdiğinde, abonelik başlatılmadığı takdirde hesap kısıtlanır</li>
             </ul>
           </Section>

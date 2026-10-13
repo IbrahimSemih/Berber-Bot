@@ -5,16 +5,20 @@ import { cn } from "@/lib/utils";
 import { createClient } from "@/lib/supabase/client";
 import { useEffect, useState } from "react";
 import NotificationListener from "@/app/dashboard/components/NotificationListener";
+import {
+  LayoutDashboard, BarChart3, Calendar, Users, Scissors, Bell, Settings, CreditCard, Menu, LogOut,
+  type LucideIcon,
+} from "lucide-react";
 
-const navItems = [
-  { href: "/dashboard",    label: "Dashboard",     icon: "⊞" },
-  { href: "/analytics",    label: "Analitik",      icon: "📊" },
-  { href: "/appointments", label: "Randevular",     icon: "📅" },
-  { href: "/customers",    label: "Müşteriler",     icon: "👥" },
-  { href: "/staff",        label: "Personeller",    icon: "✂️" },
-  { href: "/notifications",label: "Bildirimler",    icon: "🔔" },
-  { href: "/settings",     label: "Ayarlar",        icon: "⚙" },
-  { href: "/settings/billing", label: "Fatura & Abonelik", icon: "💳" },
+const navItems: { href: string; label: string; icon: LucideIcon }[] = [
+  { href: "/dashboard",        label: "Dashboard",         icon: LayoutDashboard },
+  { href: "/analytics",        label: "Analitik",          icon: BarChart3 },
+  { href: "/appointments",     label: "Randevular",        icon: Calendar },
+  { href: "/customers",        label: "Müşteriler",        icon: Users },
+  { href: "/staff",            label: "Personeller",       icon: Scissors },
+  { href: "/notifications",    label: "Bildirimler",       icon: Bell },
+  { href: "/settings",         label: "Ayarlar",           icon: Settings },
+  { href: "/settings/billing", label: "Fatura & Abonelik", icon: CreditCard },
 ];
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
@@ -73,14 +77,12 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       {/* Mobile Top Bar */}
       <div className="md:hidden fixed top-0 left-0 right-0 h-14 flex items-center px-4 gap-3 z-50"
         style={{ background: "var(--bg2)", borderBottom: "1px solid var(--border)" }}>
-        <button onClick={() => setSidebarOpen(!sidebarOpen)} className="p-1.5 rounded-lg" style={{ color: "var(--text)" }}>
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-            <line x1="3" y1="6" x2="21" y2="6" /><line x1="3" y1="12" x2="21" y2="12" /><line x1="3" y1="18" x2="21" y2="18" />
-          </svg>
+        <button onClick={() => setSidebarOpen(!sidebarOpen)} className="p-1.5 rounded-lg" style={{ color: "var(--text)" }} aria-label="Menüyü aç/kapat">
+          <Menu size={24} aria-hidden />
         </button>
         <div className="flex items-center gap-2">
-          <div className="w-7 h-7 rounded-lg flex items-center justify-center font-bold text-sm"
-            style={{ background: "var(--accent)", color: "#0a0a0a" }}>✂</div>
+          <div className="w-7 h-7 rounded-lg flex items-center justify-center"
+            style={{ background: "var(--accent)", color: "#0a0a0a" }}><Scissors size={14} strokeWidth={2.5} aria-hidden /></div>
           <span className="font-heading font-black text-base tracking-tight">BerberBot</span>
         </div>
       </div>
@@ -100,8 +102,8 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         {/* Logo */}
         <div className="px-5 py-6" style={{ borderBottom: "1px solid var(--border)" }}>
           <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-xl flex items-center justify-center font-bold text-lg"
-              style={{ background: "var(--accent)", color: "#0a0a0a" }}>✂</div>
+            <div className="w-9 h-9 rounded-xl flex items-center justify-center shadow-[0_0_16px_rgba(200,240,96,0.25)]"
+              style={{ background: "var(--accent)", color: "#0a0a0a" }}><Scissors size={18} strokeWidth={2.5} aria-hidden /></div>
             <div>
               <div className="font-heading font-black text-base tracking-tight">BerberBot</div>
               <div className="text-xs" style={{ color: "var(--text3)" }}>Admin Panel</div>
@@ -114,17 +116,18 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           <div className="text-xs font-semibold px-2 py-3 uppercase tracking-widest" style={{ color: "var(--text3)" }}>Ana Menü</div>
           {navItems.map((item) => {
             const active = pathname === item.href;
+            const Icon = item.icon;
             return (
               <Link key={item.href} href={item.href}
                 className={cn(
-                  "flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-colors font-medium",
+                  "flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-colors duration-150 font-medium hover:bg-[var(--bg3)]",
                   active ? "font-semibold" : ""
                 )}
                 style={active
-                  ? { background: "var(--accent-dim)", color: "var(--accent)" }
+                  ? { background: "var(--accent-dim)", color: "var(--accent)", boxShadow: "inset 0 0 0 1px var(--accent-dim2)" }
                   : { color: "var(--text2)" }
                 }>
-                <span className="text-base leading-none">{item.icon}</span>
+                <Icon size={17} strokeWidth={active ? 2.25 : 1.75} className="flex-shrink-0" aria-hidden />
                 <div className="flex-1 flex items-center justify-between">
                   <span>{item.label}</span>
                   {item.href === "/notifications" && unreadCount > 0 && (
@@ -150,7 +153,11 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                 <div className="text-xs" style={{ color: "var(--text3)" }}>Profilim</div>
               </div>
             </Link>
-            <button onClick={handleLogout} className="text-xs text-red-500 hover:text-red-600 px-2 py-1 bg-red-50 rounded z-10 relative">Çıkış</button>
+            <button onClick={handleLogout} title="Çıkış yap" aria-label="Çıkış yap"
+              className="p-2 rounded-lg z-10 relative transition-colors duration-150 hover:bg-[rgba(255,95,87,0.1)]"
+              style={{ color: "var(--red)" }}>
+              <LogOut size={16} aria-hidden />
+            </button>
           </div>
         </div>
       </aside>

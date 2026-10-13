@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { initiatePayment } from "@/app/settings/billing/actions";
 import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
+import { parseBillingInterval } from "@/lib/plan-limits";
 
 export async function GET(req: NextRequest) {
   const supabase = createServerClient(
@@ -35,7 +36,9 @@ export async function GET(req: NextRequest) {
   const forwardedFor = req.headers.get("x-forwarded-for");
   const clientIp = forwardedFor ? forwardedFor.split(",")[0].trim() : (req.ip || undefined);
 
-  const result = await initiatePayment(shop.id, user.email || "", shop.name, clientIp);
+  const interval = parseBillingInterval(req.nextUrl.searchParams.get("interval"));
+
+  const result = await initiatePayment(shop.id, user.email || "", shop.name, clientIp, interval);
 
   if (result.success && result.checkoutFormContent) {
     const html = `

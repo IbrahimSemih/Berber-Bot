@@ -1,14 +1,14 @@
 "use server";
 
 import { createCheckoutForm } from "@/lib/iyzico";
-import { PLANS } from "@/lib/plan-limits";
+import { getPlanPrice, type BillingInterval } from "@/lib/plan-limits";
 
-export async function initiatePayment(shopId: string, email: string, name: string, ip: string = "85.34.78.112") {
+export async function initiatePayment(shopId: string, email: string, name: string, ip: string = "85.34.78.112", interval: BillingInterval = "monthly") {
   try {
     const callbackUrl = `${process.env.NEXT_PUBLIC_APP_URL}/api/payment/callback`;
 
     // Şu an sadece PRO plana yükseltme akışı destekleniyor; fiyat tek kaynaktan (PLANS) okunur.
-    const price = PLANS.pro.price.toFixed(2);
+    const price = getPlanPrice("pro", interval).toFixed(2);
 
     // İyzico isim ve soyismi ayrı ister, basitçe bölüyoruz
     const nameParts = name.trim().split(' ');
@@ -18,7 +18,10 @@ export async function initiatePayment(shopId: string, email: string, name: strin
     const result: any = await createCheckoutForm({
       price,
       paidPrice: price,
-      basketId: shopId, // Webhook'ta yakalamak için dükkan id'sini basketId olarak gönderiyoruz
+      // Callback'te dükkanı ve periyodu yakalamak için "<shopId>:<interval>" gönderiyoruz
+      basketId: `${shopId}:${interval}`,
+      itemId: interval === "yearly" ? "PRO_PLAN_1_YEAR" : "PRO_PLAN_1_MONTH",
+      itemName: interval === "yearly" ? "BerberBot Pro Abonelik (1 Yıllık)" : "BerberBot Pro Abonelik (1 Aylık)",
       callbackUrl,
       buyer: {
         id: shopId,

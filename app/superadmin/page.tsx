@@ -2,6 +2,8 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import Link from "next/link";
 
 export const dynamic = "force-dynamic";
+export const fetchCache = "force-no-store";
+export const revalidate = 0;
 
 const PLAN_PRICES: Record<string, number> = {
   starter: 199,

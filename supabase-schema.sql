@@ -77,6 +77,7 @@ CREATE TABLE IF NOT EXISTS appointments (
 -- Tablo zaten varsa staff_id kolonunu güvenle eklemek için:
 ALTER TABLE appointments ADD COLUMN IF NOT EXISTS staff_id UUID REFERENCES staff(id) ON DELETE SET NULL;
 ALTER TABLE appointments ADD COLUMN IF NOT EXISTS cancel_token TEXT UNIQUE;
+ALTER TABLE appointments ADD COLUMN IF NOT EXISTS reminder_sent BOOLEAN DEFAULT false;
 
 -- 4. Settings (Dükkan Ayarları)
 CREATE TABLE IF NOT EXISTS settings (
@@ -115,6 +116,12 @@ CREATE TABLE IF NOT EXISTS payments (
   status TEXT NOT NULL, -- 'success', 'failure'
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
+
+-- Yıllık plan & iade takibi (status: 'success', 'failure', 'refunded')
+ALTER TABLE payments ADD COLUMN IF NOT EXISTS billing_interval TEXT DEFAULT 'monthly';
+ALTER TABLE payments ADD COLUMN IF NOT EXISTS refund_requested_at TIMESTAMPTZ;
+ALTER TABLE payments ADD COLUMN IF NOT EXISTS refund_reason TEXT;
+ALTER TABLE payments ADD COLUMN IF NOT EXISTS refunded_at TIMESTAMPTZ;
 
 
 -- ─── Seed Data ────────────────────────────────────────────────────────────

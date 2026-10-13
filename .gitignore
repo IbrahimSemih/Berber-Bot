@@ -31,3 +31,9 @@ npm-debug.log*
 
 # whatsapp-service
 /whatsapp-service/.wwebjs_auth
+
+# supabase
+supabase-schema.sql
+
+#Claude
+CLAUDE.md

@@ -4,9 +4,14 @@ import { redirect } from "next/navigation";
 import Link from "next/link";
 import { Check, AlertTriangle, CreditCard, Clock, Zap } from "lucide-react";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { getShopUsageAndLimits } from "@/lib/plan-limits";
+import { getShopUsageAndLimits, PLANS, YEARLY_REFUND_DAYS } from "@/lib/plan-limits";
 import AdminLayout from "@/components/layout/AdminLayout";
 import { PageHeader } from "@/components/ui";
+import RefundRequestButton from "./RefundRequestButton";
+
+export const dynamic = "force-dynamic";
+export const fetchCache = "force-no-store";
+export const revalidate = 0;
 
 export default async function BillingPage({ searchParams }: { searchParams: { success?: string, error?: string } }) {
   const supabase = createServerClient(
@@ -55,6 +60,18 @@ export default async function BillingPage({ searchParams }: { searchParams: { su
   const { plan, usage, limits, isLocked } = shopLimits;
   
   const isTrialExpired = isTrialing && trialEnd && trialEnd < now;
+
+  // Süresi dolmuş, iptal edilmiş/iade edilmiş, deneme sürümündeki veya Başlangıç planındaki dükkanlar ödeme seçeneğini görür
+  const showPurchaseCard = isLocked || !isActive || plan.id === "starter";
+
+  const { data: paymentRows } = await supabase
+    .from("payments")
+    .select("id, amount, status, billing_interval, created_at, refund_requested_at, refunded_at")
+    .eq("shop_id", shop.id)
+    .in("status", ["success", "refunded"])
+    .order("created_at", { ascending: false })
+    .limit(20);
+  const payments = paymentRows ?? [];
   
   const calculatePercentage = (current: number, max: number) => {
     if (max === Infinity) return 0;
@@ -94,6 +111,7 @@ export default async function BillingPage({ searchParams }: { searchParams: { su
           <p className="text-sm">
             {isTrialExpired ? "7 Günlük ücretsiz deneme süreniz dolmuştur." : "Abonelik süreniz dolmuştur."} Sisteme tekrar erişebilmek ve randevularınızı yönetmeye devam edebilmek için lütfen PRO plana geçiş yapın.
           </p>
+          <a href="#plans" className="inline-block mt-4 px-5 py-2.5 rounded-xl text-sm font-bold" style={{ background: "var(--accent)", color: "#0a0a0a" }}>Plan Seç ve Öde</a>
         </div>
       )}
 
@@ -171,13 +189,13 @@ export default async function BillingPage({ searchParams }: { searchParams: { su
         </div>
 
         {/* Upgrade Card */}
-        {plan.id !== "pro" && plan.id !== "franchise" ? (
-          <div className="p-6 rounded-2xl border relative overflow-hidden flex flex-col" style={{ background: "var(--bg2)", borderColor: "var(--accent)" }}>
+        {showPurchaseCard ? (
+          <div id="plans" className="p-6 rounded-2xl border relative overflow-hidden flex flex-col" style={{ background: "var(--bg2)", borderColor: "var(--accent)" }}>
             <div className="absolute top-0 right-0 w-32 h-32 rounded-full blur-[50px] opacity-20 pointer-events-none" style={{ background: "var(--accent)" }} />
             
-            <h3 className="text-xl font-bold mb-2">PRO Plana Yükselt</h3>
+            <h3 className="text-xl font-bold mb-2">{isLocked ? "Aboneliğinizi Yenileyin" : "PRO Plana Yükselt"}</h3>
             <p className="text-sm mb-6" style={{ color: "var(--text2)" }}>
-              Sınırları kaldırın ve dükkanınızı tam potansiyeliyle yönetin.
+              {isLocked ? "Ödemenizi yaparak panelinize ve randevu sayfanıza anında yeniden erişin." : "Sınırları kaldırın ve dükkanınızı tam potansiyeliyle yönetin."}
             </p>
 
             <ul className="space-y-3 mb-8 text-sm flex-1">
@@ -187,9 +205,15 @@ export default async function BillingPage({ searchParams }: { searchParams: { su
               <li className="flex items-center gap-2"><Check className="w-4 h-4 text-green-500" /> İptal riskini azaltan hatırlatıcılar</li>
             </ul>
 
-            <a href="/api/payment/checkout" className="w-full py-3.5 rounded-xl text-sm font-bold flex items-center justify-center gap-2 transition-all hover:-translate-y-0.5 shadow-lg block text-center mt-auto" style={{ background: "var(--accent)", color: "#0a0a0a" }}>
+            <a href="/api/payment/checkout?interval=yearly" className="w-full py-3.5 rounded-xl text-sm font-bold flex items-center justify-center gap-2 transition-all hover:-translate-y-0.5 shadow-lg block text-center mt-auto" style={{ background: "var(--accent)", color: "#0a0a0a" }}>
               <Zap className="w-4 h-4" />
-              Sadece ₺349 / Ay
+              Yıllık ₺{PLANS.pro.yearlyPrice.toLocaleString("tr-TR")} · 2 ay bedava
+            </a>
+            <p className="text-[11px] text-center mt-2" style={{ color: "var(--text2)" }}>
+              İlk {YEARLY_REFUND_DAYS} gün koşulsuz iade
+            </p>
+            <a href="/api/payment/checkout?interval=monthly" className="w-full py-3 mt-3 rounded-xl text-sm font-medium block text-center border transition-colors hover:bg-white/5" style={{ borderColor: "var(--border2)", color: "var(--text2)" }}>
+              Aylık ₺{PLANS.pro.price} / Ay
             </a>
             <p className="text-[10px] text-center mt-3 opacity-60">iyzico güvencesiyle 256-bit SSL şifreleme</p>
           </div>
@@ -202,6 +226,41 @@ export default async function BillingPage({ searchParams }: { searchParams: { su
             <p className="text-sm max-w-xs" style={{ color: "var(--text2)" }}>
               Şu anda en yüksek kapasiteli plandasınız. Tüm özellikleri sınırsız kullanabilirsiniz.
             </p>
+          </div>
+        )}
+      </div>
+
+      {/* Ödeme geçmişi & iade */}
+      <div className="p-6 rounded-2xl border" style={{ background: "var(--bg2)", borderColor: "var(--border)" }}>
+        <h3 className="font-bold text-lg mb-1">Ödeme Geçmişi</h3>
+        <p className="text-xs mb-5" style={{ color: "var(--text3)" }}>
+          Yıllık plan satın alımlarında ilk {YEARLY_REFUND_DAYS} gün koşulsuz iade talep edebilirsiniz.
+        </p>
+        {payments.length === 0 ? (
+          <p className="text-sm" style={{ color: "var(--text3)" }}>Henüz ödeme yapılmamış.</p>
+        ) : (
+          <div className="flex flex-col">
+            {payments.map((p) => {
+              const ageDays = (now.getTime() - new Date(p.created_at).getTime()) / (1000 * 60 * 60 * 24);
+              const daysLeft = Math.ceil(YEARLY_REFUND_DAYS - ageDays);
+              const canRefund = p.status === "success" && p.billing_interval === "yearly" && !p.refund_requested_at && !p.refunded_at && daysLeft > 0;
+              const statusLabel = p.status === "refunded" ? "İade edildi" : p.refund_requested_at ? "İade talebi inceleniyor" : "Ödendi";
+              const statusColor = p.status === "refunded" ? "var(--blue)" : p.refund_requested_at ? "var(--orange)" : "var(--green)";
+              return (
+                <div key={p.id} className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 py-4 border-b last:border-0" style={{ borderColor: "var(--border)" }}>
+                  <div>
+                    <div className="font-medium text-sm">
+                      Profesyonel · {p.billing_interval === "yearly" ? "Yıllık" : "Aylık"} · ₺{Number(p.amount).toLocaleString("tr-TR")}
+                    </div>
+                    <div className="text-xs mt-0.5" style={{ color: "var(--text3)" }}>{formatDate(new Date(p.created_at))}</div>
+                  </div>
+                  <div className="flex items-center gap-3 flex-wrap">
+                    <span className="text-xs font-bold px-2.5 py-1 rounded-full" style={{ color: statusColor, background: "var(--bg3)" }}>{statusLabel}</span>
+                    {canRefund && <RefundRequestButton paymentId={p.id} daysLeft={daysLeft} />}
+                  </div>
+                </div>
+              );
+            })}
           </div>
         )}
       </div>

@@ -2,6 +2,8 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import StatusButton from "./StatusButton";
 
 export const dynamic = "force-dynamic";
+export const fetchCache = "force-no-store";
+export const revalidate = 0;
 
 export default async function ShopsPage() {
   const supabase = createAdminClient();

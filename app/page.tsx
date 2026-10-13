@@ -3,10 +3,12 @@
 import { useState } from "react";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
+import { PLANS, YEARLY_REFUND_DAYS } from "@/lib/plan-limits";
 import { MessageCircle, CalendarDays, BellRing, TrendingUp, Zap, Globe, ArrowRight, CheckCircle2, Smile, Mic, CheckCheck, Menu, X } from "lucide-react";
 
 export default function LandingPage() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [yearly, setYearly] = useState(false);
   const fadeIn = {
     hidden: { opacity: 0, y: 30 },
     visible: { opacity: 1, y: 0, transition: { duration: 0.6 } }
@@ -311,14 +313,28 @@ export default function LandingPage() {
         <motion.div initial="hidden" whileInView="visible" viewport={{ once: false, amount: 0.2 }} variants={staggerContainer} className="relative z-10">
           <motion.div variants={fadeIn}>
             <h2 className="font-heading font-black text-4xl md:text-5xl lg:text-6xl mb-6 tracking-tight">Şeffaf Fiyatlandırma</h2>
-            <p className="text-xl mb-16 font-light max-w-xl mx-auto" style={{ color: "var(--text3)" }}>Gizli ücret, sürpriz kesinti yok. Memnun kalmazsanız anında iptal edebilirsiniz.</p>
+            <p className="text-xl mb-8 font-light max-w-xl mx-auto" style={{ color: "var(--text3)" }}>Gizli ücret, sürpriz kesinti yok. Aylık planı istediğiniz zaman iptal edin; yıllık planda ilk {YEARLY_REFUND_DAYS} gün koşulsuz iade.</p>
+
+            <div className="inline-flex items-center gap-1 p-1 rounded-full mb-14 border" style={{ background: "var(--bg2)", borderColor: "var(--border)" }} role="group" aria-label="Faturalama periyodu">
+              <button onClick={() => setYearly(false)} aria-pressed={!yearly}
+                className="px-5 py-2 rounded-full text-sm font-bold transition-all"
+                style={!yearly ? { background: "var(--accent)", color: "#0a0a0a" } : { color: "var(--text2)" }}>
+                Aylık
+              </button>
+              <button onClick={() => setYearly(true)} aria-pressed={yearly}
+                className="px-5 py-2 rounded-full text-sm font-bold transition-all flex items-center gap-2"
+                style={yearly ? { background: "var(--accent)", color: "#0a0a0a" } : { color: "var(--text2)" }}>
+                Yıllık
+                <span className="text-[10px] px-2 py-0.5 rounded-full font-black" style={yearly ? { background: "#0a0a0a", color: "var(--accent)" } : { background: "var(--accent-dim2)", color: "var(--accent)" }}>2 AY BEDAVA</span>
+              </button>
+            </div>
           </motion.div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-5xl mx-auto text-left">
             {[
-              { plan: "Başlangıç", price: "₺199", desc: "Tek koltuklu berberler ve yeni başlayanlar için", features: ["Aylık 200 randevu", "WhatsApp Bot (Standart)", "Admin Panel", "Hatırlatma mesajları"], popular: false },
-              { plan: "Profesyonel", price: "₺349", desc: "Büyüyen ve yoğun çalışan profesyonel salonlar", features: ["Sınırsız randevu", "Çoklu çalışan profili", "Gelir & Analitik raporları", "Gelişmiş WhatsApp Akışı", "Öncelikli Destek"], popular: true },
-              { plan: "Franchise", price: "₺799", desc: "Birden fazla şubesi olan zincir markalar için", features: ["Sınırsız şube & çalışan", "Merkezi yönetim paneli", "Özel bot kişiselleştirme", "API erişimi", "VIP Destek & Kurulum"], popular: false },
+              { plan: "Başlangıç", price: PLANS.starter.price, yearlyPrice: PLANS.starter.yearlyPrice, desc: "Tek koltuklu berberler ve yeni başlayanlar için", features: ["Aylık 200 randevu", "WhatsApp Bot (Standart)", "Admin Panel", "Hatırlatma mesajları"], popular: false },
+              { plan: "Profesyonel", price: PLANS.pro.price, yearlyPrice: PLANS.pro.yearlyPrice, desc: "Büyüyen ve yoğun çalışan profesyonel salonlar", features: ["Sınırsız randevu", "Çoklu çalışan profili", "Gelir & Analitik raporları", "Gelişmiş WhatsApp Akışı", "Öncelikli Destek"], popular: true },
+              { plan: "Franchise", price: PLANS.franchise.price, yearlyPrice: PLANS.franchise.yearlyPrice, desc: "Birden fazla şubesi olan zincir markalar için", features: ["Sınırsız şube & çalışan", "Merkezi yönetim paneli", "Özel bot kişiselleştirme", "API erişimi", "VIP Destek & Kurulum"], popular: false },
             ].map((p, i) => (
               <motion.div key={p.plan} variants={fadeIn}
                 className={`p-10 rounded-3xl border transition-all hover:-translate-y-2 relative flex flex-col h-full ${p.popular ? 'shadow-[0_20px_50px_rgba(200,240,96,0.1)]' : ''}`}
@@ -333,7 +349,12 @@ export default function LandingPage() {
                 )}
 
                 <div className="text-sm font-bold uppercase tracking-widest mb-3 font-heading" style={{ color: "var(--accent)" }}>{p.plan}</div>
-                <div className="font-heading font-black text-6xl mb-2 tracking-tight text-white">{p.price}<span className="text-lg font-normal" style={{ color: "var(--text3)" }}>/ay</span></div>
+                <div className="font-heading font-black text-6xl mb-2 tracking-tight text-white">₺{(yearly ? p.yearlyPrice : p.price).toLocaleString("tr-TR")}<span className="text-lg font-normal" style={{ color: "var(--text3)" }}>{yearly ? "/yıl" : "/ay"}</span></div>
+                {yearly && (
+                  <div className="text-sm font-medium mb-2" style={{ color: "var(--accent)" }}>
+                    Aylığa göre ₺{(p.price * 12 - p.yearlyPrice).toLocaleString("tr-TR")} tasarruf · ilk {YEARLY_REFUND_DAYS} gün koşulsuz iade
+                  </div>
+                )}
                 <div className="text-sm mb-8 pb-8 border-b" style={{ color: "var(--text3)", borderColor: "var(--border)" }}>{p.desc}</div>
 
                 <ul className="flex flex-col gap-4 mb-10 flex-grow">
@@ -370,7 +391,7 @@ export default function LandingPage() {
               { q: "BerberBot'u kullanmak için teknik bir bilgiye ihtiyacım var mı?", a: "Hayır, hiçbir teknik bilgiye ihtiyacınız yok. Sisteme kaydolduktan sonra panelde karşınıza çıkan QR kodu kendi WhatsApp'ınızdan okutmanız yeterli." },
               { q: "Kendi WhatsApp numaramı kullanabilir miyim?", a: "Kesinlikle evet! Müşterilerinizin halihazırda bildiği dükkan numaranızı veya kişisel numaranızı doğrudan BerberBot'a bağlayıp kullanabilirsiniz." },
               { q: "Randevuları nereden takip edeceğim?", a: "Size özel gelişmiş Yönetim Paneli (Dashboard) üzerinden tüm randevularınızı, günlük akışınızı ve müşteri istatistiklerinizi anlık olarak akıllı telefonunuzdan veya bilgisayardan takip edebilirsiniz." },
-              { q: "Memnun kalmazsam iptal edebilir miyim?", a: "Evet, hiçbir taahhüt bulunmamaktadır. Aboneliğinizi istediğiniz zaman tek tıkla iptal edebilir ve bot kullanımını sonlandırabilirsiniz." }
+              { q: "Memnun kalmazsam iptal edebilir miyim?", a: "Evet, hiçbir taahhüt bulunmamaktadır. Aboneliğinizi istediğiniz zaman iptal edebilirsiniz; ödediğiniz dönem sonuna kadar hizmetten yararlanırsınız. Yıllık planda ilk 30 gün içinde iptal ederseniz ücretin tamamı iade edilir." }
             ].map((faq, i) => (
               <motion.details key={i} variants={fadeIn} className="group p-6 rounded-2xl border transition-all cursor-pointer"
                 style={{ background: "var(--bg2)", borderColor: "var(--border)" }}>

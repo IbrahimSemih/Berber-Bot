@@ -6,6 +6,7 @@ import { StatCard, Card, CardHeader, PageHeader } from "@/components/ui";
 import BarChart from "@/components/charts/BarChart";
 import AreaChart from "@/components/charts/AreaChart";
 import DonutChart from "@/components/charts/DonutChart";
+import { Calendar, Ban, Wallet, BarChart3 } from "lucide-react";
 
 interface RawAppointment {
   id: string;
@@ -294,27 +295,27 @@ export default function AnalyticsPage() {
             value={thisMonthCount}
             change={pctChange(thisMonthCount, lastMonthCount)}
             changeDir={thisMonthCount >= lastMonthCount ? "up" : "down"}
-            icon="📅"
+            icon={Calendar}
           />
           <StatCard
             label="İptal Oranı"
             value={`%${Math.round(noShowRate)}`}
             change={pctChange(noShowRate, lastNoShowRate)}
             changeDir={noShowRate <= lastNoShowRate ? "up" : "down"}
-            icon="🚫"
+            icon={Ban}
           />
           <StatCard
             label="Bu Ay Gelir"
             value={`₺${thisMonthRevenue.toLocaleString("tr-TR")}`}
             change={pctChange(thisMonthRevenue, lastMonthRevenue)}
             changeDir={thisMonthRevenue >= lastMonthRevenue ? "up" : "down"}
-            icon="💰"
+            icon={Wallet}
           />
           <StatCard
             label="Günlük Ortalama"
             value={avgDaily}
             change="Bu ay ortalaması"
-            icon="📊"
+            icon={BarChart3}
           />
         </div>
 
