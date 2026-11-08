@@ -3,8 +3,12 @@ import { retrieveCheckoutForm } from "@/lib/iyzico";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { getPlanPrice, parseBillingInterval, PLANS } from "@/lib/plan-limits";
 import { sendSubscriptionFailedEmail, sendSubscriptionSuccessEmail } from "@/lib/email";
+import { addMonthsInIstanbul } from "@/lib/time";
 
 export const dynamic = "force-dynamic";
+
+/** Postgres unique_violation hata kodu */
+const UNIQUE_VIOLATION = "23505";
 
 // Yönlendirmeleri req.url yerine uygulamanın gerçek adresinden üret: ngrok/proxy arkasında
 // req.url "https://localhost:3000" gibi hatalı bir adres verebiliyor.
@@ -80,12 +84,7 @@ export async function POST(req: NextRequest) {
           : shop.subscription_status === "trialing" && trialEnd && trialEnd > now
             ? trialEnd
             : now;
-      const periodEnd = new Date(periodStart);
-      if (interval === "yearly") {
-        periodEnd.setFullYear(periodEnd.getFullYear() + 1);
-      } else {
-        periodEnd.setMonth(periodEnd.getMonth() + 1);
-      }
+      const periodEnd = addMonthsInIstanbul(periodStart, interval === "yearly" ? 12 : 1);
 
       // Fatura kesimi için ödeme anındaki fatura bilgilerinin kopyası
       const { data: billingProfile } = await admin
@@ -94,7 +93,9 @@ export async function POST(req: NextRequest) {
         .eq("shop_id", shopId)
         .maybeSingle();
 
-      const { error: paymentInsertError } = await admin.from("payments").insert([{
+      // Ödeme kaydı abonelik uzatılmadan ÖNCE eklenir. payment_id üzerindeki unique index
+      // (migrations/2026-11-08) aynı anda gelen iki callback'ten yalnızca birinin geçmesini sağlar.
+      let { error: paymentInsertError } = await admin.from("payments").insert([{
         shop_id: shopId,
         amount: paidAmount,
         currency: "TRY",
@@ -103,17 +104,24 @@ export async function POST(req: NextRequest) {
         status: "success",
         billing_snapshot: billingProfile ?? null,
       }]);
-      if (paymentInsertError) {
+      if (paymentInsertError && paymentInsertError.code !== UNIQUE_VIOLATION) {
         // billing_snapshot kolonu henüz eklenmemişse kaydı onsuz dene
         console.error("Ödeme kaydı hatası:", paymentInsertError);
-        await admin.from("payments").insert([{
+        ({ error: paymentInsertError } = await admin.from("payments").insert([{
           shop_id: shopId,
           amount: paidAmount,
           currency: "TRY",
           payment_id: paymentId,
           billing_interval: interval,
           status: "success",
-        }]);
+        }]));
+      }
+      if (paymentInsertError?.code === UNIQUE_VIOLATION) {
+        // Bu ödeme başka bir istekte zaten işlendi: aboneliği ikinci kez uzatma
+        return NextResponse.redirect(appUrl("/settings/billing?success=true", req), 303);
+      }
+      if (paymentInsertError) {
+        console.error("Ödeme kaydedilemedi (abonelik yine de uzatılıyor):", paymentInsertError, { shopId, paymentId });
       }
 
       const { error: shopUpdateError } = await admin

@@ -4,6 +4,7 @@ import { apiLimiter, getIp } from "@/lib/rate-limit";
 import { computeIsLocked } from "@/lib/plan-limits";
 import { formatTrDateTime } from "@/lib/time";
 import { sendAppointmentCancellation } from "@/lib/appointment-messages";
+import { notifyShop } from "@/lib/notify";
 
 export const dynamic = "force-dynamic";
 
@@ -73,10 +74,16 @@ export async function POST(request: Request) {
 
     // İşletme sahibinin paneline bildirim
     if (settings?.notify_cancel !== false) {
-      await supabaseAdmin.from("notifications").insert({
-        shop_id: appointment.shop_id,
+      const who = appointment.customer_name || "Bir müşteri";
+      const when = formatTrDateTime(appointment.scheduled_at);
+      await notifyShop(supabaseAdmin, appointment.shop_id, {
         type: "cancel",
-        message: `❌ ${appointment.customer_name || "Bir müşteri"} randevusunu iptal etti. (${formatTrDateTime(appointment.scheduled_at)})`,
+        message: `❌ ${who} randevusunu iptal etti. (${when})`,
+        push: {
+          title: "Randevu iptal edildi",
+          body: `${who} · ${appointment.service_name ? `${appointment.service_name} · ` : ""}${when}`,
+          data: { type: "cancel", appointmentId: appointment.id },
+        },
       });
     }
 

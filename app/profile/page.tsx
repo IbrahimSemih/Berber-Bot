@@ -113,6 +113,7 @@ export default function ProfilePage() {
           <span className="font-bold">Hesap Silme İşlemi</span>
         </div>
         <p className="text-sm">Hesabınızı ve tüm dükkan/randevu verilerinizi silmek istediğinize emin misiniz? Bu işlem geri alınamaz!</p>
+        <p className="text-xs opacity-70">İade hakkınız varsa, silmeden önce Fatura & Abonelik sayfasından talep edin. Ödeme ve fatura kayıtları yasal saklama yükümlülüğü nedeniyle saklanmaya devam eder.</p>
         <div className="flex justify-end gap-2 mt-2">
           <Button variant="ghost" size="sm" onClick={() => toast.dismiss(t.id)}>İptal</Button>
           <Button variant="danger" size="sm" onClick={async () => {

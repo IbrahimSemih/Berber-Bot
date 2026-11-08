@@ -11,6 +11,7 @@ import { PageHeader } from "@/components/ui";
 import RefundRequestButton from "./RefundRequestButton";
 import BillingProfileForm from "./BillingProfileForm";
 import PurchaseOptions from "./PurchaseOptions";
+import { isStoreProvider, isWebBillingEnabled, providerLabel, STORE_LINKS } from "@/lib/billing-config";
 
 const ERROR_MESSAGES: Record<string, string> = {
   payment_failed: "Ödeme tamamlanamadı: kart reddedildi veya bakiye yetersiz.",
@@ -21,7 +22,39 @@ const ERROR_MESSAGES: Record<string, string> = {
   billing_profile_required: "Ödemeye geçmeden önce fatura bilgilerinizi eksiksiz doldurun.",
   billing_profile_unavailable: "Fatura bilgileri şu an okunamıyor. Lütfen daha sonra tekrar deneyin.",
   too_many_requests: "Çok fazla deneme yaptınız. Lütfen birkaç dakika sonra tekrar deneyin.",
+  billing_disabled: "Abonelikler artık BerberBot mobil uygulaması üzerinden satın alınıyor.",
 };
+
+/** Web'de satış kapalıyken ödeme kartının yerine: mobil uygulamadan abone olma bilgisi */
+function MobileSubscribeInfo() {
+  const hasLinks = !!(STORE_LINKS.appStore || STORE_LINKS.playStore);
+  return (
+    <div className="space-y-4">
+      <p className="text-sm" style={{ color: "var(--text2)" }}>
+        Abonelikler BerberBot mobil uygulamasından App Store veya Google Play ile satın alınır. Uygulamaya bu hesabın
+        e-posta ve şifresiyle giriş yapın; aboneliğiniz web panelinde de geçerli olur.
+      </p>
+      {hasLinks ? (
+        <div className="flex flex-wrap gap-3">
+          {STORE_LINKS.appStore && (
+            <a href={STORE_LINKS.appStore} target="_blank" rel="noopener noreferrer" className="px-5 py-2.5 rounded-xl text-sm font-bold" style={{ background: "var(--accent)", color: "#0a0a0a" }}>
+              App Store&apos;dan indir
+            </a>
+          )}
+          {STORE_LINKS.playStore && (
+            <a href={STORE_LINKS.playStore} target="_blank" rel="noopener noreferrer" className="px-5 py-2.5 rounded-xl text-sm font-bold" style={{ background: "var(--accent)", color: "#0a0a0a" }}>
+              Google Play&apos;den indir
+            </a>
+          )}
+        </div>
+      ) : (
+        <p className="text-sm font-medium" style={{ color: "var(--accent)" }}>
+          Mobil uygulama çok yakında yayında. Bu arada sorularınız için destek ekibimize yazabilirsiniz.
+        </p>
+      )}
+    </div>
+  );
+}
 
 export const dynamic = "force-dynamic";
 export const fetchCache = "force-no-store";
@@ -56,6 +89,8 @@ export default async function BillingPage({ searchParams }: { searchParams: { su
     redirect("/onboarding");
   }
 
+  const webBilling = isWebBillingEnabled();
+  const isStoreBilling = isStoreProvider(shop.billing_provider);
   const isTrialing = shop.subscription_status === 'trialing';
   const isActive = shop.subscription_status === 'active';
   
@@ -82,12 +117,13 @@ export default async function BillingPage({ searchParams }: { searchParams: { su
 
   // Süresi dolmuş, iptal edilmiş/iade edilmiş, deneme sürümündeki veya Başlangıç planındaki dükkanlar ödeme seçeneğini görür
   // Aktif abonelikte de bitişe 7 gün kala uzatma seçeneği gösterilir (otomatik yenileme yok)
-  const renewSoon = isActive && !!currentPeriodEnd && currentPeriodEnd.getTime() - now.getTime() < 7 * 24 * 60 * 60 * 1000;
+  // Mağaza aboneliği kendiliğinden yenilenir; uzatma kartı yalnızca iyzico (tek seferlik ödeme) için
+  const renewSoon = !isStoreBilling && isActive && !!currentPeriodEnd && currentPeriodEnd.getTime() - now.getTime() < 7 * 24 * 60 * 60 * 1000;
   const showPurchaseCard = isLocked || !isActive || plan.id === "starter" || renewSoon;
 
   const { data: paymentRows } = await supabase
     .from("payments")
-    .select("id, amount, status, billing_interval, created_at, refund_requested_at, refunded_at")
+    .select("*")
     .eq("shop_id", shop.id)
     .in("status", ["success", "refunded"])
     .order("created_at", { ascending: false })
@@ -132,7 +168,7 @@ export default async function BillingPage({ searchParams }: { searchParams: { su
           <p className="text-sm">
             {isTrialExpired ? `${TRIAL_DAYS} günlük ücretsiz deneme süreniz dolmuştur.` : "Abonelik süreniz dolmuştur."} Sisteme tekrar erişebilmek ve randevularınızı yönetmeye devam edebilmek için lütfen PRO plana geçiş yapın.
           </p>
-          <a href="#plans" className="inline-block mt-4 px-5 py-2.5 rounded-xl text-sm font-bold" style={{ background: "var(--accent)", color: "#0a0a0a" }}>Plan Seç ve Öde</a>
+          <a href="#plans" className="inline-block mt-4 px-5 py-2.5 rounded-xl text-sm font-bold" style={{ background: "var(--accent)", color: "#0a0a0a" }}>{webBilling ? "Plan Seç ve Öde" : "Nasıl abone olurum?"}</a>
         </div>
       )}
 
@@ -216,7 +252,11 @@ export default async function BillingPage({ searchParams }: { searchParams: { su
             
             <h3 className="text-xl font-bold mb-2">{isLocked || renewSoon ? "Aboneliğinizi Yenileyin" : "PRO Plana Geç"}</h3>
             <p className="text-sm mb-6" style={{ color: "var(--text2)" }}>
-              {isLocked ? "Ödemenizi yaparak panelinize ve randevu sayfanıza anında yeniden erişin." : renewSoon ? "Aboneliğiniz yakında bitiyor. Şimdi uzatırsanız yeni dönem mevcut bitiş tarihinin üzerine eklenir." : "Şimdi geçerseniz kalan deneme günleriniz kaybolmaz; ücretli dönem deneme bitişinden itibaren başlar."}
+              {!webBilling
+                ? isLocked
+                  ? "Mobil uygulamadan abone olarak panelinize ve randevu sayfanıza yeniden erişin."
+                  : "Deneme süreniz boyunca tüm özellikler açık. Süre bitmeden mobil uygulamadan abone olabilirsiniz."
+                : isLocked ? "Ödemenizi yaparak panelinize ve randevu sayfanıza anında yeniden erişin." : renewSoon ? "Aboneliğiniz yakında bitiyor. Şimdi uzatırsanız yeni dönem mevcut bitiş tarihinin üzerine eklenir." : "Şimdi geçerseniz kalan deneme günleriniz kaybolmaz; ücretli dönem deneme bitişinden itibaren başlar."}
             </p>
 
             <ul className="space-y-3 mb-8 text-sm flex-1">
@@ -226,7 +266,7 @@ export default async function BillingPage({ searchParams }: { searchParams: { su
               <li className="flex items-center gap-2"><Check className="w-4 h-4 text-green-500" /> İptal riskini azaltan hatırlatıcılar</li>
             </ul>
 
-            <PurchaseOptions profileComplete={profileComplete} />
+            {webBilling ? <PurchaseOptions profileComplete={profileComplete} /> : <MobileSubscribeInfo />}
           </div>
         ) : (
           <div className="p-6 rounded-2xl border flex flex-col items-center justify-center text-center" style={{ background: "var(--bg2)", borderColor: "var(--border)" }}>
@@ -235,13 +275,16 @@ export default async function BillingPage({ searchParams }: { searchParams: { su
             </div>
             <h3 className="text-xl font-bold mb-2">Harika Gidiyorsunuz!</h3>
             <p className="text-sm max-w-xs" style={{ color: "var(--text2)" }}>
-              Aboneliğiniz {formatDate(currentPeriodEnd)} tarihine kadar aktif. Otomatik yenileme olmadığından süre bitmeden önce size e-posta ile hatırlatma yapılır; dilediğiniz zaman buradan uzatabilirsiniz.
+              {isStoreBilling
+                ? `Aboneliğiniz ${providerLabel(shop.billing_provider)} üzerinden yönetiliyor ve ${formatDate(currentPeriodEnd)} tarihinde ${shop.store_will_renew === false ? "sona erecek" : "otomatik olarak yenilenecek"}. İptal veya değişiklik için ${providerLabel(shop.billing_provider)} abonelik ayarlarını kullanın.`
+                : `Aboneliğiniz ${formatDate(currentPeriodEnd)} tarihine kadar aktif. Otomatik yenileme olmadığından süre bitmeden önce size e-posta ile hatırlatma yapılır.`}
             </p>
           </div>
         )}
       </div>
 
-      {/* Fatura bilgileri */}
+      {/* Fatura bilgileri (yalnızca web/iyzico satışı açıkken) */}
+      {webBilling && (
       <div id="fatura" className="p-6 rounded-2xl border scroll-mt-24" style={{ background: "var(--bg2)", borderColor: profileComplete ? "var(--border)" : "var(--orange)" }}>
         <h3 className="font-bold text-lg mb-1">Fatura Bilgileri</h3>
         <p className="text-xs mb-5" style={{ color: "var(--text3)" }}>
@@ -249,12 +292,13 @@ export default async function BillingPage({ searchParams }: { searchParams: { su
         </p>
         <BillingProfileForm initial={billingProfile} complete={profileComplete} />
       </div>
+      )}
 
       {/* Ödeme geçmişi & iade */}
       <div className="p-6 rounded-2xl border" style={{ background: "var(--bg2)", borderColor: "var(--border)" }}>
         <h3 className="font-bold text-lg mb-1">Ödeme Geçmişi</h3>
         <p className="text-xs mb-5" style={{ color: "var(--text3)" }}>
-          Yıllık plan satın alımlarında ilk {YEARLY_REFUND_DAYS} gün koşulsuz iade talep edebilirsiniz.
+          Kartla yapılan yıllık plan ödemelerinde ilk {YEARLY_REFUND_DAYS} gün koşulsuz iade talep edebilirsiniz. App Store / Google Play ödemelerinin iadesi mağaza üzerinden talep edilir.
         </p>
         {payments.length === 0 ? (
           <p className="text-sm" style={{ color: "var(--text3)" }}>Henüz ödeme yapılmamış.</p>
@@ -263,7 +307,8 @@ export default async function BillingPage({ searchParams }: { searchParams: { su
             {payments.map((p) => {
               const ageDays = (now.getTime() - new Date(p.created_at).getTime()) / (1000 * 60 * 60 * 24);
               const daysLeft = Math.ceil(YEARLY_REFUND_DAYS - ageDays);
-              const canRefund = p.status === "success" && p.billing_interval === "yearly" && !p.refund_requested_at && !p.refunded_at && daysLeft > 0;
+              const isIyzico = (p.provider ?? "iyzico") === "iyzico";
+              const canRefund = isIyzico && p.status === "success" && p.billing_interval === "yearly" && !p.refund_requested_at && !p.refunded_at && daysLeft > 0;
               const statusLabel = p.status === "refunded" ? "İade edildi" : p.refund_requested_at ? "İade talebi inceleniyor" : "Ödendi";
               const statusColor = p.status === "refunded" ? "var(--blue)" : p.refund_requested_at ? "var(--orange)" : "var(--green)";
               return (
@@ -271,6 +316,7 @@ export default async function BillingPage({ searchParams }: { searchParams: { su
                   <div>
                     <div className="font-medium text-sm">
                       Profesyonel · {p.billing_interval === "yearly" ? "Yıllık" : "Aylık"} · ₺{Number(p.amount).toLocaleString("tr-TR")}
+                      {!isIyzico && ` · ${providerLabel(p.provider)}${p.environment === "sandbox" ? " (test)" : ""}`}
                     </div>
                     <div className="text-xs mt-0.5" style={{ color: "var(--text3)" }}>{formatDate(new Date(p.created_at))}</div>
                   </div>

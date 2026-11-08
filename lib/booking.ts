@@ -86,6 +86,11 @@ export async function getAvailability(
     staffId?: string | null;
     workingHours: WorkingHour[];
     now?: Date;
+    /**
+     * Verilirse yalnızca bu randevudan ÖNCE oluşturulmuş randevular dolu sayılır
+     * (created_at, id sırası). Randevu eklendikten sonraki çakışma kontrolünde kullanılır.
+     */
+    before?: { id: string; createdAt: string };
   }
 ): Promise<AvailabilityResult> {
   const now = params.now ?? new Date();
@@ -135,13 +140,22 @@ export async function getAvailability(
   const lookbackStart = new Date(dayStart.getTime() - 12 * 60 * 60 * 1000);
   const { data: appointmentRows } = await admin
     .from("appointments")
-    .select("scheduled_at, staff_id, service:services(duration_minutes)")
+    .select("id, created_at, scheduled_at, staff_id, service:services(duration_minutes)")
     .eq("shop_id", shopId)
     .in("status", ["pending", "confirmed"])
     .gte("scheduled_at", lookbackStart.toISOString())
     .lt("scheduled_at", dayEnd.toISOString());
 
-  const busy = (appointmentRows ?? []).map((a: any) => {
+  const before = params.before;
+  const beforeTime = before ? new Date(before.createdAt).getTime() : 0;
+  const isEarlier = (a: any) => {
+    if (!before) return true;
+    if (a.id === before.id) return false;
+    const t = new Date(a.created_at).getTime();
+    return t < beforeTime || (t === beforeTime && String(a.id) < before.id);
+  };
+
+  const busy = (appointmentRows ?? []).filter(isEarlier).map((a: any) => {
     const service = Array.isArray(a.service) ? a.service[0] : a.service;
     const minutes = Number(service?.duration_minutes) > 0 ? Number(service.duration_minutes) : SLOT_INTERVAL_MINUTES;
     const start = new Date(a.scheduled_at).getTime();

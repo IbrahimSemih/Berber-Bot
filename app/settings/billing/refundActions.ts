@@ -17,13 +17,17 @@ export async function requestRefund(paymentRowId: string, reason: string) {
 
   const { data: payment } = await admin
     .from("payments")
-    .select("id, status, billing_interval, created_at, refund_requested_at, refunded_at")
+    .select("*")
     .eq("id", paymentRowId)
     .eq("shop_id", shop.id)
     .single();
 
   if (!payment || payment.status !== "success") {
     return { success: false, error: "Ödeme bulunamadı." };
+  }
+  // Mağaza (App Store / Google Play) ödemelerinin iadesi mağazanın kendi sürecinden yapılır
+  if ((payment.provider ?? "iyzico") !== "iyzico") {
+    return { success: false, error: "Uygulama mağazasından yapılan ödemelerin iadesi App Store / Google Play üzerinden talep edilir." };
   }
   if (payment.billing_interval !== "yearly") {
     return { success: false, error: "Koşulsuz iade yalnızca yıllık planlar için geçerlidir." };
