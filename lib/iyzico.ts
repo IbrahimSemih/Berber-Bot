@@ -23,10 +23,17 @@ export const createCheckoutForm = (params: {
     ip: string;
     city: string;
     country: string;
-    zipCode: string;
+    zipCode?: string;
+    /** "YYYY-MM-DD HH:mm:ss" */
+    registrationDate?: string;
+    /** "YYYY-MM-DD HH:mm:ss" */
+    lastLoginDate?: string;
   };
+  /** Fatura adresinde görünecek ad (kurumsal alıcıda şirket unvanı) */
+  billingContactName?: string;
   callbackUrl: string;
 }) => {
+  const zip = params.buyer.zipCode ? { zipCode: params.buyer.zipCode } : {};
   return new Promise((resolve, reject) => {
     const request = {
       locale: Iyzipay.LOCALE.TR,
@@ -45,27 +52,27 @@ export const createCheckoutForm = (params: {
         gsmNumber: params.buyer.gsmNumber,
         email: params.buyer.email,
         identityNumber: params.buyer.identityNumber,
-        lastLoginDate: '2023-01-01 00:00:00', // Dummy data for required field
-        registrationDate: '2023-01-01 00:00:00', // Dummy data for required field
+        lastLoginDate: params.buyer.lastLoginDate || '2024-01-01 00:00:00',
+        registrationDate: params.buyer.registrationDate || '2024-01-01 00:00:00',
         registrationAddress: params.buyer.registrationAddress,
         ip: params.buyer.ip,
         city: params.buyer.city,
         country: params.buyer.country,
-        zipCode: params.buyer.zipCode
+        ...zip
       },
       shippingAddress: {
-        contactName: `${params.buyer.name} ${params.buyer.surname}`,
+        contactName: params.billingContactName || `${params.buyer.name} ${params.buyer.surname}`,
         city: params.buyer.city,
         country: params.buyer.country,
         address: params.buyer.registrationAddress,
-        zipCode: params.buyer.zipCode
+        ...zip
       },
       billingAddress: {
-        contactName: `${params.buyer.name} ${params.buyer.surname}`,
+        contactName: params.billingContactName || `${params.buyer.name} ${params.buyer.surname}`,
         city: params.buyer.city,
         country: params.buyer.country,
         address: params.buyer.registrationAddress,
-        zipCode: params.buyer.zipCode
+        ...zip
       },
       basketItems: [
         {

@@ -1,13 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { retrieveCheckoutForm } from "@/lib/iyzico";
-import { createClient } from "@supabase/supabase-js";
-import { parseBillingInterval } from "@/lib/plan-limits";
+import { createAdminClient } from "@/lib/supabase/admin";
+import { getPlanPrice, parseBillingInterval, PLANS } from "@/lib/plan-limits";
+import { sendSubscriptionFailedEmail, sendSubscriptionSuccessEmail } from "@/lib/email";
 
-// Service role key is required here to bypass RLS since this is a webhook from iyzico
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
+export const dynamic = "force-dynamic";
 
 // Yönlendirmeleri req.url yerine uygulamanın gerçek adresinden üret: ngrok/proxy arkasında
 // req.url "https://localhost:3000" gibi hatalı bir adres verebiliyor.
@@ -22,71 +19,146 @@ function parseBasketId(basketId: string) {
   return { shopId, interval: parseBillingInterval(interval) };
 }
 
+async function ownerEmailFor(admin: ReturnType<typeof createAdminClient>, ownerId: string | null) {
+  if (!ownerId) return null;
+  const { data } = await admin.auth.admin.getUserById(ownerId);
+  return data?.user?.email ?? null;
+}
+
 export async function POST(req: NextRequest) {
   try {
     const formData = await req.formData();
-    const token = formData.get("token") as string;
-    
-    if (!token) {
-      return NextResponse.redirect(appUrl("/settings/billing?error=missing_token", req));
+    const token = formData.get("token");
+
+    if (typeof token !== "string" || !token) {
+      return NextResponse.redirect(appUrl("/settings/billing?error=missing_token", req), 303);
     }
 
+    // Sonuç her zaman iyzico'dan sunucu tarafında doğrulanır; formdaki veriye güvenilmez
     const result: any = await retrieveCheckoutForm(token);
+    const admin = createAdminClient();
 
-    if (result.status === "success" && result.paymentStatus === "SUCCESS") {
+    if (result.status === "success" && result.paymentStatus === "SUCCESS" && result.basketId) {
       const { shopId, interval } = parseBasketId(result.basketId);
-      const amount = result.paidPrice;
-      const paymentId = result.paymentId;
+      const paymentId = String(result.paymentId);
+      const paidAmount = Number(result.paidPrice);
 
-      // 1. Update shop subscription status
-      const periodEnd = new Date();
+      // Tutar beklenen plan fiyatıyla uyuşmalı
+      if (!Number.isFinite(paidAmount) || paidAmount + 0.001 < getPlanPrice("pro", interval)) {
+        console.error("Ödeme tutarı beklenenden düşük:", { shopId, interval, paidAmount, paymentId });
+        return NextResponse.redirect(appUrl("/settings/billing?error=amount_mismatch", req), 303);
+      }
+
+      // Aynı ödeme ikinci kez işlenmesin (kullanıcı sayfayı yenilerse / geri gelirse)
+      const { data: existingPayment } = await admin
+        .from("payments")
+        .select("id")
+        .eq("payment_id", paymentId)
+        .in("status", ["success", "refunded"])
+        .maybeSingle();
+      if (existingPayment) {
+        return NextResponse.redirect(appUrl("/settings/billing?success=true", req), 303);
+      }
+
+      const { data: shop } = await admin
+        .from("shops")
+        .select("id, name, owner_id, subscription_status, trial_end, current_period_end")
+        .eq("id", shopId)
+        .single();
+      if (!shop) {
+        console.error("Ödeme alındı ama dükkan bulunamadı:", { shopId, paymentId });
+        return NextResponse.redirect(appUrl("/settings/billing?error=system_error", req), 303);
+      }
+
+      // Süresi dolmamış aktif abonelikte (veya devam eden denemede) yeni dönem mevcut bitişin üzerine eklenir
+      const now = new Date();
+      const currentEnd = shop.current_period_end ? new Date(shop.current_period_end) : null;
+      const trialEnd = shop.trial_end ? new Date(shop.trial_end) : null;
+      const periodStart =
+        shop.subscription_status === "active" && currentEnd && currentEnd > now
+          ? currentEnd
+          : shop.subscription_status === "trialing" && trialEnd && trialEnd > now
+            ? trialEnd
+            : now;
+      const periodEnd = new Date(periodStart);
       if (interval === "yearly") {
         periodEnd.setFullYear(periodEnd.getFullYear() + 1);
       } else {
         periodEnd.setMonth(periodEnd.getMonth() + 1);
       }
 
-      await supabase
-        .from("shops")
-        .update({
-          subscription_status: 'active',
-          current_period_end: periodEnd.toISOString(),
-          plan_id: 'pro'
-        })
-        .eq("id", shopId);
+      // Fatura kesimi için ödeme anındaki fatura bilgilerinin kopyası
+      const { data: billingProfile } = await admin
+        .from("billing_profiles")
+        .select("*")
+        .eq("shop_id", shopId)
+        .maybeSingle();
 
-      // 2. Insert payment record
-      await supabase
-        .from("payments")
-        .insert([{
+      const { error: paymentInsertError } = await admin.from("payments").insert([{
+        shop_id: shopId,
+        amount: paidAmount,
+        currency: "TRY",
+        payment_id: paymentId,
+        billing_interval: interval,
+        status: "success",
+        billing_snapshot: billingProfile ?? null,
+      }]);
+      if (paymentInsertError) {
+        // billing_snapshot kolonu henüz eklenmemişse kaydı onsuz dene
+        console.error("Ödeme kaydı hatası:", paymentInsertError);
+        await admin.from("payments").insert([{
           shop_id: shopId,
-          amount: amount,
-          currency: 'TRY',
+          amount: paidAmount,
+          currency: "TRY",
           payment_id: paymentId,
           billing_interval: interval,
-          status: 'success'
+          status: "success",
         }]);
-
-      return NextResponse.redirect(appUrl("/settings/billing?success=true", req));
-    } else {
-      // Payment failed
-      const shopId = result.basketId ? parseBasketId(result.basketId).shopId : null;
-      if (shopId) {
-        await supabase
-          .from("payments")
-          .insert([{
-            shop_id: shopId,
-            amount: 0,
-            currency: 'TRY',
-            payment_id: result.paymentId || 'failed',
-            status: 'failure'
-          }]);
       }
-      return NextResponse.redirect(appUrl("/settings/billing?error=payment_failed", req));
+
+      const { error: shopUpdateError } = await admin
+        .from("shops")
+        .update({
+          subscription_status: "active",
+          current_period_end: periodEnd.toISOString(),
+          plan_id: "pro",
+        })
+        .eq("id", shopId);
+      if (shopUpdateError) console.error("Abonelik güncellenemedi:", shopUpdateError, { shopId, paymentId });
+
+      const email = await ownerEmailFor(admin, shop.owner_id);
+      if (email) {
+        await sendSubscriptionSuccessEmail(
+          email,
+          shop.name,
+          `${PLANS.pro.name} (${interval === "yearly" ? "Yıllık" : "Aylık"})`,
+          `₺${paidAmount.toLocaleString("tr-TR")}`
+        );
+      }
+
+      return NextResponse.redirect(appUrl("/settings/billing?success=true", req), 303);
     }
 
+    // Ödeme başarısız
+    const shopId = result.basketId ? parseBasketId(result.basketId).shopId : null;
+    if (shopId) {
+      await admin.from("payments").insert([{
+        shop_id: shopId,
+        amount: 0,
+        currency: "TRY",
+        payment_id: result.paymentId || "failed",
+        status: "failure",
+      }]);
+
+      const { data: shop } = await admin.from("shops").select("name, owner_id").eq("id", shopId).single();
+      const email = shop ? await ownerEmailFor(admin, shop.owner_id) : null;
+      if (email && shop) {
+        await sendSubscriptionFailedEmail(email, shop.name, PLANS.pro.name, result.errorMessage || undefined);
+      }
+    }
+    return NextResponse.redirect(appUrl("/settings/billing?error=payment_failed", req), 303);
   } catch (error) {
     console.error("Iyzico callback error:", error);
-    return NextResponse.redirect(appUrl("/settings/billing?error=system_error", req));
+    return NextResponse.redirect(appUrl("/settings/billing?error=system_error", req), 303);
   }
 }

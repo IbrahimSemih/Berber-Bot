@@ -5,9 +5,14 @@ import { cn } from "@/lib/utils";
 import { createClient } from "@/lib/supabase/client";
 import { useEffect, useState } from "react";
 import NotificationListener from "@/app/dashboard/components/NotificationListener";
+import { SUPPORT, supportWhatsappLink } from "@/lib/site-config";
+
+const supportWhatsapp = supportWhatsappLink();
+const supportIsWhatsapp = !!supportWhatsapp;
+const supportHref = supportWhatsapp ?? `mailto:${SUPPORT.email}`;
 import {
   LayoutDashboard, BarChart3, Calendar, Users, Scissors, Bell, Settings, CreditCard, Menu, LogOut,
-  type LucideIcon,
+  BookOpen, LifeBuoy, type LucideIcon,
 } from "lucide-react";
 
 const navItems: { href: string; label: string; icon: LucideIcon }[] = [
@@ -112,7 +117,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         </div>
 
         {/* Nav */}
-        <nav className="flex-1 p-3 flex flex-col gap-0.5">
+        <nav className="flex-1 p-3 flex flex-col gap-0.5 overflow-y-auto">
           <div className="text-xs font-semibold px-2 py-3 uppercase tracking-widest" style={{ color: "var(--text3)" }}>Ana Menü</div>
           {navItems.map((item) => {
             const active = pathname === item.href;
@@ -140,6 +145,19 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             );
           })}
 
+          <div className="text-xs font-semibold px-2 pt-5 pb-2 uppercase tracking-widest" style={{ color: "var(--text3)" }}>Yardım</div>
+          <Link href="/rehber" target="_blank"
+            className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-colors duration-150 font-medium hover:bg-[var(--bg3)]"
+            style={{ color: "var(--text2)" }}>
+            <BookOpen size={17} strokeWidth={1.75} className="flex-shrink-0" aria-hidden />
+            <span>Kullanım Rehberi</span>
+          </Link>
+          <a href={supportHref} target={supportIsWhatsapp ? "_blank" : undefined} rel="noreferrer"
+            className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-colors duration-150 font-medium hover:bg-[var(--bg3)]"
+            style={{ color: "var(--text2)" }}>
+            <LifeBuoy size={17} strokeWidth={1.75} className="flex-shrink-0" aria-hidden />
+            <span>{supportIsWhatsapp ? "WhatsApp Destek" : "Destek"}</span>
+          </a>
         </nav>
 
         {/* User */}

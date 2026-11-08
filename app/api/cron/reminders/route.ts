@@ -1,23 +1,21 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createClient } from "@supabase/supabase-js";
-import { sendWhatsAppTemplate } from "@/lib/whatsapp";
+import { createAdminClient } from "@/lib/supabase/admin";
+import { computeIsLocked } from "@/lib/plan-limits";
+import { REMINDER_HOURS_BEFORE, sendAppointmentReminder } from "@/lib/appointment-messages";
 
-const supabaseAdmin = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
+export const dynamic = "force-dynamic";
 
-// Randevudan kaç saat önce hatırlatma gönderilsin
-const REMINDER_HOURS_BEFORE = 3;
 // Bu görevi tetikleyen cron'un çalışma sıklığına göre güvenli örtüşme payı
 const WINDOW_MINUTES = 20;
 
-export async function GET(req: NextRequest) {
-  const authHeader = req.headers.get("authorization");
-  if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
+function isAuthorized(req: NextRequest) {
+  const secret = process.env.CRON_SECRET;
+  if (!secret) return false;
+  return req.headers.get("authorization") === `Bearer ${secret}`;
+}
 
+async function run() {
+  const supabaseAdmin = createAdminClient();
   const now = new Date();
   const windowStart = new Date(now.getTime() + (REMINDER_HOURS_BEFORE * 60 - WINDOW_MINUTES) * 60 * 1000);
   const windowEnd = new Date(now.getTime() + (REMINDER_HOURS_BEFORE * 60 + WINDOW_MINUTES) * 60 * 1000);
@@ -35,34 +33,73 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: "Fetch failed" }, { status: 500 });
   }
 
+  const rows = appointments ?? [];
+  if (rows.length === 0) return NextResponse.json({ checked: 0, sent: 0, failed: 0, skipped: 0 });
+
+  const shopIds = Array.from(new Set(rows.map((a) => a.shop_id).filter(Boolean)));
+
+  // Hatırlatmayı kapatmış veya aboneliği bitmiş dükkanlara mesaj gönderilmez
+  const [{ data: shops }, { data: settingsRows }] = await Promise.all([
+    supabaseAdmin.from("shops").select("id, status, subscription_status, trial_end, current_period_end").in("id", shopIds),
+    supabaseAdmin.from("settings").select("shop_id, reminder_hours").in("shop_id", shopIds),
+  ]);
+
+  const shopMap = new Map((shops ?? []).map((s: any) => [s.id, s]));
+  const reminderOff = new Set(
+    (settingsRows ?? []).filter((s: any) => s.reminder_hours === 0).map((s: any) => s.shop_id)
+  );
+
   let sent = 0;
   let failed = 0;
+  let skipped = 0;
 
-  for (const apt of appointments ?? []) {
-    if (!apt.customer_phone) continue;
+  for (const apt of rows) {
+    const shop = shopMap.get(apt.shop_id);
+    if (!apt.customer_phone || !shop || shop.status === "banned" || computeIsLocked(shop, now) || reminderOff.has(apt.shop_id)) {
+      skipped++;
+      continue;
+    }
 
-    const dateObj = new Date(apt.scheduled_at);
-    const dateStr =
-      dateObj.toLocaleDateString("tr-TR") +
-      " saat " +
-      dateObj.toLocaleTimeString("tr-TR", { hour: "2-digit", minute: "2-digit" });
+    // Aynı randevuya iki kez mesaj gitmesin: önce işaretle, başarısız olursa geri al
+    const { data: claimed } = await supabaseAdmin
+      .from("appointments")
+      .update({ reminder_sent: true })
+      .eq("id", apt.id)
+      .eq("reminder_sent", false)
+      .select("id");
+    if (!claimed || claimed.length === 0) {
+      skipped++;
+      continue;
+    }
 
-    // Meta'da onaylı "randevu_hatirlatma" şablonu: {{1}}=isim, {{2}}=tarih/saat, {{3}}=dükkan, {{4}}=hizmet
-    const result = await sendWhatsAppTemplate(apt.customer_phone, "randevu_hatirlatma", [
-      apt.customer_name || "Değerli Müşterimiz",
-      dateStr,
-      apt.shop_name || "Berber",
-      apt.service_name || "randevu",
-    ]);
+    const result = await sendAppointmentReminder({
+      phone: apt.customer_phone,
+      customerName: apt.customer_name,
+      scheduledAt: apt.scheduled_at,
+      shopName: apt.shop_name,
+      serviceName: apt.service_name,
+    });
 
     if (result.success) {
       sent++;
-      await supabaseAdmin.from("appointments").update({ reminder_sent: true }).eq("id", apt.id);
     } else {
       failed++;
+      await supabaseAdmin.from("appointments").update({ reminder_sent: false }).eq("id", apt.id);
       console.error(`Hatırlatma gönderilemedi (randevu ${apt.id}):`, result.error);
     }
   }
 
-  return NextResponse.json({ checked: appointments?.length ?? 0, sent, failed });
+  return NextResponse.json({ checked: rows.length, sent, failed, skipped });
+}
+
+// Vercel Cron GET ile çağırır. Harici cron servisleri (cron-job.org, Upstash QStash)
+// için POST da desteklenir; ikisinde de "Authorization: Bearer <CRON_SECRET>" gerekir.
+export async function GET(req: NextRequest) {
+  if (!isAuthorized(req)) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  return run();
+}
+
+export async function POST(req: NextRequest) {
+  if (!isAuthorized(req)) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  return run();
 }

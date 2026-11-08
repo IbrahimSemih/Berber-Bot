@@ -5,7 +5,7 @@ import AdminLayout from "@/components/layout/AdminLayout";
 import { Card, PageHeader, Button, StatusBadge, SourceBadge, Avatar, Badge, TableSkeleton, EmptyState } from "@/components/ui";
 import { formatTime, relativeDay, formatPrice } from "@/lib/utils";
 import AddAppointmentModal from "@/components/AddAppointmentModal";
-import { confirmAppointmentAndNotify } from "./actions";
+import { confirmAppointmentAndNotify, cancelAppointmentByOwner } from "./actions";
 import { toast } from "react-hot-toast";
 import { Plus, Check, X, CalendarX2, Clock, Scissors, User, AlertTriangle } from "lucide-react";
 
@@ -118,11 +118,16 @@ export default function AppointmentsPage() {
   async function cancel(id: string) {
     if (!currentShopId || acting) return;
     setActing({ id, type: "cancel" });
-    const { error } = await supabase.from("appointments").update({ status: "cancelled" }).eq("id", id).eq("shop_id", currentShopId);
-    if (error) {
-      toast.error("Randevu iptal edilemedi.");
-    } else {
-      toast.success("Randevu iptal edildi.");
+    try {
+      const result = await cancelAppointmentByOwner(id);
+      if (result.success) {
+        toast.success(result.notified ? "Randevu iptal edildi, müşteriye bildirim gönderildi." : "Randevu iptal edildi.");
+      } else {
+        toast.error(result.error || "Randevu iptal edilemedi.");
+      }
+    } catch (e) {
+      console.error(e);
+      toast.error("Randevu iptal edilirken bir hata oluştu.");
     }
     await load();
     setActing(null);

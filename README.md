@@ -55,13 +55,22 @@ SUPABASE_SERVICE_ROLE_KEY=your-service-role-key
 WHATSAPP_TOKEN=your-token
 WHATSAPP_PHONE_ID=your-phone-id
 WHATSAPP_VERIFY_TOKEN=rastgele-bir-string-yaz
+WHATSAPP_APP_SECRET=meta-app-secret            # webhook imza doğrulaması
 CRON_SECRET=rastgele-uzun-bir-string-yaz
+NEXT_PUBLIC_APP_URL=https://berberbot.com      # lokalde http://localhost:3000
+EMAIL_FROM="BerberBot <destek@berberbot.com>"  # Resend'de doğrulanmış domain
+IYZICO_API_KEY=...
+IYZICO_SECRET_KEY=...
+IYZICO_BASE_URL=https://api.iyzipay.com        # sandbox: https://sandbox-api.iyzipay.com
+RESEND_API_KEY=...
+UPSTASH_REDIS_REST_URL=...
+UPSTASH_REDIS_REST_TOKEN=...
 ```
 
 ### 3. Supabase veritabanını kur
 
 1. [app.supabase.com](https://app.supabase.com) → Yeni proje oluştur
-2. SQL Editor → `supabase-schema.sql` içeriğini kopyalayıp çalıştır
+2. SQL Editor → `supabase-schema.sql` içeriğini kopyalayıp çalıştır (mevcut kurulumlarda yalnızca `migrations/` altındaki yeni dosyaları çalıştırmak yeterli)
 3. Settings → API → URL ve Anon Key'i kopyala
 
 ### 4. Geliştirme sunucusunu başlat
@@ -79,7 +88,7 @@ npm run dev
 1. [developers.facebook.com](https://developers.facebook.com) → Uygulama oluştur
 2. WhatsApp → API Setup
 3. Test numaranı ekle
-4. **Webhook URL:** `https://your-domain.com/api/whatsapp`
+4. **Webhook URL:** `https://your-domain.com/api/whatsapp/webhook`
 5. **Verify Token:** `.env.local`'daki `WHATSAPP_VERIFY_TOKEN` ile aynı
 6. Subscribe: `messages`
 

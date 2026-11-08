@@ -3,6 +3,7 @@ import { updateSession } from "@/lib/supabase/middleware";
 import { verifySuperAdminToken } from "@/lib/auth";
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse } from "next/server";
+import { computeIsLocked } from "@/lib/plan-limits";
 
 export async function middleware(request: NextRequest) {
   // Update the session via our utility
@@ -51,15 +52,18 @@ export async function middleware(request: NextRequest) {
   }
 
   // Protect dashboard routes
-  const protectedPaths = ["/dashboard", "/customers", "/settings", "/appointments", "/onboarding", "/whatsapp"];
-  const isProtectedPath = protectedPaths.some((path) => pathname.startsWith(path));
+  const protectedPaths = [
+    "/dashboard", "/customers", "/settings", "/appointments", "/onboarding",
+    "/analytics", "/staff", "/profile", "/notifications",
+  ];
+  const isProtectedPath = protectedPaths.some((path) => pathname === path || pathname.startsWith(`${path}/`));
 
   if (isProtectedPath && !user) {
     return NextResponse.redirect(new URL("/login", request.url));
   }
 
   // If logged in and trying to access /login, redirect to dashboard
-  if (pathname === "/login" && user) {
+  if ((pathname === "/login" || pathname === "/signup") && user) {
     return NextResponse.redirect(new URL("/dashboard", request.url));
   }
 
@@ -80,32 +84,10 @@ export async function middleware(request: NextRequest) {
       return NextResponse.redirect(new URL("/banned", request.url));
     }
 
-    // Paywall Check
-    // If they are on a protected path that is NOT settings (we must allow them to go to settings to pay)
-    if (!pathname.startsWith("/settings") && !pathname.startsWith("/api/payment")) {
-      const isTrialing = shop.subscription_status === 'trialing';
-      const isActive = shop.subscription_status === 'active';
-      const now = new Date();
-      
-      let hasAccess = false;
-
-      if (isActive) {
-        if (shop.current_period_end && new Date(shop.current_period_end) > now) {
-          hasAccess = true;
-        } else if (!shop.current_period_end) {
-          // Fallback if active but no period end
-          hasAccess = true;
-        }
-      } else if (isTrialing) {
-        if (shop.trial_end && new Date(shop.trial_end) > now) {
-          hasAccess = true;
-        }
-      }
-
-      if (!hasAccess) {
-        // Redirection to billing
-        return NextResponse.redirect(new URL("/settings/billing", request.url));
-      }
+    // Paywall: abonelik/deneme bittiyse sadece ödeme ve profil sayfaları açık kalır
+    const paywallExempt = pathname.startsWith("/settings/billing") || pathname === "/profile";
+    if (!paywallExempt && computeIsLocked(shop)) {
+      return NextResponse.redirect(new URL("/settings/billing", request.url));
     }
   }
 

@@ -41,6 +41,16 @@ export const bookingLimiter = redis
   })
   : mockLimiter;
 
+// WhatsApp otomatik yanıtı: aynı numaraya saatte en fazla 2 kez
+export const autoReplyLimiter = redis
+  ? new Ratelimit({
+    redis: redis,
+    limiter: Ratelimit.slidingWindow(2, "1 h"),
+    analytics: true,
+    prefix: "@upstash/ratelimit/wa-autoreply",
+  })
+  : mockLimiter;
+
 // Helper to get client IP in Next.js App Router
 export function getIp(req?: Request, headers?: Headers) {
   // If we have Next.js headers function (server actions/components)

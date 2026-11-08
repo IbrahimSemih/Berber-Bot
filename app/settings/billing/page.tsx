@@ -4,10 +4,24 @@ import { redirect } from "next/navigation";
 import Link from "next/link";
 import { Check, AlertTriangle, CreditCard, Clock, Zap } from "lucide-react";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { getShopUsageAndLimits, PLANS, YEARLY_REFUND_DAYS } from "@/lib/plan-limits";
+import { getShopUsageAndLimits, TRIAL_DAYS, YEARLY_REFUND_DAYS } from "@/lib/plan-limits";
+import { isBillingProfileComplete, type BillingProfile } from "@/lib/checkout";
 import AdminLayout from "@/components/layout/AdminLayout";
 import { PageHeader } from "@/components/ui";
 import RefundRequestButton from "./RefundRequestButton";
+import BillingProfileForm from "./BillingProfileForm";
+import PurchaseOptions from "./PurchaseOptions";
+
+const ERROR_MESSAGES: Record<string, string> = {
+  payment_failed: "Ödeme tamamlanamadı: kart reddedildi veya bakiye yetersiz.",
+  missing_token: "Ödeme oturumu bulunamadı. Lütfen tekrar deneyin.",
+  system_error: "Ödeme sırasında beklenmeyen bir hata oluştu. Kartınızdan çekim yapıldıysa destek ekibimizle iletişime geçin.",
+  amount_mismatch: "Ödeme tutarı doğrulanamadı. Lütfen destek ekibimizle iletişime geçin.",
+  consent_required: "Ödemeye geçmek için Ön Bilgilendirme Formu ve Mesafeli Satış Sözleşmesi'ni onaylamanız gerekir.",
+  billing_profile_required: "Ödemeye geçmeden önce fatura bilgilerinizi eksiksiz doldurun.",
+  billing_profile_unavailable: "Fatura bilgileri şu an okunamıyor. Lütfen daha sonra tekrar deneyin.",
+  too_many_requests: "Çok fazla deneme yaptınız. Lütfen birkaç dakika sonra tekrar deneyin.",
+};
 
 export const dynamic = "force-dynamic";
 export const fetchCache = "force-no-store";
@@ -56,13 +70,20 @@ export default async function BillingPage({ searchParams }: { searchParams: { su
   };
 
   const adminClient = createAdminClient();
-  const shopLimits = await getShopUsageAndLimits(adminClient, shop.id);
+  const [shopLimits, { data: billingProfileRow }] = await Promise.all([
+    getShopUsageAndLimits(adminClient, shop.id),
+    adminClient.from("billing_profiles").select("*").eq("shop_id", shop.id).maybeSingle(),
+  ]);
+  const billingProfile = (billingProfileRow ?? null) as Partial<BillingProfile> | null;
+  const profileComplete = isBillingProfileComplete(billingProfile);
   const { plan, usage, limits, isLocked } = shopLimits;
   
   const isTrialExpired = isTrialing && trialEnd && trialEnd < now;
 
   // Süresi dolmuş, iptal edilmiş/iade edilmiş, deneme sürümündeki veya Başlangıç planındaki dükkanlar ödeme seçeneğini görür
-  const showPurchaseCard = isLocked || !isActive || plan.id === "starter";
+  // Aktif abonelikte de bitişe 7 gün kala uzatma seçeneği gösterilir (otomatik yenileme yok)
+  const renewSoon = isActive && !!currentPeriodEnd && currentPeriodEnd.getTime() - now.getTime() < 7 * 24 * 60 * 60 * 1000;
+  const showPurchaseCard = isLocked || !isActive || plan.id === "starter" || renewSoon;
 
   const { data: paymentRows } = await supabase
     .from("payments")
@@ -98,7 +119,7 @@ export default async function BillingPage({ searchParams }: { searchParams: { su
       {searchParams.error && (
         <div className="p-4 rounded-xl flex items-center gap-3 border" style={{ background: "rgba(239, 68, 68, 0.1)", borderColor: "rgba(239, 68, 68, 0.2)", color: "#ef4444" }}>
           <AlertTriangle className="w-5 h-5" />
-          <p className="font-medium">Ödeme işlemi başarısız: {searchParams.error === 'payment_failed' ? 'Kart reddedildi veya bakiye yetersiz.' : searchParams.error}</p>
+          <p className="font-medium">{ERROR_MESSAGES[searchParams.error] ?? `Ödeme işlemi başlatılamadı: ${searchParams.error}`}</p>
         </div>
       )}
 
@@ -109,7 +130,7 @@ export default async function BillingPage({ searchParams }: { searchParams: { su
             <h3 className="font-bold text-lg">Erişiminiz Kısıtlandı</h3>
           </div>
           <p className="text-sm">
-            {isTrialExpired ? "7 Günlük ücretsiz deneme süreniz dolmuştur." : "Abonelik süreniz dolmuştur."} Sisteme tekrar erişebilmek ve randevularınızı yönetmeye devam edebilmek için lütfen PRO plana geçiş yapın.
+            {isTrialExpired ? `${TRIAL_DAYS} günlük ücretsiz deneme süreniz dolmuştur.` : "Abonelik süreniz dolmuştur."} Sisteme tekrar erişebilmek ve randevularınızı yönetmeye devam edebilmek için lütfen PRO plana geçiş yapın.
           </p>
           <a href="#plans" className="inline-block mt-4 px-5 py-2.5 rounded-xl text-sm font-bold" style={{ background: "var(--accent)", color: "#0a0a0a" }}>Plan Seç ve Öde</a>
         </div>
@@ -140,7 +161,7 @@ export default async function BillingPage({ searchParams }: { searchParams: { su
               </span>
             </div>
             <div className="flex justify-between pb-4 border-b" style={{ borderColor: "var(--border)" }}>
-              <span style={{ color: "var(--text2)" }}>{isActive ? "Sonraki Fatura Tarihi" : "Deneme Bitiş Tarihi"}</span>
+              <span style={{ color: "var(--text2)" }}>{isActive ? "Abonelik Bitiş Tarihi" : "Deneme Bitiş Tarihi"}</span>
               <span className="font-medium">
                 {isActive ? formatDate(currentPeriodEnd) : formatDate(trialEnd)}
               </span>
@@ -193,9 +214,9 @@ export default async function BillingPage({ searchParams }: { searchParams: { su
           <div id="plans" className="p-6 rounded-2xl border relative overflow-hidden flex flex-col" style={{ background: "var(--bg2)", borderColor: "var(--accent)" }}>
             <div className="absolute top-0 right-0 w-32 h-32 rounded-full blur-[50px] opacity-20 pointer-events-none" style={{ background: "var(--accent)" }} />
             
-            <h3 className="text-xl font-bold mb-2">{isLocked ? "Aboneliğinizi Yenileyin" : "PRO Plana Yükselt"}</h3>
+            <h3 className="text-xl font-bold mb-2">{isLocked || renewSoon ? "Aboneliğinizi Yenileyin" : "PRO Plana Geç"}</h3>
             <p className="text-sm mb-6" style={{ color: "var(--text2)" }}>
-              {isLocked ? "Ödemenizi yaparak panelinize ve randevu sayfanıza anında yeniden erişin." : "Sınırları kaldırın ve dükkanınızı tam potansiyeliyle yönetin."}
+              {isLocked ? "Ödemenizi yaparak panelinize ve randevu sayfanıza anında yeniden erişin." : renewSoon ? "Aboneliğiniz yakında bitiyor. Şimdi uzatırsanız yeni dönem mevcut bitiş tarihinin üzerine eklenir." : "Şimdi geçerseniz kalan deneme günleriniz kaybolmaz; ücretli dönem deneme bitişinden itibaren başlar."}
             </p>
 
             <ul className="space-y-3 mb-8 text-sm flex-1">
@@ -205,17 +226,7 @@ export default async function BillingPage({ searchParams }: { searchParams: { su
               <li className="flex items-center gap-2"><Check className="w-4 h-4 text-green-500" /> İptal riskini azaltan hatırlatıcılar</li>
             </ul>
 
-            <a href="/api/payment/checkout?interval=yearly" className="w-full py-3.5 rounded-xl text-sm font-bold flex items-center justify-center gap-2 transition-all hover:-translate-y-0.5 shadow-lg block text-center mt-auto" style={{ background: "var(--accent)", color: "#0a0a0a" }}>
-              <Zap className="w-4 h-4" />
-              Yıllık ₺{PLANS.pro.yearlyPrice.toLocaleString("tr-TR")} · 2 ay bedava
-            </a>
-            <p className="text-[11px] text-center mt-2" style={{ color: "var(--text2)" }}>
-              İlk {YEARLY_REFUND_DAYS} gün koşulsuz iade
-            </p>
-            <a href="/api/payment/checkout?interval=monthly" className="w-full py-3 mt-3 rounded-xl text-sm font-medium block text-center border transition-colors hover:bg-white/5" style={{ borderColor: "var(--border2)", color: "var(--text2)" }}>
-              Aylık ₺{PLANS.pro.price} / Ay
-            </a>
-            <p className="text-[10px] text-center mt-3 opacity-60">iyzico güvencesiyle 256-bit SSL şifreleme</p>
+            <PurchaseOptions profileComplete={profileComplete} />
           </div>
         ) : (
           <div className="p-6 rounded-2xl border flex flex-col items-center justify-center text-center" style={{ background: "var(--bg2)", borderColor: "var(--border)" }}>
@@ -224,10 +235,19 @@ export default async function BillingPage({ searchParams }: { searchParams: { su
             </div>
             <h3 className="text-xl font-bold mb-2">Harika Gidiyorsunuz!</h3>
             <p className="text-sm max-w-xs" style={{ color: "var(--text2)" }}>
-              Şu anda en yüksek kapasiteli plandasınız. Tüm özellikleri sınırsız kullanabilirsiniz.
+              Aboneliğiniz {formatDate(currentPeriodEnd)} tarihine kadar aktif. Otomatik yenileme olmadığından süre bitmeden önce size e-posta ile hatırlatma yapılır; dilediğiniz zaman buradan uzatabilirsiniz.
             </p>
           </div>
         )}
+      </div>
+
+      {/* Fatura bilgileri */}
+      <div id="fatura" className="p-6 rounded-2xl border scroll-mt-24" style={{ background: "var(--bg2)", borderColor: profileComplete ? "var(--border)" : "var(--orange)" }}>
+        <h3 className="font-bold text-lg mb-1">Fatura Bilgileri</h3>
+        <p className="text-xs mb-5" style={{ color: "var(--text3)" }}>
+          Ödemelerinize ait fatura bu bilgilerle düzenlenir ve kayıtlı e-posta adresinize gönderilir.
+        </p>
+        <BillingProfileForm initial={billingProfile} complete={profileComplete} />
       </div>
 
       {/* Ödeme geçmişi & iade */}

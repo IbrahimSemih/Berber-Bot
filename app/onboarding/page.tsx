@@ -3,15 +3,7 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
-import { sendOnboardingWelcomeEmailAction } from "./actions";
-
-function generateSlug(name: string) {
-  return name
-    .toLowerCase()
-    .replace(/[^a-z0-9\s]/g, "")
-    .trim()
-    .replace(/\s+/g, "-");
-}
+import { createShopAction } from "./actions";
 
 const DAYS = [
   { id: 1, label: "Pzt" },
@@ -35,7 +27,6 @@ export default function OnboardingPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [userId, setUserId] = useState<string | null>(null);
-  const [userEmail, setUserEmail] = useState<string>("");
   
   const router = useRouter();
   const supabase = createClient();
@@ -48,7 +39,6 @@ export default function OnboardingPage() {
         router.push("/login");
       } else {
         setUserId(user.id);
-        setUserEmail(user.email || "");
         
         // Check if user already has a shop, if so, redirect to dashboard
         const { data: shop } = await supabase
@@ -87,101 +77,24 @@ export default function OnboardingPage() {
   const handleCreateShop = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!userId) return;
-    
+
     setLoading(true);
     setError(null);
 
-    const slug = generateSlug(shopName) + "-" + Math.floor(Math.random() * 1000);
-
-    const trialEndDate = new Date();
-    trialEndDate.setDate(trialEndDate.getDate() + 7);
-
-    // 1. Create Shop
-    const { data: shop, error: shopError } = await supabase
-      .from("shops")
-      .insert([
-        {
-          name: shopName,
-          slug: slug,
-          owner_id: userId,
-          plan_id: 'pro',
-          subscription_status: 'trialing',
-          trial_end: trialEndDate.toISOString(),
-        },
-      ])
-      .select()
-      .single();
-
-    if (shopError) {
-      setError("Dükkan oluşturulurken hata: " + shopError.message);
+    try {
+      const result = await createShopAction({ shopName, workStart, workEnd, workDays, staffMembers });
+      if (!result.success) {
+        setError(result.error);
+        setLoading(false);
+        return;
+      }
+    } catch (err) {
+      console.error("Dükkan oluşturma hatası:", err);
+      setError("Bağlantı hatası. Lütfen tekrar deneyin.");
       setLoading(false);
       return;
     }
 
-    const shopId = shop.id;
-
-    // 2. Create Default Settings with working hours
-    const working_hours = [1, 2, 3, 4, 5, 6, 0].map(day => ({
-      day,
-      is_open: workDays.includes(day),
-      start: workStart,
-      end: workEnd
-    }));
-
-    const { error: settingsError } = await supabase
-      .from("settings")
-      .insert([
-        {
-          shop_id: shopId,
-          shop_name: shopName,
-          work_start: workStart,
-          work_end: workEnd,
-          work_days: workDays,
-          working_hours: working_hours
-        },
-      ]);
-
-    if (settingsError) {
-      console.error("Settings error:", settingsError);
-    }
-
-    // 3. Create Default Services
-    const { error: servicesError } = await supabase
-      .from("services")
-      .insert([
-        { shop_id: shopId, name: "Saç Kesimi", duration_minutes: 30, price: 150 },
-        { shop_id: shopId, name: "Sakal Düzeltme", duration_minutes: 20, price: 80 },
-        { shop_id: shopId, name: "Komple Paket", duration_minutes: 45, price: 200 }
-      ]);
-
-    if (servicesError) {
-      console.error("Services error:", servicesError);
-    }
-
-    // 4. Create Staff Members
-    if (staffMembers.length > 0) {
-      const staffInserts = staffMembers.map(name => ({
-        shop_id: shopId,
-        name: name,
-        is_active: true
-      }));
-      const { error: staffError } = await supabase.from("staff").insert(staffInserts);
-      if (staffError) console.error("Staff error:", staffError);
-    } else {
-      // Varsayılan bir personel ekle
-      await supabase.from("staff").insert([{ shop_id: shopId, name: "İşletme Sahibi", is_active: true }]);
-    }
-
-    // Send welcome email now that onboarding is complete
-    if (userEmail) {
-      try {
-        await sendOnboardingWelcomeEmailAction();
-      } catch (err) {
-        console.error("Failed to send welcome email:", err);
-      }
-    }
-
-    // All done, redirect to dashboard
     router.push("/dashboard");
     router.refresh();
   };
@@ -209,6 +122,7 @@ export default function OnboardingPage() {
               <input
                 type="text"
                 required
+                maxLength={80}
                 value={shopName}
                 onChange={(e) => setShopName(e.target.value)}
                 placeholder="Örn: Maestro Berber"

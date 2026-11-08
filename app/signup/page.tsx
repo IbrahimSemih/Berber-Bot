@@ -18,6 +18,7 @@ export default function SignupPage() {
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
   const [isExiting, setIsExiting] = useState(false);
+  const [termsAccepted, setTermsAccepted] = useState(false);
   const router = useRouter();
   const supabase = createClient();
 
@@ -25,6 +26,12 @@ export default function SignupPage() {
     e.preventDefault();
     setLoading(true);
     setError(null);
+
+    if (!termsAccepted) {
+      setError("Devam etmek için Kullanım Koşulları ve Gizlilik Politikası'nı kabul etmelisiniz.");
+      setLoading(false);
+      return;
+    }
 
     // Client-side Zod validation
     const validation = signupSchema.safeParse({ email, password, passwordConfirm });
@@ -39,6 +46,8 @@ export default function SignupPage() {
       password,
       options: {
         emailRedirectTo: `${location.origin}/auth/callback`,
+        // Sözleşme onayının kaydı (kullanıcı metadata'sında saklanır)
+        data: { terms_accepted_at: new Date().toISOString() },
       },
     });
 
@@ -164,6 +173,17 @@ export default function SignupPage() {
               </button>
             </div>
           </div>
+
+          <label className="flex items-start gap-2.5 text-xs leading-relaxed cursor-pointer" style={{ color: "var(--text2)" }}>
+            <input type="checkbox" checked={termsAccepted} onChange={(e) => setTermsAccepted(e.target.checked)}
+              className="mt-0.5 w-4 h-4 flex-shrink-0 accent-[var(--accent)]" />
+            <span>
+              <Link href="/kullanim-kosullari" target="_blank" className="underline" style={{ color: "var(--accent)" }}>Kullanım Koşulları</Link>
+              &apos;nı okudum, kabul ediyorum.{" "}
+              <Link href="/gizlilik" target="_blank" className="underline" style={{ color: "var(--accent)" }}>Gizlilik Politikası</Link>
+              &apos;nı okudum.
+            </span>
+          </label>
 
           {error && (
             <div className="text-sm p-3 rounded-lg border" style={{ background: "rgba(239, 68, 68, 0.1)", borderColor: "rgba(239, 68, 68, 0.2)", color: "#f87171" }}>

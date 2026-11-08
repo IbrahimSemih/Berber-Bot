@@ -7,8 +7,9 @@ import {
   Card, CardHeader, PageHeader, Button, StatusBadge, SourceBadge, Avatar,
 } from "@/components/ui";
 import { formatTime } from "@/lib/utils";
+import { istanbulDayRange, istanbulToUtc, todayInIstanbul } from "@/lib/time";
 import AddAppointmentModal from "@/components/AddAppointmentModal";
-import { confirmAppointmentAndNotify } from "@/app/appointments/actions";
+import { confirmAppointmentAndNotify, cancelAppointmentByOwner } from "@/app/appointments/actions";
 import { toast } from "react-hot-toast";
 import { Calendar, CalendarX2, Clock, Users, Wallet, Plus, RefreshCw, Copy, ExternalLink, Link2, Check, X } from "lucide-react";
 
@@ -61,15 +62,14 @@ export default function DashboardPage() {
     setCurrentShopId(shopId);
     setShopSlug(shop.slug);
 
-    const today = new Date().toISOString().split("T")[0];
-
-    // Bugünkü randevular
+    // Bugünkü randevular (Türkiye saatine göre gün sınırları)
+    const { start: dayStart, end: dayEnd } = istanbulDayRange(todayInIstanbul());
     const { data } = await supabase
       .from("appointments")
       .select("*, customer:customers(*), service:services(*)")
       .eq("shop_id", shopId)
-      .gte("scheduled_at", `${today}T00:00:00`)
-      .lte("scheduled_at", `${today}T23:59:59`)
+      .gte("scheduled_at", dayStart.toISOString())
+      .lt("scheduled_at", dayEnd.toISOString())
       .order("scheduled_at");
 
     setApts((data as Apt[]) ?? []);
@@ -82,14 +82,13 @@ export default function DashboardPage() {
     setTotalCustomers(count ?? 0);
 
     // Bu ay ciro
-    const monthStart = new Date();
-    monthStart.setDate(1);
+    const monthStart = istanbulToUtc(`${todayInIstanbul().slice(0, 7)}-01`, "00:00");
     const { data: revenue } = await supabase
       .from("appointments")
       .select("service:services(price)")
       .eq("shop_id", shopId)
       .gte("scheduled_at", monthStart.toISOString())
-      .eq("status", "confirmed");
+      .in("status", ["confirmed", "completed"]);
     const total = (revenue ?? []).reduce((sum: number, a: any) => sum + (a.service?.price ?? 0), 0);
     setMonthRevenue(total);
 
@@ -134,11 +133,16 @@ export default function DashboardPage() {
   async function cancel(id: string) {
     if (!currentShopId || acting) return;
     setActing({ id, type: "cancel" });
-    const { error } = await supabase.from("appointments").update({ status: "cancelled" }).eq("id", id).eq("shop_id", currentShopId);
-    if (error) {
-      toast.error("Randevu iptal edilemedi.");
-    } else {
-      toast.success("Randevu iptal edildi.");
+    try {
+      const result = await cancelAppointmentByOwner(id);
+      if (result.success) {
+        toast.success(result.notified ? "Randevu iptal edildi, müşteriye bildirim gönderildi." : "Randevu iptal edildi.");
+      } else {
+        toast.error(result.error || "Randevu iptal edilemedi.");
+      }
+    } catch (e) {
+      console.error(e);
+      toast.error("Randevu iptal edilirken bir hata oluştu.");
     }
     await load();
     setActing(null);

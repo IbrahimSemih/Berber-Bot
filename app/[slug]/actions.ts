@@ -1,9 +1,59 @@
 "use server";
 
-import { createAdminClient } from "@/lib/supabase/admin";
-import { bookingLimiter, getIp } from "@/lib/rate-limit";
 import { headers } from "next/headers";
+import { createAdminClient } from "@/lib/supabase/admin";
+import { bookingLimiter, apiLimiter, getIp } from "@/lib/rate-limit";
 import { getShopUsageAndLimits } from "@/lib/plan-limits";
+import { getAvailability, resolveWorkingHours, type AvailabilityResult } from "@/lib/booking";
+import { bookingSchema, phoneLookupVariants } from "@/lib/validations";
+import { formatTrDateTime, isValidDateString, isValidTimeString, istanbulToUtc } from "@/lib/time";
+import { newCancelToken, sendAppointmentConfirmation } from "@/lib/appointment-messages";
+
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+const isUuid = (v: unknown): v is string => typeof v === "string" && UUID_RE.test(v);
+
+async function loadBookableShop(admin: ReturnType<typeof createAdminClient>, shopId: string) {
+  const { data: shop } = await admin.from("shops").select("id, name, status").eq("id", shopId).single();
+  if (!shop || shop.status === "banned") return null;
+  return shop;
+}
+
+export async function getAvailableSlots(input: {
+  shopId: string;
+  serviceId: string;
+  date: string;
+  staffId?: string | null;
+}): Promise<AvailabilityResult> {
+  const empty: AvailabilityResult = { slots: [], closed: false, staffOnLeave: false };
+  if (!isUuid(input.shopId) || !isUuid(input.serviceId) || !isValidDateString(input.date)) return empty;
+  if (input.staffId && !isUuid(input.staffId)) return empty;
+
+  const ip = getIp(undefined, headers());
+  const { success } = await apiLimiter.limit(`slots_${ip}`);
+  if (!success) return empty;
+
+  const admin = createAdminClient();
+  const shop = await loadBookableShop(admin, input.shopId);
+  if (!shop) return empty;
+
+  const [{ data: service }, { data: settings }] = await Promise.all([
+    admin.from("services").select("duration_minutes").eq("id", input.serviceId).eq("shop_id", shop.id).eq("is_active", true).single(),
+    admin.from("settings").select("working_hours, work_days, work_start, work_end").eq("shop_id", shop.id).maybeSingle(),
+  ]);
+  if (!service) return empty;
+
+  return getAvailability(admin, {
+    shopId: shop.id,
+    date: input.date,
+    serviceDurationMinutes: service.duration_minutes,
+    staffId: input.staffId || null,
+    workingHours: resolveWorkingHours(settings),
+  });
+}
+
+export type CreateBookingResult =
+  | { success: true; status: "pending" | "confirmed" }
+  | { success: false; error: string; code?: "slot_taken" };
 
 export async function createBooking(data: {
   shopId: string;
@@ -11,185 +61,144 @@ export async function createBooking(data: {
   staffId?: string | null;
   customerName: string;
   customerPhone: string;
-  scheduledAt: string;
-}) {
+  date: string;
+  time: string;
+  privacyAccepted: boolean;
+}): Promise<CreateBookingResult> {
   const ip = getIp(undefined, headers());
   const { success } = await bookingLimiter.limit(`booking_${ip}`);
   if (!success) {
     return { success: false, error: "Çok fazla randevu talebi gönderdiniz. Lütfen bir süre bekleyip tekrar deneyin." };
   }
 
-  const supabase = createAdminClient();
+  if (!isUuid(data.shopId) || !isUuid(data.serviceId) || (data.staffId && !isUuid(data.staffId))) {
+    return { success: false, error: "Geçersiz randevu bilgisi." };
+  }
+  if (!isValidDateString(data.date) || !isValidTimeString(data.time)) {
+    return { success: false, error: "Lütfen geçerli bir tarih ve saat seçin." };
+  }
+  if (data.privacyAccepted !== true) {
+    return { success: false, error: "Devam etmek için Aydınlatma Metni'ni okuduğunuzu onaylayın." };
+  }
+
+  const parsed = bookingSchema.safeParse({ customerName: data.customerName, phone: data.customerPhone });
+  if (!parsed.success) {
+    return { success: false, error: parsed.error.issues[0]?.message || "Lütfen bilgilerinizi kontrol edin." };
+  }
+  const customerName = parsed.data.customerName;
+  const phone = parsed.data.phone;
+
+  const admin = createAdminClient();
 
   try {
-    // 0. Check shop limits and lock status
-    const shopLimits = await getShopUsageAndLimits(supabase, data.shopId);
-    
+    const shop = await loadBookableShop(admin, data.shopId);
+    if (!shop) return { success: false, error: "Dükkan bulunamadı." };
+
+    // 0. Abonelik ve plan limitleri
+    const shopLimits = await getShopUsageAndLimits(admin, shop.id);
     if (shopLimits.isLocked) {
       return { success: false, error: "Bu dükkan şu anda online randevu kabul etmemektedir. Lütfen telefon ile iletişime geçiniz." };
     }
-
     if (!shopLimits.canAddAppointment) {
       return { success: false, error: "Bu dükkan aylık online randevu kapasitesini doldurmuştur. Lütfen telefon ile iletişime geçiniz." };
     }
 
-    // 1. Find or create customer
-    let customerId = null;
+    // 1. Hizmet, personel ve ayarlar bu dükkana mı ait?
+    const [{ data: service }, { data: settings }] = await Promise.all([
+      admin.from("services").select("id, name, duration_minutes").eq("id", data.serviceId).eq("shop_id", shop.id).eq("is_active", true).single(),
+      admin.from("settings").select("*").eq("shop_id", shop.id).maybeSingle(),
+    ]);
+    if (!service) return { success: false, error: "Seçtiğiniz hizmet artık sunulmuyor. Lütfen sayfayı yenileyin." };
 
-    // Normalize phone slightly (just trim)
-    const phone = data.customerPhone.trim();
+    if (data.staffId) {
+      const { data: staff } = await admin.from("staff").select("id").eq("id", data.staffId).eq("shop_id", shop.id).eq("is_active", true).single();
+      if (!staff) return { success: false, error: "Seçtiğiniz personel bulunamadı. Lütfen sayfayı yenileyin." };
+    }
 
-    const { data: existingCustomer } = await supabase
+    // 2. Saat hâlâ müsait mi? (istemciye gösterilen listeyle aynı hesap)
+    const availability = await getAvailability(admin, {
+      shopId: shop.id,
+      date: data.date,
+      serviceDurationMinutes: service.duration_minutes,
+      staffId: data.staffId || null,
+      workingHours: resolveWorkingHours(settings),
+    });
+    if (!availability.slots.includes(data.time)) {
+      return { success: false, code: "slot_taken", error: "Seçtiğiniz saat az önce doldu veya artık müsait değil. Lütfen başka bir saat seçin." };
+    }
+
+    const scheduledAt = istanbulToUtc(data.date, data.time).toISOString();
+
+    // 3. Müşteriyi bul (eski kayıtlar farklı telefon biçiminde olabilir) veya oluştur
+    const { data: existingCustomers } = await admin
       .from("customers")
       .select("id")
-      .eq("shop_id", data.shopId)
-      .eq("phone", phone)
-      .single();
+      .eq("shop_id", shop.id)
+      .in("phone", phoneLookupVariants(data.customerPhone))
+      .limit(1);
 
-    if (existingCustomer) {
-      customerId = existingCustomer.id;
+    let customerId: string;
+    if (existingCustomers && existingCustomers.length > 0) {
+      customerId = existingCustomers[0].id;
     } else {
-      const { data: newCustomer, error: customerError } = await supabase
+      const { data: newCustomer, error: customerError } = await admin
         .from("customers")
-        .insert({
-          shop_id: data.shopId,
-          name: data.customerName.trim(),
-          phone: phone,
-        })
-        .select()
+        .insert({ shop_id: shop.id, name: customerName, phone })
+        .select("id")
         .single();
-
-      if (customerError) throw new Error("Müşteri kaydı oluşturulamadı: " + customerError.message);
+      if (customerError || !newCustomer) {
+        console.error("Müşteri kaydı oluşturulamadı:", customerError);
+        return { success: false, error: "Randevu oluşturulamadı. Lütfen tekrar deneyin." };
+      }
       customerId = newCustomer.id;
     }
 
-    // 2. Create appointment
-    const cancelToken = crypto.randomUUID().replace(/-/g, '').substring(0, 10);
-    const { error: appointmentError } = await supabase
-      .from("appointments")
-      .insert({
-        shop_id: data.shopId,
-        customer_id: customerId,
-        service_id: data.serviceId,
-        staff_id: data.staffId || null,
-        scheduled_at: data.scheduledAt,
-        status: "pending",
-        source: "manual", // representing web booking
-        notes: "Web Randevu Sayfasından alındı",
-        cancel_token: cancelToken
-      });
+    // 4. Randevu
+    const autoConfirm = settings?.auto_confirm !== false;
+    const status: "pending" | "confirmed" = autoConfirm ? "confirmed" : "pending";
+    const cancelToken = newCancelToken();
+
+    const { error: appointmentError } = await admin.from("appointments").insert({
+      shop_id: shop.id,
+      customer_id: customerId,
+      service_id: service.id,
+      staff_id: data.staffId || null,
+      scheduled_at: scheduledAt,
+      status,
+      source: "manual",
+      notes: "Web randevu sayfasından alındı",
+      cancel_token: cancelToken,
+    });
 
     if (appointmentError) {
-      throw new Error("Randevu oluşturulamadı: " + appointmentError.message);
+      console.error("Randevu oluşturulamadı:", appointmentError);
+      return { success: false, error: "Randevu oluşturulamadı. Lütfen tekrar deneyin." };
     }
 
-    // Bildirim oluştur (Yeni randevu talebi)
-    await supabase
-      .from("notifications")
-      .insert({
-        shop_id: data.shopId,
-        type: 'new_booking',
-        message: `🔔 ${data.customerName.trim()} web üzerinden yeni bir randevu talebi oluşturdu. (${new Date(data.scheduledAt).toLocaleDateString("tr-TR")} saat ${new Date(data.scheduledAt).toLocaleTimeString("tr-TR", { hour: '2-digit', minute: '2-digit' })})`
+    // 5. Otomatik onay açıksa müşteriye WhatsApp onay mesajı
+    if (status === "confirmed") {
+      const result = await sendAppointmentConfirmation({
+        phone,
+        customerName,
+        scheduledAt,
+        shopName: shop.name,
+        cancelToken,
       });
-
-    return { success: true };
-  } catch (error: any) {
-    return { success: false, error: error.message };
-  }
-}
-
-export async function getBookedSlots(shopId: string, dateStr: string, staffId?: string | null) {
-  const supabase = createAdminClient();
-  const date = new Date(dateStr);
-  const dayStart = new Date(date);
-  dayStart.setHours(0, 0, 0, 0);
-  const dayEnd = new Date(date);
-  dayEnd.setHours(23, 59, 59, 999);
-
-  // 1. Personelleri al (sadece aktif olanlar)
-  const { data: staffData } = await supabase
-    .from('staff')
-    .select('id')
-    .eq('shop_id', shopId)
-    .eq('is_active', true);
-
-  if (!staffData || staffData.length === 0) {
-    const allTimes = [];
-    for (let h = 9; h < 20; h++) {
-      allTimes.push(`${String(h).padStart(2, "0")}:00`);
-      allTimes.push(`${String(h).padStart(2, "0")}:30`);
+      if (!result.success) console.error("WhatsApp onay mesajı gönderilemedi:", result.error);
     }
-    return { bookedSlots: allTimes, isStaffOnLeave: false };
-  }
 
-  // 1.5 O gün izinli olan personelleri bul
-  // start_date <= dateStr AND end_date >= dateStr
-  const queryDate = dateStr.split("T")[0]; // YYYY-MM-DD
-  const { data: leaves } = await supabase
-    .from('staff_leaves')
-    .select('staff_id')
-    .eq('shop_id', shopId)
-    .lte('start_date', queryDate)
-    .gte('end_date', queryDate);
-
-  const staffOnLeave = new Set(leaves?.map(l => l.staff_id) || []);
-  
-  // Aktif personellerden o gün izinli olanları çıkar
-  const availableStaff = staffData.filter(s => !staffOnLeave.has(s.id));
-  
-  // Eğer hiç müsait personel kalmadıysa o gün tamamen kapalıdır, tüm saatleri dolu dön
-  if (availableStaff.length === 0) {
-    const allTimes = [];
-    for (let h = 9; h < 20; h++) {
-      allTimes.push(`${String(h).padStart(2, "0")}:00`);
-      allTimes.push(`${String(h).padStart(2, "0")}:30`);
+    // 6. İşletmeye panel bildirimi
+    if (settings?.notify_new !== false) {
+      await admin.from("notifications").insert({
+        shop_id: shop.id,
+        type: "new_booking",
+        message: `🔔 ${customerName} web üzerinden ${status === "pending" ? "yeni bir randevu talebi oluşturdu" : "randevu aldı"}. (${service.name} · ${formatTrDateTime(scheduledAt)})`,
+      });
     }
-    return { bookedSlots: allTimes, isStaffOnLeave: true };
+
+    return { success: true, status };
+  } catch (error) {
+    console.error("createBooking hatası:", error);
+    return { success: false, error: "Beklenmeyen bir hata oluştu. Lütfen tekrar deneyin." };
   }
-
-  // Eğer spesifik bir personel seçilmişse ve o personel izinliyse, yine her saati dolu dön
-  if (staffId && staffOnLeave.has(staffId)) {
-    const allTimes = [];
-    for (let h = 9; h < 20; h++) {
-      allTimes.push(`${String(h).padStart(2, "0")}:00`);
-      allTimes.push(`${String(h).padStart(2, "0")}:30`);
-    }
-    return { bookedSlots: allTimes, isStaffOnLeave: true };
-  }
-
-  const totalCapacity = availableStaff.length;
-
-  // 2. Randevuları çek
-  const { data: appointments } = await supabase
-    .from('appointments')
-    .select('scheduled_at, staff_id')
-    .eq('shop_id', shopId)
-    .in('status', ['pending', 'confirmed'])
-    .gte('scheduled_at', dayStart.toISOString())
-    .lte('scheduled_at', dayEnd.toISOString());
-
-  if (!appointments || appointments.length === 0) return { bookedSlots: [], isStaffOnLeave: false };
-
-  // 3. Grupla ve kapasiteye/personele göre doluları bul
-  const timeGroups: Record<string, { count: number, staffIds: string[] }> = {};
-  appointments.forEach(a => {
-    // format as HH:mm locally
-    const d = new Date(a.scheduled_at);
-    const timeStr = `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
-    if (!timeGroups[timeStr]) timeGroups[timeStr] = { count: 0, staffIds: [] };
-    timeGroups[timeStr].count += 1;
-    if (a.staff_id) timeGroups[timeStr].staffIds.push(a.staff_id);
-  });
-
-  const bookedSlots: string[] = [];
-
-  for (const [time, data] of Object.entries(timeGroups)) {
-    if (data.count >= totalCapacity) {
-      bookedSlots.push(time);
-    } else if (staffId && data.staffIds.includes(staffId)) {
-      bookedSlots.push(time);
-    }
-  }
-
-  return { bookedSlots, isStaffOnLeave: false };
 }

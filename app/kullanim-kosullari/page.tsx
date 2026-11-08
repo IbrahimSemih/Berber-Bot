@@ -1,48 +1,15 @@
-"use client";
-
+import type { Metadata } from "next";
 import Link from "next/link";
-import { ArrowLeft } from "lucide-react";
+import { LegalPage, Section, CompanyInfo } from "@/components/legal/LegalPage";
+
+export const metadata: Metadata = {
+  title: "Kullanım Koşulları · BerberBot",
+  description: "BerberBot hizmet ve kullanım koşulları.",
+};
 
 export default function KullanimKosullariPage() {
   return (
-    <div className="min-h-screen" style={{ background: "var(--bg)", color: "var(--text)" }}>
-      {/* Nav */}
-      <nav
-        style={{ borderBottom: "1px solid var(--border)", background: "rgba(10,10,10,0.8)" }}
-        className="fixed top-0 left-0 right-0 h-16 flex items-center px-6 md:px-12 gap-5 z-50 backdrop-blur-md">
-        <Link href="/" className="flex items-center gap-3 group">
-          <div
-            className="w-8 h-8 rounded-lg flex items-center justify-center text-base font-bold"
-            style={{ background: "var(--accent)", color: "#0a0a0a" }}>✂</div>
-          <span className="font-heading font-black text-xl tracking-tight">BerberBot</span>
-        </Link>
-        <Link
-          href="/"
-          className="ml-auto flex items-center gap-2 text-sm font-medium transition-colors hover:text-white"
-          style={{ color: "var(--text3)" }}>
-          <ArrowLeft size={16} /> Ana Sayfa
-        </Link>
-      </nav>
-
-      {/* Content */}
-      <main className="max-w-3xl mx-auto px-6 pt-28 pb-20">
-        {/* Header */}
-        <div className="mb-12">
-          <div
-            className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-bold mb-6"
-            style={{ background: "var(--accent-dim)", border: "1px solid var(--accent-dim2)", color: "var(--accent)" }}>
-            📋 Hizmet Sözleşmesi
-          </div>
-          <h1 className="font-heading font-black text-4xl md:text-5xl tracking-tight mb-4">
-            Kullanım Koşulları
-          </h1>
-          <p className="text-base font-light" style={{ color: "var(--text3)" }}>
-            Son güncelleme: 27 Haziran 2025
-          </p>
-        </div>
-
-        {/* Sections */}
-        <article className="flex flex-col gap-10 text-base leading-relaxed" style={{ color: "var(--text2)" }}>
+    <LegalPage title="Kullanım Koşulları" badge="📄 Sözleşme" path="/kullanim-kosullari">
           {/* 1 */}
           <Section title="1. Genel Hükümler">
             <p>
@@ -56,9 +23,9 @@ export default function KullanimKosullariPage() {
           <Section title="2. Tanımlar">
             <div className="mt-2 rounded-xl border p-5 flex flex-col gap-3" style={{ background: "var(--bg2)", borderColor: "var(--border)" }}>
               {[
-                { term: "Platform", desc: "BerberBot tarafından sunulan web uygulaması, WhatsApp botu ve ilgili tüm dijital hizmetler" },
+                { term: "Platform", desc: "BerberBot tarafından sunulan web uygulaması, online randevu sayfaları, WhatsApp bildirim altyapısı ve ilgili tüm dijital hizmetler" },
                 { term: "Kullanıcı", desc: "Platforma kayıt olan ve Hizmeti kullanan dükkan sahipleri ve işletmeciler" },
-                { term: "Son Kullanıcı", desc: "Kullanıcının müşterileri (WhatsApp üzerinden randevu alan kişiler)" },
+                { term: "Son Kullanıcı", desc: "Kullanıcının müşterileri (Kullanıcının online randevu sayfasından randevu alan veya Kullanıcı tarafından sisteme kaydedilen kişiler)" },
                 { term: "İçerik", desc: "Platform üzerinde oluşturulan, yüklenen veya paylaşılan tüm veriler" },
               ].map((item, i) => (
                 <div key={i} className="text-sm">
@@ -73,11 +40,12 @@ export default function KullanimKosullariPage() {
           <Section title="3. Hizmetin Kapsamı">
             <p>BerberBot aşağıdaki hizmetleri sunmaktadır:</p>
             <ul className="list-disc pl-6 mt-3 flex flex-col gap-2">
-              <li>WhatsApp üzerinden otomatik randevu alma ve yönetme botu</li>
-              <li>Randevu takvimi ve zamanlama yönetim paneli</li>
-              <li>Müşteri veritabanı ve müşteri ilişkileri yönetimi</li>
-              <li>Otomatik hatırlatma mesajları gönderimi</li>
-              <li>İş analitiği ve raporlama araçları</li>
+              <li>İşletmeye özel, paylaşılabilir online randevu sayfası ve QR kod</li>
+              <li>Randevu takvimi, personel ve izin yönetimi paneli</li>
+              <li>Müşteri listesi ve randevu geçmişi</li>
+              <li>BerberBot&apos;un ortak WhatsApp bildirim numarası üzerinden randevu onay, hatırlatma ve iptal mesajları</li>
+              <li>Müşterinin randevusunu kendisinin iptal edebildiği iptal bağlantısı</li>
+              <li>Gelir ve randevu analitiği</li>
             </ul>
             <p className="mt-3">
               Hizmetin kapsamı, seçilen abonelik planına göre değişiklik gösterebilir.
@@ -101,7 +69,7 @@ export default function KullanimKosullariPage() {
             <ul className="list-disc pl-6 mt-3 flex flex-col gap-2">
               <li>Platformu yalnızca yasal amaçlarla ve Türkiye Cumhuriyeti mevzuatına uygun şekilde kullanmak</li>
               <li>Müşterilerinizin kişisel verilerini KVKK ve ilgili mevzuata uygun olarak işlemek</li>
-              <li>WhatsApp bot üzerinden spam, istenmeyen mesaj veya yanıltıcı içerik göndermemek</li>
+              <li>Sisteme yalnızca randevu vermiş/vermek isteyen müşterilerin bilgilerini girmek; bildirim altyapısını reklam, kampanya veya istenmeyen mesaj için kullanmamak</li>
               <li>Platformun güvenliğini tehlikeye atacak eylemlerden kaçınmak</li>
               <li>Ters mühendislik, hacking veya yetkisiz erişim girişiminde bulunmamak</li>
               <li>Platformu, üçüncü taraflara alt lisans vermemek veya yeniden satmamak</li>
@@ -128,19 +96,20 @@ export default function KullanimKosullariPage() {
               <li>Hizmet, farklı özelliklere sahip ücretli abonelik planları ile sunulmaktadır</li>
               <li>Ücretler, seçilen plana göre aylık veya yıllık olarak faturalandırılır</li>
               <li>Fiyat değişiklikleri en az 30 gün önceden bildirilir</li>
-              <li>Abonelik, kullanıcı tarafından herhangi bir zamanda iptal edilebilir</li>
-              <li>İptal durumunda, mevcut dönemin sonuna kadar hizmetten yararlanılabilir</li>
+              <li>Abonelikler otomatik olarak yenilenmez; dönem sonunda Kullanıcı dilerse yeni dönem için ödeme yapar. Bitişten önce e-posta ile hatırlatma gönderilir</li>
+              <li>Kullanıcı dilediği zaman yenilememeyi tercih edebilir; ödenmiş dönemin sonuna kadar hizmetten yararlanmaya devam eder</li>
               <li>Yıllık planlar, aylık fiyatın 10 katı üzerinden (2 ay bedava) tek seferde faturalandırılır ve otomatik olarak yenilenmez</li>
               <li>Yıllık plan satın alımından itibaren ilk 30 gün içinde iptal talebinde ücretin tamamı koşulsuz iade edilir; 30. günden sonra iade yapılmaz, hizmet dönem sonuna kadar devam eder</li>
               <li>Aylık planlarda yapılan ödemeler için iade yapılmaz; iptal halinde hizmet ödenen dönemin sonuna kadar sürer</li>
-              <li>Ücretsiz deneme süresi sona erdiğinde, abonelik başlatılmadığı takdirde hesap kısıtlanır</li>
+              <li>Ücretsiz deneme süresi sona erdiğinde, abonelik başlatılmadığı takdirde hesap kısıtlanır ve online randevu sayfası yeni randevu almayı durdurur. Deneme için kart bilgisi istenmez</li>
+              <li>Satın alma koşullarının ayrıntıları <Link href="/mesafeli-satis-sozlesmesi" className="underline" style={{ color: "var(--accent)" }}>Mesafeli Satış Sözleşmesi</Link> ve <Link href="/iptal-ve-iade" className="underline" style={{ color: "var(--accent)" }}>İptal ve İade Koşulları</Link> sayfalarında yer alır</li>
             </ul>
           </Section>
 
           {/* 8 */}
           <Section title="8. Hizmet Düzeyi ve Erişilebilirlik">
             <p>
-              BerberBot, platformun %99,5 çalışma süresi (uptime) ile erişilebilir olmasını hedefler.
+              BerberBot, platformun kesintisiz ve yüksek erişilebilirlikle çalışmasını hedefler.
               Ancak aşağıdaki durumlarda hizmet kesintisi yaşanabilir:
             </p>
             <ul className="list-disc pl-6 mt-3 flex flex-col gap-2">
@@ -157,8 +126,14 @@ export default function KullanimKosullariPage() {
               <Link href="/gizlilik" className="font-medium underline underline-offset-2 transition-colors hover:text-white" style={{ color: "var(--accent)" }}>
                 Gizlilik Politikamızı
               </Link>{" "}
-              inceleyiniz. Kullanıcılar, kendi müşterilerinin verilerinin KVKK uyumlu şekilde
-              işlenmesinden bireysel olarak da sorumludur.
+              inceleyiniz. Kullanıcının müşterilerine ait veriler bakımından Kullanıcı veri sorumlusu, BerberBot ise
+              Kullanıcı adına ve talimatları doğrultusunda veriyi işleyen &quot;veri işleyen&quot;dir. BerberBot bu verileri yalnızca
+              Hizmetin sunulması (randevu kaydı, WhatsApp bildirimleri) amacıyla işler, başka amaçla kullanmaz ve üçüncü kişilere
+              satmaz; gerekli teknik ve idari güvenlik tedbirlerini alır. Kullanıcı, müşterilerini{" "}
+              <Link href="/aydinlatma-metni" className="font-medium underline underline-offset-2" style={{ color: "var(--accent)" }}>
+                KVKK Aydınlatma Metni
+              </Link>{" "}
+              hakkında bilgilendirmekten ve gerektiğinde açık rızalarını almaktan sorumludur.
             </p>
           </Section>
 
@@ -218,48 +193,9 @@ export default function KullanimKosullariPage() {
 
           {/* 14 */}
           <Section title="14. İletişim">
-            <p>
-              Bu Kullanım Koşulları hakkında sorularınız için aşağıdaki kanallardan
-              bizimle iletişime geçebilirsiniz:
-            </p>
-            <div className="mt-3 rounded-xl border p-5" style={{ background: "var(--bg2)", borderColor: "var(--border)" }}>
-              <div className="flex flex-col gap-2 text-sm">
-                <div><strong className="text-white">Platform:</strong> BerberBot SaaS</div>
-                <div><strong className="text-white">E-posta:</strong> destek@berberbot.com</div>
-                <div><strong className="text-white">Genel Destek:</strong> yardim@berberbot.com</div>
-              </div>
-            </div>
+            <p>Bu Kullanım Koşulları hakkında sorularınız için:</p>
+            <CompanyInfo />
           </Section>
-        </article>
-      </main>
-
-      {/* Footer */}
-      <footer className="px-6 md:px-20 py-8 border-t" style={{ borderColor: "var(--border)", background: "var(--bg2)" }}>
-        <div className="max-w-3xl mx-auto flex flex-col md:flex-row items-center gap-4 md:justify-between">
-          <div className="flex items-center gap-2">
-            <div
-              className="w-6 h-6 rounded flex items-center justify-center text-xs font-bold"
-              style={{ background: "var(--accent)", color: "#0a0a0a" }}>✂</div>
-            <span className="font-heading font-bold text-lg text-white">BerberBot</span>
-          </div>
-          <div className="flex gap-6 text-sm font-medium" style={{ color: "var(--text3)" }}>
-            <Link href="/gizlilik" className="hover:text-white transition-colors">Gizlilik Politikası</Link>
-            <span className="text-white">Kullanım Koşulları</span>
-          </div>
-          <div className="text-sm" style={{ color: "var(--text3)" }}>
-            © 2025 BerberBot SaaS.
-          </div>
-        </div>
-      </footer>
-    </div>
-  );
-}
-
-function Section({ title, children }: { title: string; children: React.ReactNode }) {
-  return (
-    <section>
-      <h2 className="font-heading font-bold text-xl md:text-2xl mb-4 text-white">{title}</h2>
-      {children}
-    </section>
+    </LegalPage>
   );
 }

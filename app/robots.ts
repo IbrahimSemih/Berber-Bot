@@ -1,21 +1,28 @@
 import { MetadataRoute } from "next";
+import { SITE } from "@/lib/site-config";
 
 export default function robots(): MetadataRoute.Robots {
-  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "https://berberbot.com";
-
   return {
     rules: {
       userAgent: "*",
-      allow: ["/", "/login", "/signup", "/gizlilik", "/kullanim-kosullari"],
+      allow: "/",
       disallow: [
-        "/dashboard/", 
-        "/settings/", 
-        "/customers/", 
-        "/appointments/", 
-        "/superadmin/",
-        "/onboarding/"
+        "/api/",
+        "/r/",
+        "/dashboard",
+        "/analytics",
+        "/appointments",
+        "/customers",
+        "/staff",
+        "/notifications",
+        "/settings",
+        "/profile",
+        "/onboarding",
+        "/superadmin",
+        "/banned",
+        "/reset-password",
       ],
     },
-    sitemap: `${baseUrl}/sitemap.xml`,
+    sitemap: `${SITE.url}/sitemap.xml`,
   };
 }

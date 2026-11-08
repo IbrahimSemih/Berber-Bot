@@ -2,11 +2,14 @@ import { Resend } from "resend";
 import WelcomeEmail from "@/components/emails/WelcomeEmail";
 import SubscriptionEmail from "@/components/emails/SubscriptionEmail";
 import SecurityAlertEmail from "@/components/emails/SecurityAlertEmail";
+import ExpiryReminderEmail from "@/components/emails/ExpiryReminderEmail";
 import { render } from "@react-email/components";
 
 const resend = new Resend(process.env.RESEND_API_KEY || "re_test_key");
 
-const SENDER_EMAIL = "BerberBot Destek <onboarding@resend.dev>"; // Üretim aşamasında kendi domaininizle değiştirmelisiniz (örn: destek@berberbot.com)
+// Resend'de domaininizi doğruladıktan sonra EMAIL_FROM'u ayarlayın, örn:
+// EMAIL_FROM="BerberBot <destek@berberbot.com>". onboarding@resend.dev yalnızca test içindir.
+const SENDER_EMAIL = process.env.EMAIL_FROM || "BerberBot Destek <onboarding@resend.dev>";
 
 export const sendWelcomeEmail = async (email: string, name: string) => {
   try {
@@ -90,6 +93,27 @@ export const sendSecurityAlertEmail = async (
     return { success: true, data };
   } catch (error) {
     console.error("Security alert email error:", error);
+    return { success: false, error };
+  }
+};
+
+export const sendExpiryReminderEmail = async (
+  email: string,
+  params: { shopName: string; isTrial: boolean; endDate: string; daysLeft: number; billingUrl: string }
+) => {
+  try {
+    const data = await resend.emails.send({
+      from: SENDER_EMAIL,
+      to: email,
+      subject: params.isTrial
+        ? "Ücretsiz deneme süreniz bitiyor - BerberBot"
+        : "Aboneliğiniz bitiyor - BerberBot",
+      html: await render(ExpiryReminderEmail(params)),
+    });
+    if (data.error) return { success: false, error: data.error };
+    return { success: true, data };
+  } catch (error) {
+    console.error("Expiry reminder email error:", error);
     return { success: false, error };
   }
 };

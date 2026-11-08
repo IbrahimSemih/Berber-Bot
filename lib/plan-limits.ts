@@ -1,4 +1,5 @@
 import { SupabaseClient } from "@supabase/supabase-js";
+import { istanbulToUtc, todayInIstanbul } from "@/lib/time";
 
 export const PLANS = {
   starter: {
@@ -34,6 +35,42 @@ export type BillingInterval = "monthly" | "yearly";
 // Yıllık plan: 12 ay yerine 10 ay öde (2 ay bedava). Yıllık ödemede ilk 30 gün koşulsuz iade.
 export const YEARLY_REFUND_DAYS = 30;
 
+// Ücretsiz deneme süresi (gün). Değiştirirseniz supabase-schema.sql içindeki
+// protect_shop_billing_fields trigger'ındaki '7 days' değerini de güncelleyin.
+export const TRIAL_DAYS = 7;
+
+// Abonelik bitişinden kaç gün önce sahibine hatırlatma e-postası gönderilsin
+export const EXPIRY_REMINDER_DAYS = 3;
+
+export type ShopBillingFields = {
+  status?: string | null;
+  subscription_status?: string | null;
+  trial_end?: string | null;
+  current_period_end?: string | null;
+};
+
+/**
+ * Dükkanın paneli/randevu sayfası kilitli mi? Middleware, randevu akışı ve
+ * cron'lar aynı kuralı kullansın diye tek yerde tutuluyor.
+ */
+export function computeIsLocked(shop: ShopBillingFields, now: Date = new Date()): boolean {
+  const isTrialing = shop.subscription_status === "trialing";
+  const isActive = shop.subscription_status === "active";
+  if (!isActive && !isTrialing) return true;
+
+  if (isTrialing) {
+    return !shop.trial_end || new Date(shop.trial_end) <= now;
+  }
+  // Aktif ama bitiş tarihi yoksa (eski kayıtlar) erişim açık kalır
+  return !!shop.current_period_end && new Date(shop.current_period_end) <= now;
+}
+
+/** Erişimin biteceği an (deneme veya ücretli dönem sonu) */
+export function getAccessEndDate(shop: ShopBillingFields): Date | null {
+  const value = shop.subscription_status === "trialing" ? shop.trial_end : shop.current_period_end;
+  return value ? new Date(value) : null;
+}
+
 export function parseBillingInterval(value: string | null | undefined): BillingInterval {
   return value === "yearly" ? "yearly" : "monthly";
 }
@@ -56,21 +93,16 @@ export async function getShopUsageAndLimits(supabase: SupabaseClient, shopId: st
   const plan = PLANS[planId] || PLANS.pro;
 
   // 2. Check lock status (Trial expired or subscription failed)
-  const isTrialing = shop.subscription_status === 'trialing';
-  const isActive = shop.subscription_status === 'active';
   const now = new Date();
-  
-  const trialEnd = shop.trial_end ? new Date(shop.trial_end) : null;
-  const currentPeriodEnd = shop.current_period_end ? new Date(shop.current_period_end) : null;
-  
-  const isTrialExpired = isTrialing && trialEnd && trialEnd < now;
-  const isActiveExpired = isActive && currentPeriodEnd && currentPeriodEnd < now;
-  
-  const isLocked = (!isActive && !isTrialing) || isTrialExpired || isActiveExpired;
+  const isLocked = computeIsLocked(shop, now);
 
-  // 3. Current month's appointment count
-  const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
-  const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59, 999).toISOString();
+  // 3. Current month's appointment count (Türkiye saatine göre ay sınırları)
+  const today = todayInIstanbul(now);
+  const [year, month] = today.split("-").map(Number);
+  const monthStartStr = `${year}-${String(month).padStart(2, "0")}-01`;
+  const nextMonthStartStr = month === 12 ? `${year + 1}-01-01` : `${year}-${String(month + 1).padStart(2, "0")}-01`;
+  const startOfMonth = istanbulToUtc(monthStartStr, "00:00").toISOString();
+  const endOfMonth = new Date(istanbulToUtc(nextMonthStartStr, "00:00").getTime() - 1).toISOString();
 
   const { count: appointmentCount } = await supabase
     .from("appointments")

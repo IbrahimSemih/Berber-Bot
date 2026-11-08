@@ -1,18 +1,34 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Toaster } from "react-hot-toast";
+import { SITE } from "@/lib/site-config";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "BerberBot — WhatsApp Randevu Sistemi",
-  description: "Berber dükkanınız için WhatsApp üzerinden otomatik randevu sistemi",
+  metadataBase: new URL(SITE.url),
+  title: "BerberBot — Berberler için Online Randevu ve WhatsApp Bildirimleri",
+  description:
+    "Berber ve erkek kuaförleri için online randevu sayfası. Müşterileriniz 7/24 randevu alsın; onay, hatırlatma ve iptal mesajları WhatsApp'tan otomatik gitsin.",
+  applicationName: "BerberBot",
+  keywords: ["berber randevu sistemi", "kuaför randevu programı", "online randevu", "whatsapp randevu hatırlatma", "berber yazılımı"],
   openGraph: {
-    title: "BerberBot — WhatsApp Randevu Sistemi",
-    description: "Berber dükkanınız için WhatsApp üzerinden otomatik randevu sistemi",
-    url: "https://berberbot.com",
+    title: "BerberBot — Online Randevu ve WhatsApp Bildirimleri",
+    description: "Berberler için online randevu sayfası, WhatsApp onay ve hatırlatma mesajları.",
+    url: SITE.url,
     siteName: "BerberBot",
     locale: "tr_TR",
     type: "website",
   },
+  twitter: {
+    card: "summary_large_image",
+    title: "BerberBot — Online Randevu ve WhatsApp Bildirimleri",
+    description: "Berberler için online randevu sayfası, WhatsApp onay ve hatırlatma mesajları.",
+  },
+};
+
+export const viewport: Viewport = {
+  themeColor: "#0a0a0a",
+  width: "device-width",
+  initialScale: 1,
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

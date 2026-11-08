@@ -1,32 +1,30 @@
-import { cookies } from 'next/headers';
+import type { Metadata } from 'next';
+import Link from 'next/link';
 import { notFound } from 'next/navigation';
-import { format } from 'date-fns';
-import { tr } from 'date-fns/locale';
 import CancelForm from './CancelForm';
 import { Calendar, Clock, MapPin, User, Scissors } from 'lucide-react';
+import { createAdminClient } from '@/lib/supabase/admin';
+import { formatIstanbulTime, formatTrLongDateWithWeekday } from '@/lib/time';
 
 export const dynamic = 'force-dynamic';
+
+export const metadata: Metadata = {
+  title: 'Randevu Detayı · BerberBot',
+  robots: { index: false, follow: false },
+};
 
 export default async function CancelPortalPage({ params }: { params: { token: string } }) {
   const { token } = params;
 
-  if (!token) {
+  if (!token || token.length > 64) {
     notFound();
   }
 
-  // Admin yetkisi gerektiren durumları public olarak okumak için service role gerekebilir.
-  // Ancak @supabase/auth-helpers-nextjs üzerinden anon kullanıcı olarak deneyeceğiz,
-  // Eğer appointments RLS'i okunmasına izin vermiyorsa, supabase/supabase-js createClient ile admin client oluşturmalıyız.
-
-  // Burada randevu detaylarını göstermek için RLS (anon) public değilse, admin client kullanmalıyız.
-  const { createClient } = await import('@supabase/supabase-js');
-  const supabaseAdmin = createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!
-  );
+  // Randevu sahibi giriş yapmadığı için admin client ile okunur; erişim gizli token ile sınırlıdır.
+  const supabaseAdmin = createAdminClient();
 
   const { data: appointment, error } = await supabaseAdmin
-    .from('appointments_full') // view kullanarak personel, müşteri ve hizmet bilgilerini alıyoruz
+    .from('appointments_full')
     .select('*')
     .eq('cancel_token', token)
     .single();
@@ -47,14 +45,21 @@ export default async function CancelPortalPage({ params }: { params: { token: st
     );
   }
 
+  const { data: shop } = await supabaseAdmin
+    .from('shops')
+    .select('slug, status')
+    .eq('id', appointment.shop_id)
+    .single();
+  const bookingHref = shop && shop.status !== 'banned' ? `/${shop.slug}` : null;
+
   const isCancelled = appointment.status === 'cancelled';
-  const isPast = new Date(appointment.scheduled_at) < new Date();
+  const isPending = appointment.status === 'pending';
+  const isPast = new Date(appointment.scheduled_at) < new Date() || appointment.status === 'completed';
 
   const canCancel = !isCancelled && !isPast;
 
-  const dateObj = new Date(appointment.scheduled_at);
-  const formattedDate = format(dateObj, 'd MMMM yyyy, EEEE', { locale: tr });
-  const formattedTime = format(dateObj, 'HH:mm');
+  const formattedDate = formatTrLongDateWithWeekday(appointment.scheduled_at);
+  const formattedTime = formatIstanbulTime(appointment.scheduled_at);
 
   return (
     <div className="min-h-screen bg-neutral-950 flex flex-col items-center justify-center p-4">
@@ -66,7 +71,7 @@ export default async function CancelPortalPage({ params }: { params: { token: st
             <Scissors className="w-8 h-8 text-indigo-400" />
           </div>
           <h1 className="text-2xl font-bold text-white mb-1">
-            {appointment.shop_name || 'Maestro Berber'}
+            {appointment.shop_name || 'Berber'}
           </h1>
           <div className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium mt-2 bg-neutral-800 text-neutral-300 border border-neutral-700">
             {isCancelled ? (
@@ -76,6 +81,10 @@ export default async function CancelPortalPage({ params }: { params: { token: st
             ) : isPast ? (
               <span className="text-neutral-400 flex items-center gap-1.5">
                 <div className="w-1.5 h-1.5 rounded-full bg-neutral-500"></div> Geçmiş Randevu
+              </span>
+            ) : isPending ? (
+              <span className="text-amber-400 flex items-center gap-1.5">
+                <div className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse"></div> İşletme Onayı Bekleniyor
               </span>
             ) : (
               <span className="text-green-400 flex items-center gap-1.5">
@@ -105,7 +114,8 @@ export default async function CancelPortalPage({ params }: { params: { token: st
               <div>
                 <p className="text-xs text-neutral-500 font-medium mb-0.5">HİZMET VE PERSONEL</p>
                 <p className="text-sm text-neutral-200 font-medium">
-                  {appointment.service_name} • <span className="text-neutral-400">{appointment.staff_name}</span>
+                  {appointment.service_name}
+                  {appointment.staff_name && <> • <span className="text-neutral-400">{appointment.staff_name}</span></>}
                 </p>
               </div>
             </div>
@@ -133,7 +143,7 @@ export default async function CancelPortalPage({ params }: { params: { token: st
               <div>
                 <p className="text-xs text-neutral-500 font-medium mb-0.5">KONUM</p>
                 <p className="text-sm text-neutral-200 font-medium">
-                  {appointment.shop_name || 'Maestro Berber'}
+                  {appointment.shop_name || 'Berber'}
                 </p>
               </div>
             </div>
@@ -145,9 +155,14 @@ export default async function CancelPortalPage({ params }: { params: { token: st
             <div className="mt-8 p-4 bg-neutral-800/50 border border-neutral-800 rounded-xl text-center">
               <p className="text-sm text-neutral-400">
                 {isCancelled
-                  ? 'Bu randevu iptal edilmiştir. Yeni randevu için WhatsApp üzerinden iletişime geçebilirsiniz.'
+                  ? 'Bu randevu iptal edilmiştir.'
                   : 'Geçmiş randevular üzerinde işlem yapılamaz.'}
               </p>
+              {bookingHref && (
+                <Link href={bookingHref} className="inline-block mt-3 text-sm font-semibold text-indigo-300 hover:text-indigo-200">
+                  Yeni randevu al →
+                </Link>
+              )}
             </div>
           )}
         </div>

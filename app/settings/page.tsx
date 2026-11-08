@@ -1,9 +1,13 @@
 "use client";
 import { useState, useEffect } from "react";
 import AdminLayout from "@/components/layout/AdminLayout";
+import BookingLinkCard from "@/components/BookingLinkCard";
 import { Card, CardHeader, PageHeader, Button, Toggle, Input } from "@/components/ui";
 import { createClient } from "@/lib/supabase/client";
-import { Service, Settings, WorkingHour } from "@/types";
+import { Service, WorkingHour } from "@/types";
+import { normalizeTrPhone, PHONE_ERROR } from "@/lib/validations";
+import { instagramHandle } from "@/lib/utils";
+import { REMINDER_HOURS_BEFORE } from "@/lib/booking";
 import { toast } from "react-hot-toast";
 
 const DAYS = [
@@ -16,11 +20,16 @@ const DAYS = [
   { value: 0, label: "Pazar" },
 ];
 
+const DURATION_OPTIONS = [10, 15, 20, 25, 30, 40, 45, 50, 60, 75, 90, 105, 120, 150, 180, 240];
+
 export default function SettingsPage() {
   const [currentShopId, setCurrentShopId] = useState<string | null>(null);
+  const [shopSlug, setShopSlug] = useState<string | null>(null);
   const [settingsId, setSettingsId] = useState<string | null>(null);
   const [shopName, setShopName] = useState("");
-  const [wpNumber, setWpNumber] = useState("");
+  const [phone, setPhone] = useState("");
+  const [address, setAddress] = useState("");
+  const [instagram, setInstagram] = useState("");
   const [workingHours, setWorkingHours] = useState<WorkingHour[]>(
     DAYS.map(d => ({
       day: d.value,
@@ -31,63 +40,72 @@ export default function SettingsPage() {
   );
   const [autoConfirm, setAutoConfirm] = useState(true);
   const [notifyNew, setNotifyNew] = useState(true);
-  const [notifyCancel, setNotifyCancel] = useState(false);
+  const [notifyCancel, setNotifyCancel] = useState(true);
   const [reminder, setReminder] = useState(true);
-  
+
   const [services, setServices] = useState<Service[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
 
-  const supabase = createClient();
+  const [supabase] = useState(() => createClient());
+
+  async function loadServices(shopId: string) {
+    const { data: servicesData } = await supabase
+      .from("services")
+      .select("*")
+      .eq("shop_id", shopId)
+      .eq("is_active", true)
+      .order("created_at", { ascending: true });
+    setServices(servicesData ?? []);
+  }
 
   useEffect(() => {
     async function loadData() {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) { window.location.href = "/login"; return; }
-      const { data: shop } = await supabase.from("shops").select("id").eq("owner_id", user.id).single();
+      const { data: shop } = await supabase.from("shops").select("id, name, slug").eq("owner_id", user.id).single();
       if (!shop) { setLoading(false); return; }
-      
+
       const shopId = shop.id;
       setCurrentShopId(shopId);
+      setShopSlug(shop.slug);
+      setShopName(shop.name || "");
 
-      // Fetch settings
-      const { data: settingsData } = await supabase.from("settings").select("*").eq("shop_id", shopId).limit(1).single();
+      const { data: settingsData } = await supabase.from("settings").select("*").eq("shop_id", shopId).limit(1).maybeSingle();
       if (settingsData) {
         setSettingsId(settingsData.id);
-        setShopName(settingsData.shop_name || "");
-        setWpNumber(settingsData.whatsapp_number || "");
-        
-        // Migrate old work_days to new working_hours if working_hours is missing
-        if (settingsData.working_hours) {
+        setPhone(settingsData.whatsapp_number || "");
+        setAddress(settingsData.address || "");
+        setInstagram(settingsData.instagram || "");
+
+        // Eski work_days kayıtlarını working_hours biçimine taşı
+        if (Array.isArray(settingsData.working_hours) && settingsData.working_hours.length > 0) {
           setWorkingHours(settingsData.working_hours);
         } else if (settingsData.work_days) {
           setWorkingHours(DAYS.map(d => ({
             day: d.value,
             is_open: settingsData.work_days.includes(d.value),
-            start: settingsData.work_start || "09:00",
-            end: settingsData.work_end || "20:00"
+            start: (settingsData.work_start || "09:00").slice(0, 5),
+            end: (settingsData.work_end || "20:00").slice(0, 5)
           })));
         }
 
         setAutoConfirm(settingsData.auto_confirm ?? true);
         setNotifyNew(settingsData.notify_new ?? true);
-        setNotifyCancel(settingsData.notify_cancel ?? false);
-        setReminder(settingsData.reminder_hours === 24);
+        setNotifyCancel(settingsData.notify_cancel ?? true);
+        setReminder(settingsData.reminder_hours !== 0);
       }
 
-      // Fetch services
-      const { data: servicesData } = await supabase.from("services").select("*").eq("shop_id", shopId).order("created_at", { ascending: true });
-      if (servicesData) {
-        setServices(servicesData);
-      }
+      await loadServices(shopId);
       setLoading(false);
     }
     loadData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const updateWorkingHour = (dayValue: number, field: keyof WorkingHour, value: string | boolean) => {
-    setWorkingHours(prev => prev.map(wh => 
+    setWorkingHours(prev => prev.map(wh =>
       wh.day === dayValue ? { ...wh, [field]: value } : wh
     ));
   };
@@ -113,89 +131,125 @@ export default function SettingsPage() {
   const removeService = async (index: number) => {
     const serviceToRemove = services[index];
     if (!serviceToRemove.id.startsWith("new-")) {
-      await supabase.from("services").delete().eq("id", serviceToRemove.id);
+      if (!window.confirm(`"${serviceToRemove.name}" hizmeti kaldırılsın mı? Geçmiş randevular korunur, yeni randevuda bu hizmet görünmez.`)) return;
+      // Silmek yerine pasife alıyoruz: hizmete bağlı geçmiş randevular ve ciro raporları kaybolmasın
+      const { error } = await supabase.from("services").update({ is_active: false }).eq("id", serviceToRemove.id);
+      if (error) {
+        toast.error("Hizmet kaldırılamadı: " + error.message);
+        return;
+      }
+      toast.success("Hizmet kaldırıldı.");
     }
     setServices(services.filter((_, i) => i !== index));
   };
 
+  function validate(): string | null {
+    const name = shopName.trim();
+    if (name.length < 2 || name.length > 80) return "Dükkan adı 2-80 karakter olmalıdır.";
+    if (phone.trim() && !normalizeTrPhone(phone)) return `İletişim telefonu: ${PHONE_ERROR}`;
+    if (instagram.trim() && !instagramHandle(instagram)) return "Instagram kullanıcı adı geçersiz.";
+    for (const wh of workingHours) {
+      if (wh.is_open && (!wh.start || !wh.end || wh.end <= wh.start)) {
+        const label = DAYS.find(d => d.value === wh.day)?.label;
+        return `${label}: kapanış saati açılış saatinden sonra olmalıdır.`;
+      }
+    }
+    for (const s of services) {
+      if (!s.name.trim()) return "Hizmet adları boş bırakılamaz.";
+      const price = Number(s.price);
+      if (!Number.isFinite(price) || price < 0) return `"${s.name}" için geçerli bir fiyat girin.`;
+      const duration = Number(s.duration_minutes);
+      if (!Number.isInteger(duration) || duration < 5 || duration > 480) return `"${s.name}" için süre 5-480 dakika olmalıdır.`;
+    }
+    return null;
+  }
+
   async function save() {
     if (!currentShopId) return;
+    const validationError = validate();
+    if (validationError) {
+      toast.error(validationError);
+      return;
+    }
     setSaving(true);
-    
-    // Save settings
-    const settingsPayload = {
-      shop_name: shopName,
-      whatsapp_number: wpNumber,
-      working_hours: workingHours,
-      auto_confirm: autoConfirm,
-      notify_new: notifyNew,
-      notify_cancel: notifyCancel,
-      reminder_hours: reminder ? 24 : 0,
-    };
 
-    if (settingsId) {
-      const { error } = await supabase.from("settings").update(settingsPayload).eq("id", settingsId);
-      if (error) {
-        toast.error("Ayarlar güncellenirken hata oluştu: " + error.message);
-        setSaving(false);
-        return;
+    try {
+      // Dükkan adı (randevu sayfasında görünen ad)
+      const { error: shopError } = await supabase.from("shops").update({ name: shopName.trim() }).eq("id", currentShopId);
+      if (shopError) throw new Error("Dükkan adı güncellenemedi: " + shopError.message);
+
+      const basePayload = {
+        shop_name: shopName.trim(),
+        whatsapp_number: phone.trim() ? normalizeTrPhone(phone) : null,
+        working_hours: workingHours,
+        auto_confirm: autoConfirm,
+        notify_new: notifyNew,
+        notify_cancel: notifyCancel,
+        reminder_hours: reminder ? REMINDER_HOURS_BEFORE : 0,
+      };
+      const contactPayload = {
+        address: address.trim() || null,
+        instagram: instagram.trim() ? instagramHandle(instagram) : null,
+      };
+
+      const writeSettings = (payload: Record<string, unknown>) =>
+        settingsId
+          ? supabase.from("settings").update(payload).eq("id", settingsId)
+          : supabase.from("settings").insert([{ ...payload, shop_id: currentShopId }]).select("id").single();
+
+      let { error: settingsError } = await writeSettings({ ...basePayload, ...contactPayload });
+      // Veritabanına adres/instagram kolonları henüz eklenmemişse diğer ayarları yine de kaydet
+      if (settingsError && (settingsError.code === "PGRST204" || /address|instagram/.test(settingsError.message))) {
+        ({ error: settingsError } = await writeSettings(basePayload));
+        if (!settingsError) {
+          toast("Adres ve Instagram için veritabanı güncellemesi gerekiyor; diğer ayarlar kaydedildi.", { icon: "⚠️" });
+        }
       }
-    } else {
-      const { error } = await supabase.from("settings").insert([{ ...settingsPayload, shop_id: currentShopId }]);
-      if (error) {
-        toast.error("Ayarlar eklenirken hata oluştu: " + error.message);
-        setSaving(false);
-        return;
+      if (settingsError) throw new Error("Ayarlar kaydedilemedi: " + settingsError.message);
+
+      if (!settingsId) {
+        const { data: created } = await supabase.from("settings").select("id").eq("shop_id", currentShopId).maybeSingle();
+        if (created) setSettingsId(created.id);
       }
+
+      // Hizmetler
+      const servicesToUpdate = services
+        .filter(s => !s.id.startsWith("new-"))
+        .map(s => ({
+          id: s.id,
+          shop_id: currentShopId,
+          name: s.name.trim(),
+          duration_minutes: Number(s.duration_minutes),
+          price: Number(s.price),
+        }));
+
+      const servicesToInsert = services
+        .filter(s => s.id.startsWith("new-"))
+        .map(s => ({
+          shop_id: currentShopId,
+          name: s.name.trim(),
+          duration_minutes: Number(s.duration_minutes),
+          price: Number(s.price),
+          is_active: true,
+        }));
+
+      if (servicesToUpdate.length > 0) {
+        const { error } = await supabase.from("services").upsert(servicesToUpdate);
+        if (error) throw new Error("Hizmetler güncellenemedi: " + error.message);
+      }
+      if (servicesToInsert.length > 0) {
+        const { error } = await supabase.from("services").insert(servicesToInsert);
+        if (error) throw new Error("Yeni hizmetler eklenemedi: " + error.message);
+      }
+
+      await loadServices(currentShopId);
+      setSaved(true);
+      setTimeout(() => setSaved(false), 2000);
+    } catch (e: any) {
+      toast.error(e?.message || "Kaydedilirken bir hata oluştu.");
+    } finally {
+      setSaving(false);
     }
-
-    // Save services
-    const servicesToUpdate = services
-      .filter(s => !s.id.startsWith("new-"))
-      .map(s => ({
-        id: s.id,
-        shop_id: currentShopId,
-        name: s.name,
-        duration_minutes: Number(s.duration_minutes),
-        price: Number(s.price),
-      }));
-
-    const servicesToInsert = services
-      .filter(s => s.id.startsWith("new-"))
-      .map(s => ({
-        shop_id: currentShopId,
-        name: s.name,
-        duration_minutes: Number(s.duration_minutes),
-        price: Number(s.price),
-      }));
-
-    if (servicesToUpdate.length > 0) {
-      const { error } = await supabase.from("services").upsert(servicesToUpdate);
-      if (error) {
-        toast.error("Mevcut hizmetler güncellenirken hata oluştu: " + error.message);
-        setSaving(false);
-        return;
-      }
-    }
-
-    if (servicesToInsert.length > 0) {
-      const { error } = await supabase.from("services").insert(servicesToInsert);
-      if (error) {
-        toast.error("Yeni hizmetler eklenirken hata oluştu: " + error.message);
-        setSaving(false);
-        return;
-      }
-    }
-      
-      // Reload services to get proper IDs for newly inserted ones
-      const { data: newServices } = await supabase.from("services").select("*").eq("shop_id", currentShopId).order("created_at", { ascending: true });
-      if (newServices) {
-        setServices(newServices);
-      }
-
-    setSaving(false);
-    setSaved(true);
-    setTimeout(() => setSaved(false), 2000);
   }
 
   if (loading) {
@@ -206,6 +260,8 @@ export default function SettingsPage() {
     );
   }
 
+  const labelClass = "block text-xs font-semibold uppercase tracking-wide mb-1.5";
+
   return (
     <AdminLayout>
       <PageHeader title="Ayarlar">
@@ -214,21 +270,34 @@ export default function SettingsPage() {
         </Button>
       </PageHeader>
 
-      <div className="p-7 max-w-2xl flex flex-col gap-5">
+      <div className="p-4 sm:p-7 max-w-2xl flex flex-col gap-5">
+        {shopSlug && <BookingLinkCard initialSlug={shopSlug} shopName={shopName} />}
+
         {/* Shop info */}
         <Card>
           <CardHeader title="Dükkan Bilgileri" />
           <div className="p-5 flex flex-col gap-4">
             <div>
-              <label className="block text-xs font-semibold uppercase tracking-wide mb-1.5" style={{ color: "var(--text3)" }}>Dükkan Adı</label>
-              <Input value={shopName} onChange={(e) => setShopName(e.target.value)} />
+              <label className={labelClass} style={{ color: "var(--text3)" }}>Dükkan Adı</label>
+              <Input value={shopName} maxLength={80} onChange={(e) => setShopName(e.target.value)} />
             </div>
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <label className="block text-xs font-semibold uppercase tracking-wide mb-1.5" style={{ color: "var(--text3)" }}>WhatsApp Numarası</label>
-                <Input value={wpNumber} disabled placeholder="Bota bağlandığınızda otomatik dolar" />
+                <label className={labelClass} style={{ color: "var(--text3)" }}>İletişim Telefonu</label>
+                <Input type="tel" value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="532 123 45 67" />
+              </div>
+              <div>
+                <label className={labelClass} style={{ color: "var(--text3)" }}>Instagram</label>
+                <Input value={instagram} onChange={(e) => setInstagram(e.target.value)} placeholder="@berberiniz" />
               </div>
             </div>
+            <div>
+              <label className={labelClass} style={{ color: "var(--text3)" }}>Adres</label>
+              <Input value={address} maxLength={300} onChange={(e) => setAddress(e.target.value)} placeholder="Mahalle, cadde, no, ilçe / il" />
+            </div>
+            <p className="text-xs" style={{ color: "var(--text3)" }}>
+              Bu bilgiler randevu sayfanızda müşterilerinize gösterilir. WhatsApp bildirimleri BerberBot&apos;un resmi bildirim numarasından gönderilir.
+            </p>
           </div>
         </Card>
 
@@ -241,12 +310,12 @@ export default function SettingsPage() {
               <div>Açılış</div>
               <div>Kapanış</div>
             </div>
-            
+
             {DAYS.map(day => {
               const wh = workingHours.find(w => w.day === day.value) || { is_open: false, start: "09:00", end: "20:00" };
               return (
                 <div key={day.value} className="grid grid-cols-[90px_1fr_1fr] sm:grid-cols-[auto_1fr_1fr] gap-2 sm:gap-4 items-center p-1 sm:p-2 rounded-lg transition-colors border"
-                  style={{ 
+                  style={{
                     borderColor: "var(--border)",
                     background: wh.is_open ? "var(--bg)" : "var(--bg3)",
                     opacity: wh.is_open ? 1 : 0.6
@@ -256,17 +325,17 @@ export default function SettingsPage() {
                     <span className="text-[11px] sm:text-sm font-medium">{day.label}</span>
                   </div>
                   <div>
-                    <Input 
-                      type="time" 
-                      value={wh.start} 
+                    <Input
+                      type="time"
+                      value={wh.start}
                       onChange={(e) => updateWorkingHour(day.value, "start", e.target.value)}
                       disabled={!wh.is_open}
                     />
                   </div>
                   <div>
-                    <Input 
-                      type="time" 
-                      value={wh.end} 
+                    <Input
+                      type="time"
+                      value={wh.end}
                       onChange={(e) => updateWorkingHour(day.value, "end", e.target.value)}
                       disabled={!wh.is_open}
                     />
@@ -279,13 +348,13 @@ export default function SettingsPage() {
 
         {/* Services */}
         <Card>
-          <CardHeader title="Hizmetler & Fiyatlar" />
+          <CardHeader title="Hizmetler, Süreler & Fiyatlar" />
           <div className="p-5 flex flex-col gap-4">
             <div className="overflow-x-auto">
-              <table className="w-full border-collapse min-w-[500px]">
+              <table className="w-full border-collapse min-w-[520px]">
                 <thead>
                   <tr style={{ background: "var(--bg3)" }}>
-                    {["Hizmet", "Fiyat (₺)", ""].map((h) => (
+                    {["Hizmet", "Süre", "Fiyat (₺)", ""].map((h) => (
                       <th key={h} className="px-4 py-2 text-left text-xs font-medium uppercase tracking-wide"
                         style={{ color: "var(--text3)", borderBottom: "1px solid var(--border)" }}>{h}</th>
                     ))}
@@ -295,13 +364,27 @@ export default function SettingsPage() {
                   {services.map((s, i) => (
                     <tr key={s.id} className="border-b last:border-0" style={{ borderColor: "var(--border)" }}>
                       <td className="px-4 py-3">
-                        <Input value={s.name} onChange={(e) => updateService(i, "name", e.target.value)} />
+                        <Input value={s.name} maxLength={80} onChange={(e) => updateService(i, "name", e.target.value)} />
+                      </td>
+                      <td className="px-4 py-3 w-32">
+                        <select
+                          value={Number(s.duration_minutes)}
+                          onChange={(e) => updateService(i, "duration_minutes", Number(e.target.value))}
+                          className="w-full px-3 py-2 rounded-lg text-sm outline-none"
+                          style={{ background: "var(--bg)", border: "1px solid var(--border2)", color: "var(--text)" }}
+                          aria-label="Hizmet süresi"
+                        >
+                          {Array.from(new Set([...DURATION_OPTIONS, Number(s.duration_minutes)]))
+                            .filter((d) => Number.isFinite(d) && d > 0)
+                            .sort((a, b) => a - b)
+                            .map((d) => <option key={d} value={d}>{d} dk</option>)}
+                        </select>
                       </td>
                       <td className="px-4 py-3 w-28">
-                        <Input type="number" value={s.price} onChange={(e) => updateService(i, "price", e.target.value)} />
+                        <Input type="number" min={0} value={s.price} onChange={(e) => updateService(i, "price", e.target.value)} />
                       </td>
                       <td className="px-4 py-3 w-16 text-center">
-                        <button onClick={() => removeService(i)} className="text-red-500 hover:text-red-700 p-2">
+                        <button onClick={() => removeService(i)} className="text-red-500 hover:text-red-700 p-2" aria-label={`${s.name} hizmetini kaldır`}>
                           ✕
                         </button>
                       </td>
@@ -309,7 +392,7 @@ export default function SettingsPage() {
                   ))}
                   {services.length === 0 && (
                     <tr>
-                      <td colSpan={3} className="px-4 py-6 text-center text-sm" style={{ color: "var(--text3)" }}>
+                      <td colSpan={4} className="px-4 py-6 text-center text-sm" style={{ color: "var(--text3)" }}>
                         Henüz hiç hizmet eklenmemiş.
                       </td>
                     </tr>
@@ -317,7 +400,11 @@ export default function SettingsPage() {
                 </tbody>
               </table>
             </div>
-            
+
+            <p className="text-xs" style={{ color: "var(--text3)" }}>
+              Süre, online randevuda dolu saatlerin hesaplanmasında kullanılır: 45 dakikalık bir hizmet takvimde 45 dakika yer kaplar.
+            </p>
+
             <Button onClick={addService} variant="ghost" className="self-start">
               + Yeni Hizmet Ekle
             </Button>
@@ -329,12 +416,12 @@ export default function SettingsPage() {
           <CardHeader title="Bildirimler & Otomasyon" />
           <div className="px-5">
             {[
-              { label: "Otomatik hatırlatma mesajı", desc: "Randevudan 24 saat önce müşteriye WhatsApp gönder", value: reminder, set: setReminder },
-              { label: "Yeni randevu bildirimi", desc: "WhatsApp'tan randevu alındığında seni bildir", value: notifyNew, set: setNotifyNew },
-              { label: "İptal bildirimi", desc: "Müşteri randevuyu iptal ettiğinde haber ver", value: notifyCancel, set: setNotifyCancel },
-              { label: "Bot otomatik onay", desc: "Randevuları senin onayın olmadan otomatik kabul et", value: autoConfirm, set: setAutoConfirm },
+              { label: "Otomatik onay", desc: "Online randevuları onayınızı beklemeden kabul et ve müşteriye WhatsApp onay mesajı gönder", value: autoConfirm, set: setAutoConfirm },
+              { label: "WhatsApp hatırlatma mesajı", desc: `Onaylı randevulardan ${REMINDER_HOURS_BEFORE} saat önce müşteriye WhatsApp hatırlatması gönder`, value: reminder, set: setReminder },
+              { label: "Yeni randevu bildirimi", desc: "Online randevu alındığında panelde bildirim göster", value: notifyNew, set: setNotifyNew },
+              { label: "İptal bildirimi", desc: "Müşteri randevusunu iptal ettiğinde panelde bildirim göster", value: notifyCancel, set: setNotifyCancel },
             ].map((item) => (
-              <div key={item.label} className="flex items-center justify-between py-4 border-b last:border-0" style={{ borderColor: "var(--border)" }}>
+              <div key={item.label} className="flex items-center justify-between gap-4 py-4 border-b last:border-0" style={{ borderColor: "var(--border)" }}>
                 <div>
                   <div className="text-sm font-medium">{item.label}</div>
                   <div className="text-xs mt-0.5" style={{ color: "var(--text3)" }}>{item.desc}</div>
