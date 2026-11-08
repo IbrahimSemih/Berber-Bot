@@ -5,6 +5,7 @@ import { parseBillingInterval } from "@/lib/plan-limits";
 import { initiatePayment, isBillingProfileComplete } from "@/lib/checkout";
 import { apiLimiter, getIp } from "@/lib/rate-limit";
 import { SITE } from "@/lib/site-config";
+import { isWebBillingEnabled } from "@/lib/billing-config";
 
 export const dynamic = "force-dynamic";
 
@@ -13,6 +14,9 @@ export async function GET(req: NextRequest) {
   const base = process.env.NEXT_PUBLIC_APP_URL ? SITE.url : req.nextUrl.origin;
   const billingRedirect = (error: string) =>
     NextResponse.redirect(new URL(`/settings/billing?error=${encodeURIComponent(error)}#plans`, base));
+
+  // Web'de satış kapalıyken (abonelik mobil uygulamadan alınır) iyzico ödemesi başlatılmaz
+  if (!isWebBillingEnabled()) return billingRedirect("billing_disabled");
 
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,

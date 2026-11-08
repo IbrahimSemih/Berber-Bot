@@ -92,8 +92,9 @@ async function run() {
   return NextResponse.json({ checked: rows.length, sent, failed, skipped });
 }
 
-// Vercel Cron GET ile çağırır. Harici cron servisleri (cron-job.org, Upstash QStash)
-// için POST da desteklenir; ikisinde de "Authorization: Bearer <CRON_SECRET>" gerekir.
+// 15 dakikada bir harici cron servisi (cron-job.org / Upstash QStash) çağırır: Vercel
+// Hobby planı günde birden sık cron'a izin vermediği için vercel.json'da DEĞİL.
+// GET ve POST desteklenir; ikisinde de "Authorization: Bearer <CRON_SECRET>" gerekir.
 export async function GET(req: NextRequest) {
   if (!isAuthorized(req)) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   return run();

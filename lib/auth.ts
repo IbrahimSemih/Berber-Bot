@@ -1,14 +1,26 @@
 const SECRET_KEY = process.env.SUPERADMIN_SECRET_KEY;
 
+/** Superadmin oturumunun geçerlilik süresi (saat) */
+export const SUPERADMIN_SESSION_HOURS = 12;
+
+// İmza anahtarı şifreye de bağlıdır: SUPERADMIN_PASSWORD(_HASH) değiştirildiğinde
+// verilmiş tüm oturumlar anında geçersiz olur (çalınan bir cookie'yi iptal etmenin yolu).
+function signingSecret(): string | undefined {
+  if (!SECRET_KEY) return undefined;
+  const credential = process.env.SUPERADMIN_PASSWORD_HASH || process.env.SUPERADMIN_PASSWORD || "";
+  return `${SECRET_KEY}:${credential}`;
+}
+
 // Convert string key to CryptoKey for Web Crypto API
 async function getCryptoKey(): Promise<CryptoKey> {
-  if (!SECRET_KEY) {
+  const secret = signingSecret();
+  if (!secret) {
     throw new Error("SUPERADMIN_SECRET_KEY is not defined in environment variables.");
   }
   const encoder = new TextEncoder();
   return await crypto.subtle.importKey(
     "raw",
-    encoder.encode(SECRET_KEY),
+    encoder.encode(secret),
     { name: "HMAC", hash: "SHA-256" },
     false,
     ["sign", "verify"]
@@ -35,7 +47,7 @@ function hexToUint8Array(hex: string): Uint8Array {
  * Generates an HMAC-SHA256 signed token with an expiration timestamp.
  * Format: "timestamp.hmac_signature"
  */
-export async function signSuperAdminToken(expiresInHours: number = 24 * 7): Promise<string> {
+export async function signSuperAdminToken(expiresInHours: number = SUPERADMIN_SESSION_HOURS): Promise<string> {
   const timestamp = Date.now() + expiresInHours * 60 * 60 * 1000;
   const payload = timestamp.toString();
   

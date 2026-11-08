@@ -2,15 +2,19 @@
 
 import { headers } from "next/headers";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { bookingLimiter, apiLimiter, getIp } from "@/lib/rate-limit";
+import { bookingLimiter, apiLimiter, phoneBookingLimiter, getIp } from "@/lib/rate-limit";
 import { getShopUsageAndLimits } from "@/lib/plan-limits";
 import { getAvailability, resolveWorkingHours, type AvailabilityResult } from "@/lib/booking";
 import { bookingSchema, phoneLookupVariants } from "@/lib/validations";
 import { formatTrDateTime, isValidDateString, isValidTimeString, istanbulToUtc } from "@/lib/time";
 import { newCancelToken, sendAppointmentConfirmation } from "@/lib/appointment-messages";
+import { notifyShop } from "@/lib/notify";
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const isUuid = (v: unknown): v is string => typeof v === "string" && UUID_RE.test(v);
+
+/** Aynı numaranın bir dükkanda aynı anda sahip olabileceği en fazla ileri tarihli aktif randevu */
+const MAX_ACTIVE_BOOKINGS_PER_PHONE = 2;
 
 async function loadBookableShop(admin: ReturnType<typeof createAdminClient>, shopId: string) {
   const { data: shop } = await admin.from("shops").select("id, name, status").eq("id", shopId).single();
@@ -88,6 +92,11 @@ export async function createBooking(data: {
   const customerName = parsed.data.customerName;
   const phone = parsed.data.phone;
 
+  const { success: phoneAllowed } = await phoneBookingLimiter.limit(`booking_phone_${data.shopId}_${phone}`);
+  if (!phoneAllowed) {
+    return { success: false, error: "Bu telefon numarasıyla çok fazla randevu denemesi yapıldı. Lütfen daha sonra tekrar deneyin." };
+  }
+
   const admin = createAdminClient();
 
   try {
@@ -140,6 +149,21 @@ export async function createBooking(data: {
     let customerId: string;
     if (existingCustomers && existingCustomers.length > 0) {
       customerId = existingCustomers[0].id;
+
+      // Başkasının numarasıyla toplu sahte randevu açılmasını sınırla
+      const { count: activeCount } = await admin
+        .from("appointments")
+        .select("id", { count: "exact", head: true })
+        .eq("shop_id", shop.id)
+        .eq("customer_id", customerId)
+        .in("status", ["pending", "confirmed"])
+        .gt("scheduled_at", new Date().toISOString());
+      if ((activeCount ?? 0) >= MAX_ACTIVE_BOOKINGS_PER_PHONE) {
+        return {
+          success: false,
+          error: `Bu telefon numarasıyla zaten ${MAX_ACTIVE_BOOKINGS_PER_PHONE} aktif randevunuz var. Yeni randevu için mevcut randevunuzu iptal edin veya dükkanı arayın.`,
+        };
+      }
     } else {
       const { data: newCustomer, error: customerError } = await admin
         .from("customers")
@@ -158,7 +182,7 @@ export async function createBooking(data: {
     const status: "pending" | "confirmed" = autoConfirm ? "confirmed" : "pending";
     const cancelToken = newCancelToken();
 
-    const { error: appointmentError } = await admin.from("appointments").insert({
+    const { data: inserted, error: appointmentError } = await admin.from("appointments").insert({
       shop_id: shop.id,
       customer_id: customerId,
       service_id: service.id,
@@ -168,11 +192,27 @@ export async function createBooking(data: {
       source: "manual",
       notes: "Web randevu sayfasından alındı",
       cancel_token: cancelToken,
-    });
+    }).select("id, created_at").single();
 
-    if (appointmentError) {
+    if (appointmentError || !inserted) {
       console.error("Randevu oluşturulamadı:", appointmentError);
       return { success: false, error: "Randevu oluşturulamadı. Lütfen tekrar deneyin." };
+    }
+
+    // 4b. Eşzamanlı istek kontrolü: aynı saate aynı anda iki randevu eklenmiş olabilir.
+    // Yalnızca bizden önce eklenenler dolu sayılır; saat artık uygun değilse sonradan
+    // gelen (bu) randevu geri alınır. İki istek de aynı sırayı gördüğü için biri kalır.
+    const recheck = await getAvailability(admin, {
+      shopId: shop.id,
+      date: data.date,
+      serviceDurationMinutes: service.duration_minutes,
+      staffId: data.staffId || null,
+      workingHours: resolveWorkingHours(settings),
+      before: { id: inserted.id, createdAt: inserted.created_at },
+    });
+    if (!recheck.slots.includes(data.time)) {
+      await admin.from("appointments").delete().eq("id", inserted.id);
+      return { success: false, code: "slot_taken", error: "Seçtiğiniz saat az önce doldu. Lütfen başka bir saat seçin." };
     }
 
     // 5. Otomatik onay açıksa müşteriye WhatsApp onay mesajı
@@ -189,10 +229,15 @@ export async function createBooking(data: {
 
     // 6. İşletmeye panel bildirimi
     if (settings?.notify_new !== false) {
-      await admin.from("notifications").insert({
-        shop_id: shop.id,
+      const when = formatTrDateTime(scheduledAt);
+      await notifyShop(admin, shop.id, {
         type: "new_booking",
-        message: `🔔 ${customerName} web üzerinden ${status === "pending" ? "yeni bir randevu talebi oluşturdu" : "randevu aldı"}. (${service.name} · ${formatTrDateTime(scheduledAt)})`,
+        message: `🔔 ${customerName} web üzerinden ${status === "pending" ? "yeni bir randevu talebi oluşturdu" : "randevu aldı"}. (${service.name} · ${when})`,
+        push: {
+          title: status === "pending" ? "Yeni randevu talebi" : "Yeni randevu",
+          body: `${customerName} · ${service.name} · ${when}`,
+          data: { type: "new_booking", appointmentId: inserted.id },
+        },
       });
     }
 

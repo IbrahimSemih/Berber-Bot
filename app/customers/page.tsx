@@ -1,10 +1,42 @@
 "use client";
 import { useState, useEffect } from "react";
 import AdminLayout from "@/components/layout/AdminLayout";
-import { Card, PageHeader, Avatar } from "@/components/ui";
+import { Card, PageHeader, Avatar, Button } from "@/components/ui";
+import toast from "react-hot-toast";
+import { anonymizeCustomer } from "./actions";
 import { formatPrice } from "@/lib/utils";
 import { createClient } from "@/lib/supabase/client";
 import { Customer } from "@/types";
+
+const isAnonymized = (c: Customer) => c.phone?.startsWith("silindi-");
+
+function csvCell(value: unknown) {
+  const text = value == null ? "" : String(value);
+  return /[";\n\r]/.test(text) ? `"${text.replace(/"/g, '""')}"` : text;
+}
+
+/** Excel (Türkçe) uyumlu CSV: UTF-8 BOM + noktalı virgül ayırıcı */
+function exportCustomersCsv(rows: Customer[]) {
+  const header = ["Ad Soyad", "Telefon", "Toplam Randevu", "Son Ziyaret", "Favori Hizmet", "Toplam Harcama (TL)", "Kayıt Tarihi"];
+  const lines = rows
+    .filter((c) => !isAnonymized(c))
+    .map((c) => [
+      c.name || "",
+      c.phone,
+      c.total_appointments ?? 0,
+      c.last_visit ?? "",
+      c.favorite_service ?? "",
+      c.total_spent ?? 0,
+      c.created_at ? new Date(c.created_at).toLocaleDateString("tr-TR") : "",
+    ].map(csvCell).join(";"));
+  const blob = new Blob(["\uFEFF" + [header.join(";"), ...lines].join("\r\n")], { type: "text/csv;charset=utf-8" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `musteriler-${new Date().toISOString().slice(0, 10)}.csv`;
+  a.click();
+  URL.revokeObjectURL(url);
+}
 
 export default function CustomersPage() {
   const [query, setQuery] = useState("");
@@ -82,6 +114,33 @@ export default function CustomersPage() {
     loadData();
   }, []);
 
+  const handleAnonymize = (customer: Customer) => {
+    toast((t) => (
+      <div className="flex flex-col gap-3">
+        <span className="font-bold">Müşteri verilerini sil</span>
+        <p className="text-sm">
+          {customer.name || "Bu müşteri"} için ad ve telefon kalıcı olarak silinecek, ileri tarihli randevuları iptal edilecek.
+          Randevu geçmişi istatistiklerde isimsiz olarak kalır. Bu işlem geri alınamaz.
+        </p>
+        <div className="flex justify-end gap-2">
+          <Button variant="ghost" size="sm" onClick={() => toast.dismiss(t.id)}>Vazgeç</Button>
+          <Button variant="danger" size="sm" onClick={async () => {
+            toast.dismiss(t.id);
+            const result = await anonymizeCustomer(customer.id);
+            if (result.success) {
+              setCustomers((prev) => prev.map((c) => c.id === customer.id
+                ? { ...c, name: "Silinmiş müşteri", phone: `silindi-${c.id}` }
+                : c));
+              toast.success("Müşteri verileri silindi.");
+            } else {
+              toast.error(result.error || "İşlem başarısız oldu.");
+            }
+          }}>Evet, sil</Button>
+        </div>
+      </div>
+    ), { duration: Infinity });
+  };
+
   const filtered = customers.filter(
     (c) =>
       c.name?.toLowerCase().includes(query.toLowerCase()) ||
@@ -98,7 +157,11 @@ export default function CustomersPage() {
 
   return (
     <AdminLayout>
-      <PageHeader title="Müşteriler" />
+      <PageHeader title="Müşteriler">
+        <Button variant="ghost" size="sm" onClick={() => exportCustomersCsv(customers)} disabled={customers.length === 0}>
+          Excel&apos;e aktar (CSV)
+        </Button>
+      </PageHeader>
       <div className="p-7">
         <div className="flex items-center gap-3 px-4 py-2.5 rounded-lg mb-5"
           style={{ background: "var(--bg3)", border: "1px solid var(--border2)" }}>
@@ -114,7 +177,7 @@ export default function CustomersPage() {
           <table className="w-full border-collapse">
             <thead>
               <tr style={{ background: "var(--bg3)" }}>
-                {["Müşteri", "WhatsApp", "Toplam Randevu", "Son Ziyaret", "Favori Hizmet", "Toplam Harcama"].map((h) => (
+                {["Müşteri", "WhatsApp", "Toplam Randevu", "Son Ziyaret", "Favori Hizmet", "Toplam Harcama", ""].map((h) => (
                   <th key={h} className="px-4 py-2.5 text-left text-xs font-medium uppercase tracking-wide"
                     style={{ color: "var(--text3)", borderBottom: "1px solid var(--border)" }}>{h}</th>
                 ))}
@@ -123,7 +186,7 @@ export default function CustomersPage() {
             <tbody>
               {filtered.length === 0 ? (
                 <tr>
-                  <td colSpan={6} className="px-4 py-8 text-center text-sm" style={{ color: "var(--text3)" }}>
+                  <td colSpan={7} className="px-4 py-8 text-center text-sm" style={{ color: "var(--text3)" }}>
                     Kayıtlı müşteri bulunamadı.
                   </td>
                 </tr>
@@ -138,12 +201,24 @@ export default function CustomersPage() {
                         <div className="text-sm font-medium">{c.name || "İsimsiz"}</div>
                       </div>
                     </td>
-                    <td className="px-4 py-3 text-sm" style={{ color: "var(--text3)" }}>{c.phone}</td>
+                    <td className="px-4 py-3 text-sm" style={{ color: "var(--text3)" }}>{isAnonymized(c) ? "—" : c.phone}</td>
                     <td className="px-4 py-3 font-syne font-bold text-sm">{c.total_appointments ?? 0}</td>
                     <td className="px-4 py-3 text-sm" style={{ color: "var(--text3)" }}>{c.last_visit ?? "—"}</td>
                     <td className="px-4 py-3 text-sm">{c.favorite_service ?? "—"}</td>
                     <td className="px-4 py-3 font-syne font-bold text-sm" style={{ color: "var(--accent)" }}>
                       {c.total_spent ? formatPrice(c.total_spent) : "—"}
+                    </td>
+                    <td className="px-4 py-3 text-right">
+                      {!isAnonymized(c) && (
+                        <button
+                          onClick={() => handleAnonymize(c)}
+                          className="text-xs underline-offset-2 hover:underline"
+                          style={{ color: "var(--text3)" }}
+                          title="KVKK kapsamında müşterinin kişisel verilerini sil"
+                        >
+                          Verileri sil
+                        </button>
+                      )}
                     </td>
                   </tr>
                 ))

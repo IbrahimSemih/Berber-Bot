@@ -1,34 +1,15 @@
 "use server";
 
-import { createAdminClient } from "@/lib/supabase/admin";
-import { getShopUsageAndLimits } from "@/lib/plan-limits";
-import { createServerClient } from "@supabase/ssr";
-import { cookies } from "next/headers";
+import { requireOwner } from "@/lib/owner";
+import { getShopLimits } from "@/lib/services/shop";
 
 export async function getShopLimitsAction() {
-  const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    {
-      cookies: {
-        get(name: string) {
-          return cookies().get(name)?.value;
-        },
-      },
-    }
-  );
-
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return { error: "Yetkisiz erişim." };
-
-  const { data: shop } = await supabase.from("shops").select("id").eq("owner_id", user.id).single();
-  if (!shop) return { error: "Dükkan bulunamadı." };
+  const auth = await requireOwner();
+  if ("error" in auth) return { error: auth.error };
 
   try {
-    const adminClient = createAdminClient();
-    const limits = await getShopUsageAndLimits(adminClient, shop.id);
-    return { data: limits };
+    return { data: await getShopLimits(auth.ctx.shop.id) };
   } catch (error: any) {
-    return { error: error.message };
+    return { error: error.message as string };
   }
 }
