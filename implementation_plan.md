@@ -39,7 +39,9 @@ Son güncelleme: 5 Kasım 2026. Kod tarafındaki kritik açıklar kapatıldı; a
 - Webhook URL: `https://<domain>/api/whatsapp/webhook`.
 
 ### 6. Cron
-- `vercel.json` hatırlatma cron'u 15 dakikada bir çalışır: **Vercel Hobby planında deploy hata verir.** Ya Pro plana geç ya da bu satırı kaldırıp cron-job.org / Upstash QStash ile `/api/cron/reminders` adresini `Authorization: Bearer <CRON_SECRET>` başlığıyla 15 dakikada bir çağır.
+- Randevu hatırlatma cron'u `vercel.json`'dan çıkarıldı (Hobby planı 15 dakikalık cron'u reddedip **tüm deploy'u** başarısız yapıyordu). cron-job.org (ücretsiz) veya Upstash QStash'te bir görev aç:
+  - Adres: `https://<site>/api/cron/reminders`, yöntem GET veya POST, her 15 dakikada bir.
+  - Başlık: `Authorization: Bearer <CRON_SECRET>`. `CRON_SECRET` Vercel env'de de tanımlı olmalı; yoksa uç her isteğe 401 döner.
 - `/api/cron/subscriptions` günde bir çalışır (Hobby'de de çalışır).
 
 ### 7. E-posta ve key rotasyonu
