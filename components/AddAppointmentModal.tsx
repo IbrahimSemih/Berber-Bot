@@ -75,7 +75,7 @@ export default function AddAppointmentModal({ shopId, onClose, onAdd }: Props) {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4"
-      style={{ background: "rgba(0,0,0,0.75)", backdropFilter: "blur(4px)" }}
+      style={{ background: "var(--overlay)", backdropFilter: "blur(4px)" }}
       onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}>
       <div className="rounded-2xl p-6 sm:p-7 w-full max-w-[480px] max-h-[90vh] overflow-y-auto"
         style={{ background: "var(--bg2)", border: "1px solid var(--border2)" }}>

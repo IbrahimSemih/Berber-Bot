@@ -171,7 +171,7 @@ export default function OnboardingPage() {
                       className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors border`}
                       style={{
                         background: isSelected ? "var(--accent)" : "transparent",
-                        color: isSelected ? "#0a0a0a" : "var(--text2)",
+                        color: isSelected ? "var(--on-accent)" : "var(--text2)",
                         borderColor: isSelected ? "var(--accent)" : "var(--border)"
                       }}
                     >
@@ -218,9 +218,9 @@ export default function OnboardingPage() {
               {staffMembers.length > 0 ? (
                 <div className="flex flex-wrap gap-2 mt-4">
                   {staffMembers.map((staff, idx) => (
-                    <div key={idx} className="flex items-center gap-2 px-3 py-1.5 rounded-full border text-sm" style={{ borderColor: "var(--border)", background: "rgba(0,0,0,0.2)" }}>
+                    <div key={idx} className="flex items-center gap-2 px-3 py-1.5 rounded-full border text-sm" style={{ borderColor: "var(--border)", background: "var(--bg)" }}>
                       <span>{staff}</span>
-                      <button type="button" onClick={() => removeStaff(staff)} className="w-5 h-5 flex items-center justify-center rounded-full hover:bg-red-500/20 hover:text-red-500 transition-colors">
+                      <button type="button" onClick={() => removeStaff(staff)} className="w-5 h-5 flex items-center justify-center rounded-full hover:bg-[rgba(185,60,52,0.14)] hover:text-[var(--red)] transition-colors">
                         ×
                       </button>
                     </div>
@@ -233,7 +233,7 @@ export default function OnboardingPage() {
           </div>
 
           {error && (
-            <div className="text-red-500 text-sm bg-red-500/10 p-3 rounded-lg">
+            <div className="text-[var(--red)] text-sm bg-[var(--red-dim)] p-3 rounded-lg">
               {error}
             </div>
           )}
@@ -242,7 +242,7 @@ export default function OnboardingPage() {
             type="submit"
             disabled={loading || !shopName}
             className="w-full py-4 mt-8 rounded-xl text-base font-bold transition-all disabled:opacity-50 hover:-translate-y-0.5"
-            style={{ background: "var(--accent)", color: "#0a0a0a" }}
+            style={{ background: "var(--accent)", color: "var(--on-accent)" }}
           >
             {loading ? "Sistem Kuruluyor..." : "Dükkanımı Oluştur ve Başla"}
           </button>

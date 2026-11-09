@@ -17,7 +17,7 @@ export default function ErrorBoundary({
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center p-4 text-center" style={{ background: "var(--bg)", color: "var(--text)" }}>
-      <div className="w-20 h-20 rounded-full flex items-center justify-center mb-6 bg-red-500/10 text-red-500">
+      <div className="w-20 h-20 rounded-full flex items-center justify-center mb-6 bg-[var(--red-dim)] text-[var(--red)]">
         <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
           <circle cx="12" cy="12" r="10" />
           <line x1="12" y1="8" x2="12" y2="12" />
@@ -34,13 +34,13 @@ export default function ErrorBoundary({
         <button
           onClick={() => reset()}
           className="px-6 py-3 rounded-xl font-bold text-sm transition-all hover:opacity-80"
-          style={{ background: "var(--accent)", color: "#0a0a0a" }}
+          style={{ background: "var(--accent)", color: "var(--on-accent)" }}
         >
           Tekrar Dene
         </button>
         <Link 
           href="/"
-          className="px-6 py-3 rounded-xl font-bold text-sm border transition-all hover:bg-white/5"
+          className="px-6 py-3 rounded-xl font-bold text-sm border transition-all hover:bg-[var(--bg3)]"
           style={{ borderColor: "var(--border)", color: "var(--text)" }}
         >
           Ana Sayfa

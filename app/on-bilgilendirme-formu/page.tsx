@@ -28,8 +28,8 @@ export default function OnBilgilendirmeFormuPage() {
 
       <Section title="3. Toplam Fiyat (Vergiler Dahil)">
         <Box>
-          <div><strong className="text-white">Aylık abonelik:</strong> {tl(PLANS.pro.price)} – 1 ay</div>
-          <div><strong className="text-white">Yıllık abonelik:</strong> {tl(PLANS.pro.yearlyPrice)} – 12 ay</div>
+          <div><strong className="text-[var(--text)]">Aylık abonelik:</strong> {tl(PLANS.pro.price)} – 1 ay</div>
+          <div><strong className="text-[var(--text)]">Yıllık abonelik:</strong> {tl(PLANS.pro.yearlyPrice)} – 12 ay</div>
           <div>Teslimat / kargo ücreti yoktur. Ek ücret veya gizli masraf bulunmaz.</div>
         </Box>
       </Section>
@@ -37,7 +37,7 @@ export default function OnBilgilendirmeFormuPage() {
       <Section title="4. Ödeme ve Yenileme">
         <ul className={ul}>
           <li>Ödeme kredi/banka kartı ile iyzico güvenli ödeme altyapısı üzerinden tek çekim olarak alınır.</li>
-          <li>Abonelik <strong className="text-white">otomatik yenilenmez</strong>; süre bitiminden önce e-posta ile hatırlatma yapılır.</li>
+          <li>Abonelik <strong className="text-[var(--text)]">otomatik yenilenmez</strong>; süre bitiminden önce e-posta ile hatırlatma yapılır.</li>
           <li>Yeni hesaplara {TRIAL_DAYS} gün ücretsiz deneme sunulur; deneme sonunda kendiliğinden ücret alınmaz.</li>
         </ul>
       </Section>

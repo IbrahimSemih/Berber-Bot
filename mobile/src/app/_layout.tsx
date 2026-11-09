@@ -29,7 +29,7 @@ export default function RootLayout() {
       <QueryClientProvider client={queryClient}>
         <AuthProvider>
           <ToastProvider>
-            <StatusBar style="light" />
+            <StatusBar style="dark" />
             <RootNavigator />
           </ToastProvider>
         </AuthProvider>

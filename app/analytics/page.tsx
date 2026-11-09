@@ -43,8 +43,8 @@ interface StaffPerf {
 }
 
 const DONUT_COLORS = [
-  "#c8f060", "#4a9eff", "#ff5f57", "#ffaa33", "#c77dff",
-  "#4caf7d", "#ff6b9d", "#ffd93d", "#6bcb77", "#4d96ff",
+  "var(--accent)", "#2A65A0", "#B93C34", "#995709", "#6B4C8A",
+  "#2B7553", "#C9813A", "#4E8F73", "#8A6D3B", "#3E7CB1",
 ];
 
 export default function AnalyticsPage() {
@@ -388,7 +388,7 @@ export default function AnalyticsPage() {
                       className="h-full rounded-full"
                       style={{
                         width: `${allApts.length > 0 ? (sourceData.whatsapp / allApts.length) * 100 : 0}%`,
-                        background: "linear-gradient(90deg, var(--accent), #a8d040)",
+                        background: "linear-gradient(90deg, var(--accent), var(--accent2))",
                         transition: "width 0.6s ease",
                       }}
                     />
@@ -414,7 +414,7 @@ export default function AnalyticsPage() {
                       className="h-full rounded-full"
                       style={{
                         width: `${allApts.length > 0 ? (sourceData.manual / allApts.length) * 100 : 0}%`,
-                        background: "linear-gradient(90deg, var(--blue), #3a7acc)",
+                        background: "linear-gradient(90deg, var(--blue), #4E86BF)",
                         transition: "width 0.6s ease",
                       }}
                     />

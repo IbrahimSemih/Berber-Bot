@@ -41,17 +41,17 @@ export default function NotificationListener({ shopId, onNewNotification }: { sh
 
   return (
     <div className="fixed bottom-6 right-6 z-50 animate-in slide-in-from-bottom-5 fade-in duration-300">
-      <div className="bg-white border-l-4 border-accent text-gray-900 px-6 py-4 rounded-xl shadow-2xl flex items-center gap-3">
+      <div className="bg-white border-l-4 border-accent text-[var(--text)] px-6 py-4 rounded-xl shadow-2xl flex items-center gap-3">
         <div className="text-xl">
           {notification.type === 'cancel' ? '❌' : notification.type === 'new_booking' ? '🔔' : 'ℹ️'}
         </div>
         <div>
           <div className="font-bold text-sm">Yeni Bildirim</div>
-          <div className="text-sm font-medium text-gray-600">{notification.message}</div>
+          <div className="text-sm font-medium text-[var(--text2)]">{notification.message}</div>
         </div>
         <button 
           onClick={() => setNotification(null)}
-          className="ml-4 text-gray-400 hover:text-gray-900"
+          className="ml-4 text-[var(--text3)] hover:text-[var(--text)]"
         >
           ✕
         </button>

@@ -258,8 +258,8 @@ export function SwitchRow({
         value={value}
         onValueChange={onValueChange}
         disabled={disabled}
-        trackColor={{ false: colors.bg4, true: colors.accent2 }}
-        thumbColor={value ? colors.accent : colors.text2}
+        trackColor={{ false: colors.switchTrackOff, true: colors.switchTrackOn }}
+        thumbColor={value ? colors.switchThumbOn : colors.switchThumbOff}
       />
     </View>
   );
@@ -294,7 +294,7 @@ const buttonVariants = {
   primary: { bg: colors.accent, border: colors.accent, text: colors.onAccent },
   secondary: { bg: colors.bg3, border: colors.border2, text: colors.text },
   ghost: { bg: "transparent", border: "transparent", text: colors.text2 },
-  danger: { bg: "rgba(255, 95, 87, 0.12)", border: "rgba(255, 95, 87, 0.35)", text: colors.red },
+  danger: { bg: colors.redDim, border: colors.redBorder, text: colors.red },
 };
 
 export const textStyles = StyleSheet.create({
@@ -340,8 +340,8 @@ const styles = StyleSheet.create({
     gap: spacing.sm,
   },
   errorBanner: {
-    backgroundColor: "rgba(255, 95, 87, 0.1)",
-    borderColor: "rgba(255, 95, 87, 0.3)",
+    backgroundColor: colors.redDim,
+    borderColor: colors.redBorder,
     borderWidth: 1,
     borderRadius: radius.md,
     padding: spacing.md,

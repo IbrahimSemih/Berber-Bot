@@ -12,16 +12,16 @@ const PLAN_PRICES: Record<string, number> = {
 };
 
 const PLAN_COLORS: Record<string, string> = {
-  starter: "#4a9eff",
-  pro: "#c8f060",
-  business: "#c77dff",
+  starter: "#2A65A0",
+  pro: "var(--accent)",
+  business: "#6B4C8A",
 };
 
 const STATUS_COLORS: Record<string, string> = {
-  active: "#4caf7d",
-  trialing: "#4a9eff",
-  past_due: "#ffaa33",
-  canceled: "#ff5f57",
+  active: "#2B7553",
+  trialing: "#2A65A0",
+  past_due: "#995709",
+  canceled: "#B93C34",
 };
 
 const PLAN_LABELS: Record<string, string> = {
@@ -158,7 +158,7 @@ export default async function SuperAdminAnalyticsPage() {
   const planDistribution = Array.from(planCounts.entries()).map(([plan, count]) => ({
     label: PLAN_LABELS[plan] || plan,
     value: count,
-    color: PLAN_COLORS[plan] || "#5a5752",
+    color: PLAN_COLORS[plan] || "#656A63",
   }));
 
   // ─── Subscription Status Distribution ──────────────────────────────────────
@@ -171,7 +171,7 @@ export default async function SuperAdminAnalyticsPage() {
     ([status, count]) => ({
       label: STATUS_LABELS[status] || status,
       value: count,
-      color: STATUS_COLORS[status] || "#5a5752",
+      color: STATUS_COLORS[status] || "#656A63",
     })
   );
 

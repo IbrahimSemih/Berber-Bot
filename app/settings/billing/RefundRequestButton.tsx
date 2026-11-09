@@ -22,7 +22,7 @@ export default function RefundRequestButton({ paymentId, daysLeft }: { paymentId
 
   if (!open) {
     return (
-      <button onClick={() => setOpen(true)} className="text-xs font-medium px-3 py-1.5 rounded-lg border transition-colors hover:bg-white/5"
+      <button onClick={() => setOpen(true)} className="text-xs font-medium px-3 py-1.5 rounded-lg border transition-colors hover:bg-[var(--bg3)]"
         style={{ borderColor: "var(--border2)", color: "var(--text2)" }}>
         İade Talep Et ({daysLeft} gün kaldı)
       </button>
@@ -38,7 +38,7 @@ export default function RefundRequestButton({ paymentId, daysLeft }: { paymentId
       <div className="flex gap-2">
         <button onClick={submit} disabled={loading}
           className="flex-1 text-xs font-bold px-3 py-2 rounded-lg disabled:opacity-50"
-          style={{ background: "var(--accent)", color: "#0a0a0a" }}>
+          style={{ background: "var(--accent)", color: "var(--on-accent)" }}>
           {loading ? "Gönderiliyor..." : "İade Talebi Gönder"}
         </button>
         <button onClick={() => setOpen(false)} disabled={loading}

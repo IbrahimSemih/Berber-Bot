@@ -15,10 +15,10 @@ export default function MesafeliSatisSozlesmesiPage() {
   return (
     <LegalPage title="Mesafeli Satış Sözleşmesi" badge="📄 Sözleşme" path="/mesafeli-satis-sozlesmesi">
       <Section title="1. Taraflar">
-        <p><strong className="text-white">Satıcı / Hizmet Sağlayıcı:</strong></p>
+        <p><strong className="text-[var(--text)]">Satıcı / Hizmet Sağlayıcı:</strong></p>
         <CompanyInfo />
         <p className="mt-4">
-          <strong className="text-white">Alıcı:</strong> {SITE.name} platformuna üye olan ve ödeme adımında fatura bilgilerini
+          <strong className="text-[var(--text)]">Alıcı:</strong> {SITE.name} platformuna üye olan ve ödeme adımında fatura bilgilerini
           beyan eden gerçek veya tüzel kişi (&quot;Alıcı&quot;). Alıcının ad-soyad/unvan, T.C. kimlik/vergi numarası, adres, telefon ve
           e-posta bilgileri ödeme sırasında beyan ettiği fatura bilgileridir.
         </p>
@@ -50,8 +50,8 @@ export default function MesafeliSatisSozlesmesiPage() {
 
       <Section title="4. Fiyat ve Ödeme">
         <Box>
-          <div><strong className="text-white">Profesyonel – Aylık:</strong> {tl(PLANS.pro.price)} (1 ay)</div>
-          <div><strong className="text-white">Profesyonel – Yıllık:</strong> {tl(PLANS.pro.yearlyPrice)} (12 ay; aylık fiyatın 10 katı)</div>
+          <div><strong className="text-[var(--text)]">Profesyonel – Aylık:</strong> {tl(PLANS.pro.price)} (1 ay)</div>
+          <div><strong className="text-[var(--text)]">Profesyonel – Yıllık:</strong> {tl(PLANS.pro.yearlyPrice)} (12 ay; aylık fiyatın 10 katı)</div>
           <div>Fiyatlara tüm vergiler dahildir. Ödeme, kredi kartı veya banka kartı ile iyzico Ödeme Hizmetleri A.Ş. altyapısı üzerinden tek seferde alınır; taksit uygulanmaz.</div>
         </Box>
         <ul className={ul}>
@@ -78,8 +78,8 @@ export default function MesafeliSatisSozlesmesiPage() {
         </p>
         <p className="mt-3">Buna rağmen Satıcı, Alıcıya aşağıdaki gönüllü iade imkânını tanır:</p>
         <ul className={ul}>
-          <li><strong className="text-white">Yıllık plan:</strong> Ödeme tarihinden itibaren ilk {YEARLY_REFUND_DAYS} gün içinde talep edilmesi halinde ücretin tamamı koşulsuz iade edilir; iade ile birlikte abonelik derhal sona erer.</li>
-          <li><strong className="text-white">Aylık plan:</strong> Ödenen ücret iade edilmez; hizmet ödenen dönemin sonuna kadar kullanılabilir.</li>
+          <li><strong className="text-[var(--text)]">Yıllık plan:</strong> Ödeme tarihinden itibaren ilk {YEARLY_REFUND_DAYS} gün içinde talep edilmesi halinde ücretin tamamı koşulsuz iade edilir; iade ile birlikte abonelik derhal sona erer.</li>
+          <li><strong className="text-[var(--text)]">Aylık plan:</strong> Ödenen ücret iade edilmez; hizmet ödenen dönemin sonuna kadar kullanılabilir.</li>
         </ul>
         <p className="mt-3">
           İade talebi panelde <em>Fatura &amp; Abonelik</em> sayfasından veya e-posta ile iletilir. Onaylanan iadeler ödemenin

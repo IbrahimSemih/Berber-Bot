@@ -219,7 +219,7 @@ export default function AppointmentsPage() {
       <div className="p-4 sm:p-7 relative">
         {/* Ambient glow */}
         <div className="absolute top-0 right-0 w-[520px] h-[520px] pointer-events-none"
-          style={{ background: "radial-gradient(circle, rgba(200,240,96,0.06) 0%, transparent 70%)" }} aria-hidden />
+          style={{ background: "radial-gradient(circle, var(--accent-dim) 0%, transparent 70%)" }} aria-hidden />
 
         <div className="relative z-10">
           {/* Mobile filters */}

@@ -22,17 +22,17 @@ export default function SiteFooter({ current }: { current?: string }) {
           <div className="flex flex-col gap-3 max-w-sm">
             <Link href="/" className="flex items-center gap-2">
               <div className="w-6 h-6 rounded flex items-center justify-center text-xs font-bold"
-                style={{ background: "var(--accent)", color: "#0a0a0a" }}>✂</div>
-              <span className="font-heading font-bold text-lg text-white">{SITE.name}</span>
+                style={{ background: "var(--accent)", color: "var(--on-accent)" }}>✂</div>
+              <span className="font-heading font-bold text-lg text-[var(--text)]">{SITE.name}</span>
             </Link>
             <p className="text-sm" style={{ color: "var(--text3)" }}>{SITE.tagline}.</p>
           </div>
           <nav aria-label="Alt menü" className="grid grid-cols-2 sm:grid-cols-3 gap-x-8 gap-y-2 text-sm font-medium" style={{ color: "var(--text3)" }}>
             {LINKS.map((l) =>
               l.href === current ? (
-                <span key={l.href} className="text-white">{l.label}</span>
+                <span key={l.href} className="text-[var(--text)]">{l.label}</span>
               ) : (
-                <Link key={l.href} href={l.href} className="hover:text-white transition-colors">{l.label}</Link>
+                <Link key={l.href} href={l.href} className="hover:text-[var(--text)] transition-colors">{l.label}</Link>
               )
             )}
           </nav>

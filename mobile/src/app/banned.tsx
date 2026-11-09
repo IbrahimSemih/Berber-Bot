@@ -6,7 +6,7 @@ export default function BannedScreen() {
   const { signOut, refreshShop } = useAuth();
   return (
     <Screen contentStyle={{ justifyContent: "center" }}>
-      <Card style={{ borderColor: "rgba(255, 95, 87, 0.35)" }}>
+      <Card style={{ borderColor: colors.redBorder }}>
         <AppText variant="heading" style={{ color: colors.red }}>Hesabınız askıya alındı</AppText>
         <AppText variant="muted">
           Hesabınız kullanım koşullarına aykırılık nedeniyle askıya alınmıştır. Bunun bir hata olduğunu

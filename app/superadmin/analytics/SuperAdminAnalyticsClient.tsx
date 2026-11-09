@@ -65,18 +65,18 @@ export interface PlatformAnalyticsData {
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
 const PLAN_COLORS: Record<string, string> = {
-  starter: "#4a9eff",
-  pro: "#c8f060",
-  business: "#c77dff",
-  Bilinmiyor: "#5a5752",
+  starter: "#2A65A0",
+  pro: "var(--accent)",
+  business: "#6B4C8A",
+  Bilinmiyor: "#656A63",
 };
 
 const STATUS_COLORS: Record<string, string> = {
-  active: "#4caf7d",
-  trialing: "#4a9eff",
-  past_due: "#ffaa33",
-  canceled: "#ff5f57",
-  Bilinmiyor: "#5a5752",
+  active: "#2B7553",
+  trialing: "#2A65A0",
+  past_due: "#995709",
+  canceled: "#B93C34",
+  Bilinmiyor: "#656A63",
 };
 
 const PLAN_LABELS: Record<string, string> = {
@@ -287,7 +287,7 @@ export default function SuperAdminAnalyticsClient({ data }: { data: PlatformAnal
               className="px-3 py-1.5 rounded-md text-xs font-medium transition-all"
               style={{
                 background: shopSort === "appointments" ? "var(--accent)" : "transparent",
-                color: shopSort === "appointments" ? "#0a0a0a" : "var(--text3)",
+                color: shopSort === "appointments" ? "var(--on-accent)" : "var(--text3)",
               }}
             >
               Randevu
@@ -297,7 +297,7 @@ export default function SuperAdminAnalyticsClient({ data }: { data: PlatformAnal
               className="px-3 py-1.5 rounded-md text-xs font-medium transition-all"
               style={{
                 background: shopSort === "revenue" ? "var(--accent)" : "transparent",
-                color: shopSort === "revenue" ? "#0a0a0a" : "var(--text3)",
+                color: shopSort === "revenue" ? "var(--on-accent)" : "var(--text3)",
               }}
             >
               Gelir
@@ -425,7 +425,7 @@ function StatCard({
       className="rounded-2xl p-5 relative overflow-hidden group border"
       style={{ background: "var(--bg2)", borderColor: "var(--border)" }}
     >
-      <div className="absolute inset-0 bg-gradient-to-br from-transparent to-black/20 opacity-0 group-hover:opacity-100 transition-opacity" />
+      <div className="absolute inset-0 bg-gradient-to-br from-transparent to-[var(--accent-dim)] opacity-0 group-hover:opacity-100 transition-opacity" />
       <div className="absolute top-0 right-0 w-20 h-20 pointer-events-none" style={{ background: "radial-gradient(circle at top right, var(--accent-dim2), transparent 70%)" }} />
       <div className="absolute top-4 right-4 text-xl opacity-40">{icon}</div>
       <div className="text-[11px] font-bold uppercase tracking-widest mb-2 relative z-10" style={{ color: "var(--text3)" }}>
@@ -437,7 +437,7 @@ function StatCard({
       {change && (
         <div
           className="text-xs mt-1.5 relative z-10"
-          style={{ color: changeDir === "up" ? "#4caf7d" : changeDir === "down" ? "#ff5f57" : "var(--text3)" }}
+          style={{ color: changeDir === "up" ? "#2B7553" : changeDir === "down" ? "#B93C34" : "var(--text3)" }}
         >
           {change}
         </div>

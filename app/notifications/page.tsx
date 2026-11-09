@@ -89,13 +89,13 @@ export default function NotificationsPage() {
     toast((t) => (
       <div className="flex flex-col gap-3">
         <div className="flex items-center gap-2">
-          <AlertTriangle className="text-red-500 w-5 h-5" />
+          <AlertTriangle className="text-[var(--red)] w-5 h-5" />
           <span className="font-bold">Emin misiniz?</span>
         </div>
         <p className="text-sm">Tüm bildirimleri silmek istediğinize emin misiniz?</p>
         <div className="flex justify-end gap-2 mt-2">
-          <button className="px-3 py-1.5 text-xs rounded border border-neutral-700 hover:bg-neutral-800" onClick={() => toast.dismiss(t.id)}>İptal</button>
-          <button className="px-3 py-1.5 text-xs rounded bg-red-500/20 text-red-500 border border-red-500/30 hover:bg-red-500/30" onClick={async () => {
+          <button className="px-3 py-1.5 text-xs rounded border border-[var(--border2)] hover:bg-[var(--bg4)]" onClick={() => toast.dismiss(t.id)}>İptal</button>
+          <button className="px-3 py-1.5 text-xs rounded bg-[rgba(185,60,52,0.14)] text-[var(--red)] border border-[rgba(185,60,52,0.3)] hover:bg-[rgba(185,60,52,0.2)]" onClick={async () => {
             toast.dismiss(t.id);
             setNotifications([]);
             await clearAllNotifications(shopId);
@@ -120,18 +120,18 @@ export default function NotificationsPage() {
         <div className="flex items-center justify-between mb-8">
           <div>
             <h1 className="text-3xl font-bold">Bildirimler</h1>
-            <p className="text-neutral-400">Gelen bildirimlerinizi buradan takip edebilirsiniz.</p>
+            <p className="text-[var(--text3)]">Gelen bildirimlerinizi buradan takip edebilirsiniz.</p>
           </div>
           <div className="flex gap-4">
             <button 
               onClick={handleMarkAllAsRead}
-              className="px-4 py-2 text-sm bg-neutral-800 hover:bg-neutral-700 text-white rounded-lg transition"
+              className="px-4 py-2 text-sm bg-[var(--bg3)] hover:bg-[var(--bg4)] text-[var(--text)] rounded-lg transition"
             >
               Tümünü Okundu İşaretle
             </button>
             <button 
               onClick={handleClearAll}
-              className="px-4 py-2 text-sm bg-red-900/50 hover:bg-red-900/80 text-red-100 rounded-lg transition border border-red-800"
+              className="px-4 py-2 text-sm bg-[var(--red-dim)] hover:bg-[rgba(185,60,52,0.2)] text-[var(--red)] rounded-lg transition border border-[rgba(185,60,52,0.3)]"
             >
               Tümünü Temizle
             </button>
@@ -140,8 +140,8 @@ export default function NotificationsPage() {
 
         <div className="space-y-4">
           {notifications.length === 0 ? (
-            <div className="p-12 text-center border border-neutral-800 rounded-2xl bg-neutral-900/50">
-              <p className="text-neutral-400">Henüz hiç bildiriminiz yok.</p>
+            <div className="p-12 text-center border border-[var(--border)] rounded-2xl bg-[var(--bg3)]">
+              <p className="text-[var(--text3)]">Henüz hiç bildiriminiz yok.</p>
             </div>
           ) : (
             notifications.map((notif) => (
@@ -150,18 +150,18 @@ export default function NotificationsPage() {
                 onClick={() => !notif.is_read && handleMarkAsRead(notif.id)}
                 className={`p-5 rounded-2xl border transition flex gap-4 items-start ${
                   notif.is_read 
-                    ? "bg-neutral-900 border-neutral-800 opacity-70" 
-                    : "bg-neutral-800 border-neutral-600 cursor-pointer shadow-lg"
+                    ? "bg-[var(--bg2)] border-[var(--border)] opacity-70" 
+                    : "bg-[var(--bg3)] border-[var(--border2)] cursor-pointer shadow-lg"
                 }`}
               >
                 <div className="text-2xl mt-1">
                   {notif.type === "cancel" ? "❌" : notif.type === "new_booking" ? "🔔" : "ℹ️"}
                 </div>
                 <div className="flex-1">
-                  <p className={`text-base ${notif.is_read ? "text-neutral-300" : "text-white font-semibold"}`}>
+                  <p className={`text-base ${notif.is_read ? "text-[var(--text2)]" : "text-[var(--text)] font-semibold"}`}>
                     {notif.message}
                   </p>
-                  <p className="text-xs text-neutral-500 mt-2">
+                  <p className="text-xs text-[var(--text3)] mt-2">
                     {new Date(notif.created_at).toLocaleString("tr-TR")}
                   </p>
                 </div>

@@ -42,7 +42,7 @@ export default async function ShopsPage() {
             <tbody>
               {shops && shops.length > 0 ? (
                 shops.map((shop) => (
-                  <tr key={shop.id} className="transition-colors hover:bg-white/5 border-b last:border-0" style={{ borderColor: "var(--border)" }}>
+                  <tr key={shop.id} className="transition-colors hover:bg-[var(--bg3)] border-b last:border-0" style={{ borderColor: "var(--border)" }}>
                     <td className="px-6 py-5">
                       <div className="font-medium text-base mb-1">{shop.name}</div>
                       <div className="text-xs font-mono" style={{ color: "var(--text3)" }}>/{shop.slug}</div>

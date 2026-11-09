@@ -198,7 +198,7 @@ export function timeOptions(from = "07:00", to = "23:45"): PickerOption[] {
 
 
 const styles = StyleSheet.create({
-  backdrop: { flex: 1, backgroundColor: "rgba(0,0,0,0.6)" },
+  backdrop: { flex: 1, backgroundColor: colors.overlay },
   sheet: {
     backgroundColor: colors.bg2,
     borderTopLeftRadius: radius.lg,

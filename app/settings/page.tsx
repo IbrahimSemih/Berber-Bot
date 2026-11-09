@@ -384,7 +384,7 @@ export default function SettingsPage() {
                         <Input type="number" min={0} value={s.price} onChange={(e) => updateService(i, "price", e.target.value)} />
                       </td>
                       <td className="px-4 py-3 w-16 text-center">
-                        <button onClick={() => removeService(i)} className="text-red-500 hover:text-red-700 p-2" aria-label={`${s.name} hizmetini kaldır`}>
+                        <button onClick={() => removeService(i)} className="text-[var(--red)] hover:text-[#8F2E28] p-2" aria-label={`${s.name} hizmetini kaldır`}>
                           ✕
                         </button>
                       </td>

@@ -87,7 +87,7 @@ export default function LoginPage() {
               onChange={(e) => setEmail(e.target.value)}
               placeholder="isim@sirket.com"
               className="w-full px-4 py-3 rounded-xl text-sm border focus:outline-none transition-colors"
-              style={{ background: "rgba(0,0,0,0.2)", borderColor: "var(--border)", color: "var(--text)" }}
+              style={{ background: "var(--bg)", borderColor: "var(--border)", color: "var(--text)" }}
             />
           </div>
 
@@ -103,12 +103,12 @@ export default function LoginPage() {
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="••••••••"
                 className="w-full px-4 py-3 rounded-xl text-sm border focus:outline-none transition-colors pr-12"
-                style={{ background: "rgba(0,0,0,0.2)", borderColor: "var(--border)", color: "var(--text)" }}
+                style={{ background: "var(--bg)", borderColor: "var(--border)", color: "var(--text)" }}
               />
               <button
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-3 top-1/2 -translate-y-1/2 p-1.5 rounded-lg transition-colors hover:bg-white/10"
+                className="absolute right-3 top-1/2 -translate-y-1/2 p-1.5 rounded-lg transition-colors hover:bg-[var(--bg4)]"
                 style={{ color: "var(--text2)" }}
                 aria-label={showPassword ? "Şifreyi gizle" : "Şifreyi göster"}
               >
@@ -132,7 +132,7 @@ export default function LoginPage() {
             type="submit"
             disabled={loading}
             className="w-full py-3.5 rounded-xl text-sm font-bold transition-all disabled:opacity-50 hover:-translate-y-0.5 mt-2"
-            style={{ background: "var(--accent)", color: "#0a0a0a" }}
+            style={{ background: "var(--accent)", color: "var(--on-accent)" }}
           >
             {loading ? "Giriş yapılıyor..." : "Giriş Yap"}
           </button>

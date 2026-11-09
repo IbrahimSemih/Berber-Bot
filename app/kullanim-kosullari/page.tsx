@@ -29,7 +29,7 @@ export default function KullanimKosullariPage() {
                 { term: "İçerik", desc: "Platform üzerinde oluşturulan, yüklenen veya paylaşılan tüm veriler" },
               ].map((item, i) => (
                 <div key={i} className="text-sm">
-                  <strong className="text-white">{item.term}:</strong>{" "}
+                  <strong className="text-[var(--text)]">{item.term}:</strong>{" "}
                   <span>{item.desc}</span>
                 </div>
               ))}
@@ -123,7 +123,7 @@ export default function KullanimKosullariPage() {
           <Section title="9. Verilerin Korunması">
             <p>
               Verilerinizin korunmasına ilişkin detaylı bilgi için lütfen{" "}
-              <Link href="/gizlilik" className="font-medium underline underline-offset-2 transition-colors hover:text-white" style={{ color: "var(--accent)" }}>
+              <Link href="/gizlilik" className="font-medium underline underline-offset-2 transition-colors hover:text-[var(--text)]" style={{ color: "var(--accent)" }}>
                 Gizlilik Politikamızı
               </Link>{" "}
               inceleyiniz. Kullanıcının müşterilerine ait veriler bakımından Kullanıcı veri sorumlusu, BerberBot ise

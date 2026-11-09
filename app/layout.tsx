@@ -26,7 +26,7 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: "#0a0a0a",
+  themeColor: "#FAF7F2",
   width: "device-width",
   initialScale: 1,
 };
@@ -52,7 +52,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             success: {
               iconTheme: {
                 primary: 'var(--accent)',
-                secondary: '#0a0a0a',
+                secondary: '#FFFFFF',
               },
             },
           }}

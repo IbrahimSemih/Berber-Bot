@@ -40,7 +40,7 @@ export default function InvoiceButton({ paymentId, issuedNumber }: { paymentId: 
         disabled={loading || !value.trim()}
         onClick={() => save(value)}
         className="px-3 py-1.5 rounded-lg text-xs font-bold disabled:opacity-50"
-        style={{ background: "var(--accent)", color: "#0a0a0a" }}
+        style={{ background: "var(--accent)", color: "var(--on-accent)" }}
       >
         Kesildi
       </button>

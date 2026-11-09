@@ -78,7 +78,7 @@ export default function StaffPage() {
     toast((t) => (
       <div className="flex flex-col gap-3">
         <div className="flex items-center gap-2">
-          <AlertTriangle className="text-red-500 w-5 h-5" />
+          <AlertTriangle className="text-[var(--red)] w-5 h-5" />
           <span className="font-bold">Emin misiniz?</span>
         </div>
         <p className="text-sm">Bu personeli silmek istediğinize emin misiniz? Geçmiş randevuları 'Fark Etmez' olarak kalacaktır.</p>
@@ -158,7 +158,7 @@ export default function StaffPage() {
                         <div 
                           onClick={() => handleToggleAvailability(s.id, s.is_active)}
                           className={`relative inline-flex h-5 w-9 cursor-pointer items-center rounded-full transition-colors ${
-                            s.is_active ? 'bg-green-500' : 'bg-neutral-600'
+                            s.is_active ? 'bg-[var(--green)]' : 'bg-[var(--border2)]'
                           }`}
                         >
                           <span
@@ -168,9 +168,9 @@ export default function StaffPage() {
                           />
                         </div>
                         {s.is_active ? (
-                          <span className="text-xs font-medium text-green-500">Çalışıyor</span>
+                          <span className="text-xs font-medium text-[var(--green)]">Çalışıyor</span>
                         ) : (
-                          <span className="text-xs font-medium text-neutral-400">İzinli / Müsait Değil</span>
+                          <span className="text-xs font-medium text-[var(--text3)]">İzinli / Müsait Değil</span>
                         )}
                       </div>
                     </td>

@@ -21,16 +21,16 @@ export default function AydinlatmaMetniPage() {
 
       <Section title="2. Veri Sorumlusu ve Veri İşleyen">
         <ul className={ul}>
-          <li><strong className="text-white">Veri sorumlusu:</strong> Randevu aldığınız İşletmedir. İşletmenin adı randevu sayfasında ve size gönderilen mesajlarda yer alır.</li>
-          <li><strong className="text-white">Veri işleyen:</strong> {COMPANY.legalName} ({SITE.name}). {SITE.name}, verilerinizi yalnızca İşletme adına ve randevu hizmetinin sunulması amacıyla işler; başka amaçla kullanmaz, satmaz ve reklam için paylaşmaz.</li>
+          <li><strong className="text-[var(--text)]">Veri sorumlusu:</strong> Randevu aldığınız İşletmedir. İşletmenin adı randevu sayfasında ve size gönderilen mesajlarda yer alır.</li>
+          <li><strong className="text-[var(--text)]">Veri işleyen:</strong> {COMPANY.legalName} ({SITE.name}). {SITE.name}, verilerinizi yalnızca İşletme adına ve randevu hizmetinin sunulması amacıyla işler; başka amaçla kullanmaz, satmaz ve reklam için paylaşmaz.</li>
         </ul>
       </Section>
 
       <Section title="3. İşlenen Kişisel Veriler">
         <ul className={ul}>
-          <li><strong className="text-white">Kimlik ve iletişim:</strong> Ad soyad, cep telefonu numarası</li>
-          <li><strong className="text-white">Randevu bilgileri:</strong> Hizmet, tarih/saat, tercih edilen personel, randevu durumu (onaylı, iptal vb.) ve geçmiş randevular</li>
-          <li><strong className="text-white">İşlem güvenliği:</strong> IP adresi ve işlem zamanı (kötüye kullanımı önlemek amacıyla, kısa süreli)</li>
+          <li><strong className="text-[var(--text)]">Kimlik ve iletişim:</strong> Ad soyad, cep telefonu numarası</li>
+          <li><strong className="text-[var(--text)]">Randevu bilgileri:</strong> Hizmet, tarih/saat, tercih edilen personel, randevu durumu (onaylı, iptal vb.) ve geçmiş randevular</li>
+          <li><strong className="text-[var(--text)]">İşlem güvenliği:</strong> IP adresi ve işlem zamanı (kötüye kullanımı önlemek amacıyla, kısa süreli)</li>
         </ul>
       </Section>
 
@@ -55,10 +55,10 @@ export default function AydinlatmaMetniPage() {
 
       <Section title="6. Aktarım">
         <ul className={ul}>
-          <li><strong className="text-white">İşletme:</strong> Randevunuzu yönetebilmesi için.</li>
-          <li><strong className="text-white">Meta Platforms (WhatsApp Business):</strong> Onay, hatırlatma ve iptal mesajlarının iletilmesi için yalnızca telefon numaranız ve mesaj içeriği.</li>
-          <li><strong className="text-white">Barındırma hizmet sağlayıcıları:</strong> Verilerin güvenli şekilde saklanması için (Supabase, Vercel).</li>
-          <li><strong className="text-white">Yetkili kamu kurum ve kuruluşları:</strong> Kanunen zorunlu hallerde.</li>
+          <li><strong className="text-[var(--text)]">İşletme:</strong> Randevunuzu yönetebilmesi için.</li>
+          <li><strong className="text-[var(--text)]">Meta Platforms (WhatsApp Business):</strong> Onay, hatırlatma ve iptal mesajlarının iletilmesi için yalnızca telefon numaranız ve mesaj içeriği.</li>
+          <li><strong className="text-[var(--text)]">Barındırma hizmet sağlayıcıları:</strong> Verilerin güvenli şekilde saklanması için (Supabase, Vercel).</li>
+          <li><strong className="text-[var(--text)]">Yetkili kamu kurum ve kuruluşları:</strong> Kanunen zorunlu hallerde.</li>
         </ul>
         <p className="mt-3">
           Bu hizmet sağlayıcıların sunucuları yurt dışında bulunabilir; aktarımlar KVKK m.9 uyarınca uygun güvenceler
@@ -77,7 +77,7 @@ export default function AydinlatmaMetniPage() {
       <Section title="8. Haklarınız">
         <p>KVKK m.11 uyarınca; verilerinizin işlenip işlenmediğini öğrenme, bilgi talep etme, düzeltilmesini veya silinmesini isteme, aktarıldığı üçüncü kişileri bilme, itiraz etme ve zararın giderilmesini talep etme haklarına sahipsiniz.</p>
         <Box>
-          <div>Başvurularınızı öncelikle randevu aldığınız <strong className="text-white">İşletmeye</strong> iletebilirsiniz.</div>
+          <div>Başvurularınızı öncelikle randevu aldığınız <strong className="text-[var(--text)]">İşletmeye</strong> iletebilirsiniz.</div>
           <div>
             Ayrıca <a className="underline" href={`mailto:${COMPANY.kvkkEmail}`}>{COMPANY.kvkkEmail}</a> adresine yazabilirsiniz; talebiniz
             ilgili İşletmeye iletilerek en geç 30 gün içinde sonuçlandırılır.
