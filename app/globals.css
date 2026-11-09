@@ -3,8 +3,10 @@
 @tailwind utilities;
 
 :root {
-  /* Yazı tipleri: --font-heading (Fraunces 600/700) ve --font-dm (Plus Jakarta Sans
-     400-700) app/layout.tsx içinde next/font ile <html> üzerine tanımlanır. */
+  /* Yazı tipleri (@fontsource, app/layout.tsx'te yüklenir): başlıklar Fraunces 600/700,
+     gövde ve panel Plus Jakarta Sans 400-700 */
+  --font-heading: "Fraunces", Georgia, serif;
+  --font-dm: "Plus Jakarta Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
   /* Palet: "Krem ve orman yeşili" (açık tema). Tüm yazı renkleri zemin
      tonlarında en az 4,5:1 kontrast sağlar. Mobil: mobile/src/theme.ts aynı değerler. */
   color-scheme: light;

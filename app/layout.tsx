@@ -1,23 +1,17 @@
 import type { Metadata, Viewport } from "next";
-import { Fraunces, Plus_Jakarta_Sans } from "next/font/google";
 import { Toaster } from "react-hot-toast";
 import { SITE } from "@/lib/site-config";
+// Yazı tipleri npm paketinden kendi sunucumuzdan sunulur (build Google'a bağlı değil;
+// next/font/google, Next 14'te bazı Google font adreslerini çözemeyip build'i kırıyordu).
+// Alt kümeler unicode-range ile: tarayıcı yalnızca gerekeni (latin / latin-ext → Türkçe) indirir.
+// Mobil: mobile/src/lib/fonts.ts aynı aileler ve ağırlıklar.
+import "@fontsource/fraunces/600.css";
+import "@fontsource/fraunces/700.css";
+import "@fontsource/plus-jakarta-sans/400.css";
+import "@fontsource/plus-jakarta-sans/500.css";
+import "@fontsource/plus-jakarta-sans/600.css";
+import "@fontsource/plus-jakarta-sans/700.css";
 import "./globals.css";
-
-// Yazı tipleri next/font ile kendi sunucumuzdan sunulur (Google'a istek yok, yazı kayması yok).
-// latin-ext: Türkçe karakterler (ğ, ş, ı, İ). Mobil: mobile/src/components/text.tsx aynı aileler.
-const headingFont = Fraunces({
-  subsets: ["latin", "latin-ext"],
-  weight: ["600", "700"],
-  variable: "--font-heading",
-  display: "swap",
-});
-const bodyFont = Plus_Jakarta_Sans({
-  subsets: ["latin", "latin-ext"],
-  weight: ["400", "500", "600", "700"],
-  variable: "--font-dm",
-  display: "swap",
-});
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE.url),
@@ -49,7 +43,7 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="tr" className={`${headingFont.variable} ${bodyFont.variable}`}>
+    <html lang="tr">
       <body className="font-dm bg-bg text-txt antialiased">
         {children}
         <Toaster 
