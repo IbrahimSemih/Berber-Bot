@@ -8,8 +8,6 @@ import {
   Pressable,
   ScrollView,
   StyleSheet,
-  Text,
-  TextInput,
   View,
   type StyleProp,
   type TextInputProps,
@@ -18,6 +16,8 @@ import {
 } from "react-native";
 import { SafeAreaView, type Edge } from "react-native-safe-area-context";
 import { colors, radius, spacing } from "@/theme";
+import { HEADING } from "@/lib/fonts";
+import { Text, TextInput } from "@/components/text";
 
 export function Screen({
   children,
@@ -298,8 +298,9 @@ const buttonVariants = {
 };
 
 export const textStyles = StyleSheet.create({
-  title: { color: colors.text, fontSize: 26, fontWeight: "800" },
-  heading: { color: colors.text, fontSize: 18, fontWeight: "700" },
+  // Başlıklar Fraunces (fontFamily: HEADING → components/text.tsx gerçek dosyayı seçer)
+  title: { color: colors.text, fontSize: 26, lineHeight: 32, fontWeight: "700", fontFamily: HEADING },
+  heading: { color: colors.text, fontSize: 18, lineHeight: 24, fontWeight: "600", fontFamily: HEADING },
   body: { color: colors.text, fontSize: 15, lineHeight: 21 },
   muted: { color: colors.text2, fontSize: 14, lineHeight: 20 },
   small: { color: colors.text3, fontSize: 12, lineHeight: 17 },

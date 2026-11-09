@@ -2,6 +2,7 @@ import type { ColorValue } from "react-native";
 import { Tabs } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { colors } from "@/theme";
+import { resolveFontFamily } from "@/lib/fonts";
 
 type IconName = React.ComponentProps<typeof Ionicons>["name"];
 
@@ -18,6 +19,7 @@ export default function TabsLayout() {
         tabBarActiveTintColor: colors.accent,
         tabBarInactiveTintColor: colors.text3,
         tabBarStyle: { backgroundColor: colors.bg2, borderTopColor: colors.border },
+        tabBarLabelStyle: { fontFamily: resolveFontFamily(undefined, 600) },
         sceneStyle: { backgroundColor: colors.bg },
       }}
     >

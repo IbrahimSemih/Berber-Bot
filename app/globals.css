@@ -3,8 +3,8 @@
 @tailwind utilities;
 
 :root {
-  --font-dm: "DM Sans", sans-serif;
-  --font-heading: "Plus Jakarta Sans", sans-serif;
+  /* Yazı tipleri: --font-heading (Fraunces 600/700) ve --font-dm (Plus Jakarta Sans
+     400-700) app/layout.tsx içinde next/font ile <html> üzerine tanımlanır. */
   /* Palet: "Krem ve orman yeşili" (açık tema). Tüm yazı renkleri zemin
      tonlarında en az 4,5:1 kontrast sağlar. Mobil: mobile/src/theme.ts aynı değerler. */
   color-scheme: light;
@@ -54,7 +54,13 @@ input[type="password"]::-ms-clear {
   display: none;
 }
 
+/* Başlıklar her yerde başlık fontuyla; sınıf verilmişse (font-dm vb.) o kazanır */
+@layer base {
+  h1, h2, h3 { font-family: var(--font-heading), Georgia, serif; }
+}
+
 @layer utilities {
-  .font-syne { font-family: var(--font-syne), sans-serif; }
+  /* font-syne: eski görüntü yazı tipi sınıfı; artık başlık fontu (rakamlar, vurgu) */
+  .font-syne { font-family: var(--font-heading), Georgia, serif; }
   .font-dm   { font-family: var(--font-dm), sans-serif; }
 }

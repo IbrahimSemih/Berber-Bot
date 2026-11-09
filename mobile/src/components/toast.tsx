@@ -1,6 +1,7 @@
 // Kısa bilgi mesajı (ekranın altında 2,5 sn). Başarı/hata geri bildirimi için.
 import { createContext, useCallback, useContext, useRef, useState, type ReactNode } from "react";
-import { StyleSheet, Text, View } from "react-native";
+import { StyleSheet, View } from "react-native";
+import { Text } from "@/components/text";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { colors, radius, spacing } from "@/theme";
 

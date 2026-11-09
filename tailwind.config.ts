@@ -9,7 +9,7 @@ const config: Config = {
   theme: {
     extend: {
       fontFamily: {
-        heading: ["var(--font-heading)", "sans-serif"],
+        heading: ["var(--font-heading)", "Georgia", "serif"],
         dm: ["var(--font-dm)", "sans-serif"],
       },
       // Renkler app/globals.css değişkenlerinden gelir (tek kaynak)

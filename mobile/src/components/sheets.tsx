@@ -1,7 +1,9 @@
 // Alttan açılan seçim pencereleri: liste seçimi ve takvim. Ek paket gerektirmez,
 // telefonda ve tarayıcı önizlemesinde aynı çalışır. Tarihler "YYYY-MM-DD" (Türkiye takvimi).
 import { useRef, useState, type ReactNode } from "react";
-import { Modal, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { Modal, Pressable, ScrollView, StyleSheet, View } from "react-native";
+import { Text } from "@/components/text";
+import { HEADING } from "@/lib/fonts";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { dayOfWeekOf, todayInIstanbul } from "@shared/time";
 import { colors, radius, spacing } from "@/theme";
@@ -209,7 +211,7 @@ const styles = StyleSheet.create({
   },
   handle: { alignSelf: "center", width: 40, height: 4, borderRadius: 2, backgroundColor: colors.border2, marginTop: spacing.sm },
   header: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", paddingVertical: spacing.md },
-  title: { color: colors.text, fontSize: 17, fontWeight: "700" },
+  title: { color: colors.text, fontSize: 18, fontWeight: "600", fontFamily: HEADING },
   option: { minHeight: OPTION_HEIGHT, justifyContent: "center", paddingVertical: 12, paddingHorizontal: spacing.md, borderRadius: radius.sm },
   monthNav: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", paddingVertical: spacing.sm },
   navArrow: { color: colors.text, fontSize: 28, paddingHorizontal: spacing.md },
