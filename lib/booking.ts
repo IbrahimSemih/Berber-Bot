@@ -18,7 +18,7 @@ import {
 
 export const SLOT_INTERVAL_MINUTES = 30;
 /** Hatırlatma mesajı randevudan kaç saat önce gönderilir (cron her 15 dk çalışır) */
-export const REMINDER_HOURS_BEFORE = 3;
+export { REMINDER_HOURS_BEFORE } from "@/shared/plan";
 export const BOOKING_WINDOW_DAYS = 14;
 const MAX_SERVICE_MINUTES = 8 * 60;
 

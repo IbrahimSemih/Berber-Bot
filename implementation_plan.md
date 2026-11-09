@@ -4,6 +4,7 @@
 >
 > Faz 1 (sunucu) tamamlandı; `migrations/2026-11-08c_mobile_billing.sql` çalıştırıldı.
 > Faz 2 (mobil iskelet, `mobile/`) tamamlandı. Supabase → Authentication → Email Templates'te "Confirm signup" ve "Reset password" şablonlarına `{{ .Token }}` (doğrulama kodu) eklenmeli; ayrıntı `mobile/README.md`.
+> Faz 3 (mobil çekirdek ekranlar) tamamlandı. Supabase'de `migrations/2026-11-09_realtime_appointments.sql` çalıştırılmalı: randevular canlı güncelleme yayınına eklenir (web randevular sayfası ve mobil uygulama için).
 > - Web'de iyzico satışı artık varsayılan olarak **kapalı**. Yerelde iyzico'yu denemek için `.env.local` dosyasına `WEB_BILLING_ENABLED=true` ekleyin.
 
 Son güncelleme: 5 Kasım 2026. Kod tarafındaki kritik açıklar kapatıldı; aşağıdakiler **kod dışı** veya henüz yapılmamış işlerdir.

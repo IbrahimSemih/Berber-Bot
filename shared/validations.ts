@@ -115,3 +115,13 @@ export const billingProfileSchema = z
   });
 
 export type BillingProfileInput = z.input<typeof billingProfileSchema>;
+
+/** "@berber", "instagram.com/berber/", "https://www.instagram.com/berber?x=1" → "berber" */
+export function instagramHandle(value: unknown): string | null {
+  if (typeof value !== "string") return null;
+  let v = value.trim();
+  if (!v) return null;
+  v = v.replace(/^https?:\/\//i, "").replace(/^(www\.)?instagram\.com\//i, "");
+  v = v.split(/[/?#]/)[0].replace(/^@/, "");
+  return /^[A-Za-z0-9._]{1,30}$/.test(v) ? v : null;
+}

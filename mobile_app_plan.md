@@ -176,6 +176,20 @@ ALTER TABLE push_tokens ENABLE ROW LEVEL SECURITY;            -- yazma API üzer
 >   - Supabase e-posta şablonlarına `{{ .Token }}` eklenmesi.
 >   - Uygulama adı/bundle ID kararı.
 
+> **Faz 3 durumu (9 Kasım 2026): tamamlandı.**
+> - Ekranlar:
+>   - Randevular: gün seçici, takvim, durum filtresi, onay/iptal, personel atama, yeni randevu.
+>   - Müşteriler: arama, istatistik, arama/WhatsApp, KVKK silme, CSV paylaşımı.
+>   - Personel: aktif/pasif, ekle/düzenle/sil, izinler.
+>   - Hizmetler: ekle/düzenle/pasife al.
+>   - Dükkan ayarları: iletişim, çalışma saatleri, otomatik onay, bildirim tercihleri.
+>   - Randevu linki ve QR: QR paylaşma, link değiştirme.
+>   - Bildirimler ve profil: şifre/e-posta değiştirme, yasal metinler, hesap silme. Profil abonelik bitince de açılır.
+> - Ortak parçalar: React Query veri kancaları (`src/lib/queries.ts`), canlı güncelleme köprüsü (`src/lib/realtime.tsx`), seçim ve takvim pencereleri (ek paket yok), kısa bildirim (toast).
+> - Android emülatöründe tüm ekranlar uçtan uca test edildi; yazılanlar veritabanından doğrulandı.
+> - Bekleyen: `migrations/2026-11-09_realtime_appointments.sql` çalıştırılmalı. Çalışmadan randevu değişiklikleri canlı gelmez; ekranlar aşağı çekince ve uygulamaya dönünce yenilenir.
+> - Analitik ekranı ilk sürümde yok (plan gereği web'de kalıyor).
+
 ### 4.1 Teknoloji
 | Alan | Seçim |
 |---|---|

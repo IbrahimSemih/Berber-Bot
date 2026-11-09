@@ -1,6 +1,7 @@
 // Deneme veya abonelik süresi dolduğunda. Mağaza üzerinden satın alma (RevenueCat)
 // Faz 4'te eklenecek. Apple 3.1.1: iOS'ta web'den satın almaya yönlendiren link/metin OLMAMALI.
 import { useState } from "react";
+import { router } from "expo-router";
 import { TRIAL_DAYS } from "@shared/plan";
 import { formatTrLongDate } from "@shared/time";
 import { useAuth } from "@/lib/auth";
@@ -36,6 +37,7 @@ export default function PaywallScreen() {
           setRefreshing(false);
         }}
       />
+      <Button title="Profil ve hesap" variant="ghost" onPress={() => router.push("/profile")} />
       <Button title="Çıkış yap" variant="ghost" onPress={signOut} />
     </Screen>
   );

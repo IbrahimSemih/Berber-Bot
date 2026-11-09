@@ -1,3 +1,4 @@
+export { instagramHandle } from "@/shared/validations";
 import { clsx, type ClassValue } from "clsx";
 
 export function cn(...inputs: ClassValue[]) {
@@ -86,12 +87,3 @@ export function generateAvailableSlots(date: Date, bookedTimes: string[]): strin
   return slots;
 }
 
-/** "@berber", "instagram.com/berber/", "https://www.instagram.com/berber?x=1" → "berber" */
-export function instagramHandle(value: unknown): string | null {
-  if (typeof value !== "string") return null;
-  let v = value.trim();
-  if (!v) return null;
-  v = v.replace(/^https?:\/\//i, "").replace(/^(www\.)?instagram\.com\//i, "");
-  v = v.split(/[/?#]/)[0].replace(/^@/, "");
-  return /^[A-Za-z0-9._]{1,30}$/.test(v) ? v : null;
-}
