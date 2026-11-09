@@ -151,7 +151,7 @@ export default function BookingForm({ shop, services, staffList, bookableDates }
   if (result) {
     return (
       <div className="p-10 rounded-3xl border text-center" style={{ background: "var(--bg2)", borderColor: "var(--border)" }}>
-        <div className="w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6 bg-green-500/20 text-green-500">
+        <div className="w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6 bg-[var(--green-dim)] text-[var(--green)]">
           <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden>
             <polyline points="20 6 9 17 4 12" />
           </svg>
@@ -184,7 +184,7 @@ export default function BookingForm({ shop, services, staffList, bookableDates }
             <div key={num} className="flex-1 py-4 text-center text-[10px] sm:text-xs font-bold uppercase tracking-widest relative"
               style={{
                 color: step >= num ? "var(--text)" : "var(--text3)",
-                background: step === num ? "rgba(255,255,255,0.02)" : "transparent",
+                background: step === num ? "var(--accent-dim)" : "transparent",
               }}>
               <span className="opacity-50 mr-1">0{num}</span> {title}
               {step >= num && <div className="absolute bottom-0 left-0 w-full h-0.5" style={{ background: "var(--accent)" }} />}
@@ -195,7 +195,7 @@ export default function BookingForm({ shop, services, staffList, bookableDates }
 
       <div className="p-5 sm:p-8">
         {error && (
-          <div role="alert" className="p-4 mb-6 rounded-xl border bg-red-500/10 border-red-500/20 text-red-500 text-sm">
+          <div role="alert" className="p-4 mb-6 rounded-xl border bg-[var(--red-dim)] border-[rgba(185,60,52,0.25)] text-[var(--red)] text-sm">
             {error}
           </div>
         )}
@@ -236,7 +236,7 @@ export default function BookingForm({ shop, services, staffList, bookableDates }
           <div className="space-y-4">
             <div className="flex items-center justify-between mb-6">
               <h2 className="text-xl font-heading font-bold">Personel Seçimi</h2>
-              <button onClick={() => setStep(1)} className="text-xs font-bold px-3 py-1.5 rounded-lg border hover:bg-white/5" style={{ borderColor: "var(--border)", color: "var(--text2)" }}>Geri</button>
+              <button onClick={() => setStep(1)} className="text-xs font-bold px-3 py-1.5 rounded-lg border hover:bg-[var(--bg3)]" style={{ borderColor: "var(--border)", color: "var(--text2)" }}>Geri</button>
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <button
@@ -273,7 +273,7 @@ export default function BookingForm({ shop, services, staffList, bookableDates }
           <div>
             <div className="flex items-center justify-between mb-6">
               <h2 className="text-xl font-heading font-bold">Uygun Bir Zaman Seçin</h2>
-              <button onClick={() => setStep(hasStaff ? STAFF_STEP : 1)} className="text-xs font-bold px-3 py-1.5 rounded-lg border hover:bg-white/5" style={{ borderColor: "var(--border)", color: "var(--text2)" }}>Geri</button>
+              <button onClick={() => setStep(hasStaff ? STAFF_STEP : 1)} className="text-xs font-bold px-3 py-1.5 rounded-lg border hover:bg-[var(--bg3)]" style={{ borderColor: "var(--border)", color: "var(--text2)" }}>Geri</button>
             </div>
 
             <div className="mb-6">
@@ -289,7 +289,7 @@ export default function BookingForm({ shop, services, staffList, bookableDates }
                       style={{
                         background: isSelected ? "var(--accent)" : "var(--bg3)",
                         borderColor: isSelected ? "var(--accent)" : "var(--border)",
-                        color: isSelected ? "#0a0a0a" : "var(--text)",
+                        color: isSelected ? "var(--on-accent)" : "var(--text)",
                       }}
                     >
                       <div className="text-xs font-bold uppercase mb-1 opacity-60">{formatDateLabel(date, "EEE")}</div>
@@ -349,7 +349,7 @@ export default function BookingForm({ shop, services, staffList, bookableDates }
               <button
                 onClick={() => { setError(null); setStep(INFO_STEP); }}
                 className="w-full mt-8 py-4 rounded-xl font-bold transition-all hover:-translate-y-0.5"
-                style={{ background: "var(--accent)", color: "#0a0a0a" }}
+                style={{ background: "var(--accent)", color: "var(--on-accent)" }}
               >
                 Devam Et
               </button>
@@ -362,7 +362,7 @@ export default function BookingForm({ shop, services, staffList, bookableDates }
           <div>
             <div className="flex items-center justify-between mb-6">
               <h2 className="text-xl font-heading font-bold">Kişisel Bilgileriniz</h2>
-              <button onClick={() => setStep(DATE_STEP)} className="text-xs font-bold px-3 py-1.5 rounded-lg border hover:bg-white/5" style={{ borderColor: "var(--border)", color: "var(--text2)" }}>Geri</button>
+              <button onClick={() => setStep(DATE_STEP)} className="text-xs font-bold px-3 py-1.5 rounded-lg border hover:bg-[var(--bg3)]" style={{ borderColor: "var(--border)", color: "var(--text2)" }}>Geri</button>
             </div>
 
             <form onSubmit={handleBooking} className="space-y-5">
@@ -409,24 +409,24 @@ export default function BookingForm({ shop, services, staffList, bookableDates }
                 <div className="text-sm font-bold mb-2">Randevu Özeti</div>
                 <div className="text-sm flex justify-between gap-3 mb-1" style={{ color: "var(--text2)" }}>
                   <span>Hizmet:</span>
-                  <span className="font-medium text-white text-right">{selectedService?.name} ({selectedService?.duration_minutes} dk)</span>
+                  <span className="font-medium text-[var(--text)] text-right">{selectedService?.name} ({selectedService?.duration_minutes} dk)</span>
                 </div>
                 {hasStaff && (
                   <div className="text-sm flex justify-between gap-3 mb-1" style={{ color: "var(--text2)" }}>
                     <span>Personel:</span>
-                    <span className="font-medium text-white text-right">{selectedStaffId ? staffList.find((s) => s.id === selectedStaffId)?.name : "Fark Etmez"}</span>
+                    <span className="font-medium text-[var(--text)] text-right">{selectedStaffId ? staffList.find((s) => s.id === selectedStaffId)?.name : "Fark Etmez"}</span>
                   </div>
                 )}
                 <div className="text-sm flex justify-between gap-3 mb-1" style={{ color: "var(--text2)" }}>
                   <span>Tarih & Saat:</span>
-                  <span className="font-medium text-white text-right">
+                  <span className="font-medium text-[var(--text)] text-right">
                     {selectedDate && formatDateLabel(selectedDate, "d MMMM yyyy")} - {selectedTime}
                   </span>
                 </div>
                 {selectedService && (
                   <div className="text-sm flex justify-between gap-3" style={{ color: "var(--text2)" }}>
                     <span>Ücret:</span>
-                    <span className="font-medium text-white">{Number(selectedService.price).toLocaleString("tr-TR")} ₺</span>
+                    <span className="font-medium text-[var(--text)]">{Number(selectedService.price).toLocaleString("tr-TR")} ₺</span>
                   </div>
                 )}
               </div>
@@ -451,7 +451,7 @@ export default function BookingForm({ shop, services, staffList, bookableDates }
                 type="submit"
                 disabled={loading}
                 className="w-full py-4 rounded-xl font-bold transition-all disabled:opacity-50 hover:-translate-y-0.5 mt-4"
-                style={{ background: "var(--accent)", color: "#0a0a0a" }}
+                style={{ background: "var(--accent)", color: "var(--on-accent)" }}
               >
                 {loading ? "Gönderiliyor..." : "Randevuyu Oluştur"}
               </button>

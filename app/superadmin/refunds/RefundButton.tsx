@@ -13,7 +13,7 @@ export default function RefundButton({ paymentId, amount, shopName, outsideWindo
     toast((t) => (
       <div className="flex flex-col gap-3">
         <div className="flex items-center gap-2">
-          <AlertTriangle className="text-red-500 w-5 h-5" />
+          <AlertTriangle className="text-[var(--red)] w-5 h-5" />
           <span className="font-bold">İadeyi onaylıyor musunuz?</span>
         </div>
         <p className="text-sm">
@@ -22,7 +22,7 @@ export default function RefundButton({ paymentId, amount, shopName, outsideWindo
         </p>
         <div className="flex justify-end gap-2 mt-2">
           <button className="px-3 py-1.5 text-xs rounded border" onClick={() => toast.dismiss(t.id)}>Vazgeç</button>
-          <button className="px-3 py-1.5 text-xs rounded bg-red-500/20 text-red-500 border border-red-500/30 hover:bg-red-500/30" onClick={async () => {
+          <button className="px-3 py-1.5 text-xs rounded bg-[rgba(185,60,52,0.14)] text-[var(--red)] border border-[rgba(185,60,52,0.3)] hover:bg-[rgba(185,60,52,0.2)]" onClick={async () => {
             toast.dismiss(t.id);
             setLoading(true);
             const result = await refundPaymentAction(paymentId);

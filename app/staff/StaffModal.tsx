@@ -58,7 +58,7 @@ export default function StaffModal({ shopId, existingStaff, onClose, onSuccess }
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center"
-      style={{ background: "rgba(0,0,0,0.75)", backdropFilter: "blur(4px)" }}
+      style={{ background: "var(--overlay)", backdropFilter: "blur(4px)" }}
       onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}>
       <div className="rounded-2xl p-7 w-[400px] max-h-[90vh] overflow-y-auto"
         style={{ background: "var(--bg2)", border: "1px solid var(--border2)" }}>

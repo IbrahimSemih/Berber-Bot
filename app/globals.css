@@ -3,25 +3,39 @@
 @tailwind utilities;
 
 :root {
-  --font-dm: "DM Sans", sans-serif;
-  --font-heading: "Plus Jakarta Sans", sans-serif;
-  --bg: #0a0a0a;
-  --bg2: #111111;
-  --bg3: #1a1a1a;
-  --bg4: #222222;
-  --border: #2a2a2a;
-  --border2: #333333;
-  --text: #f0ede8;
-  --text2: #9a9690;
-  --text3: #5a5752;
-  --accent: #c8f060;
-  --accent2: #a8d040;
-  --accent-dim: rgba(200, 240, 96, 0.08);
-  --accent-dim2: rgba(200, 240, 96, 0.15);
-  --red: #ff5f57;
-  --orange: #ffaa33;
-  --blue: #4a9eff;
-  --green: #4caf7d;
+  /* Yazı tipleri (@fontsource, app/layout.tsx'te yüklenir): başlıklar Fraunces 600/700,
+     gövde ve panel Plus Jakarta Sans 400-700 */
+  --font-heading: "Fraunces", Georgia, serif;
+  --font-dm: "Plus Jakarta Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  /* Palet: "Krem ve orman yeşili" (açık tema). Tüm yazı renkleri zemin
+     tonlarında en az 4,5:1 kontrast sağlar. Mobil: mobile/src/theme.ts aynı değerler. */
+  color-scheme: light;
+  --bg: #FAF7F2;          /* sayfa zemini (sıcak krem) */
+  --bg2: #FFFFFF;         /* kart / panel */
+  --bg3: #F3EEE6;         /* hafif dolgu: tablo başlığı, pasif buton, input */
+  --bg4: #E9E2D6;         /* daha belirgin dolgu / hover */
+  --border: #E5DED2;
+  --border2: #D6CCBD;
+  --text: #1F2421;
+  --text2: #565B55;
+  --text3: #656A63;
+  --accent: #2F6B4F;      /* orman yeşili: ana buton, vurgu */
+  --accent2: #285C44;     /* hover / basılı */
+  --on-accent: #FFFFFF;   /* accent zemin üstündeki yazı */
+  --accent-dim: rgba(47, 107, 79, 0.08);
+  --accent-dim2: rgba(47, 107, 79, 0.14);
+  --accent-dim3: rgba(47, 107, 79, 0.22);
+  --warm: #C9813A;        /* ikincil sıcak vurgu (dekoratif, yazı için değil) */
+  --red: #B93C34;
+  --orange: #995709;
+  --blue: #2A65A0;
+  --green: #2B7553;
+  --red-dim: #FBEAE8;
+  --orange-dim: #FBF0DE;
+  --blue-dim: #E7F0F8;
+  --green-dim: #E6F2EC;
+  --overlay: rgba(31, 36, 33, 0.45);   /* modal arka planı */
+  --shadow: rgba(31, 36, 33, 0.08);
 }
 
 * { box-sizing: border-box; }
@@ -42,7 +56,13 @@ input[type="password"]::-ms-clear {
   display: none;
 }
 
+/* Başlıklar her yerde başlık fontuyla; sınıf verilmişse (font-dm vb.) o kazanır */
+@layer base {
+  h1, h2, h3 { font-family: var(--font-heading), Georgia, serif; }
+}
+
 @layer utilities {
-  .font-syne { font-family: var(--font-syne), sans-serif; }
+  /* font-syne: eski görüntü yazı tipi sınıfı; artık başlık fontu (rakamlar, vurgu) */
+  .font-syne { font-family: var(--font-heading), Georgia, serif; }
   .font-dm   { font-family: var(--font-dm), sans-serif; }
 }

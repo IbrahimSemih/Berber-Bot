@@ -76,7 +76,7 @@ export default function BarChart({
                 y={padding.top}
                 width={barGroupWidth}
                 height={chartHeight}
-                fill={isHovered ? "rgba(255,255,255,0.03)" : "transparent"}
+                fill={isHovered ? "var(--accent-dim)" : "transparent"}
                 rx="1"
               />
 

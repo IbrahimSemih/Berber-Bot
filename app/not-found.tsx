@@ -16,7 +16,7 @@ export default function NotFound() {
       <Link
         href="/"
         className="px-6 py-3 rounded-xl font-bold text-sm transition-all hover:opacity-80"
-        style={{ background: "var(--accent)", color: "#0a0a0a" }}
+        style={{ background: "var(--accent)", color: "var(--on-accent)" }}
       >
         Ana Sayfa
       </Link>

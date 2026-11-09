@@ -25,7 +25,7 @@ export default function GizlilikPolitikasiPage() {
           <Section title="2. Veri Sorumlusu">
             <p>
               BerberBot hesabı açan işletme sahiplerinin (Kullanıcı) verileri bakımından KVKK kapsamında veri sorumlusu{" "}
-              <strong className="text-white">{COMPANY.legalName}</strong>&apos;dır (&quot;BerberBot&quot;). İşletmelerin kendi müşterilerine
+              <strong className="text-[var(--text)]">{COMPANY.legalName}</strong>&apos;dır (&quot;BerberBot&quot;). İşletmelerin kendi müşterilerine
               (randevu alan kişiler) ait veriler bakımından ise veri sorumlusu ilgili işletme, BerberBot ise veri işleyendir; bu verilere ilişkin
               bilgilendirme{" "}
               <Link href="/aydinlatma-metni" className="underline" style={{ color: "var(--accent)" }}>KVKK Aydınlatma Metni</Link>&apos;nde yer alır.
@@ -36,12 +36,12 @@ export default function GizlilikPolitikasiPage() {
           <Section title="3. Toplanan Kişisel Veriler">
             <p>Hizmetimizi kullanırken aşağıdaki kişisel veriler toplanmaktadır:</p>
             <ul className="list-disc pl-6 mt-3 flex flex-col gap-2">
-              <li><strong className="text-white">Kimlik ve İletişim Bilgileri:</strong> Ad-soyad, telefon numarası, e-posta adresi</li>
-              <li><strong className="text-white">Hesap Bilgileri:</strong> Şifre (hashlenmiş), dükkan adı, kullanıcı tercihleri</li>
-              <li><strong className="text-white">İşlem ve Fatura Verileri:</strong> Randevu bilgileri, hizmet tercihleri, ödeme kayıtları, fatura bilgileri (T.C. kimlik / vergi numarası, fatura adresi). Kart bilgileri BerberBot tarafından görülmez ve saklanmaz; ödeme kuruluşu iyzico tarafından işlenir.</li>
-              <li><strong className="text-white">WhatsApp Verileri:</strong> Gönderilen bildirim mesajlarının içeriği, iletim durumu ve BerberBot bildirim numarasına gönderilen mesajlar ile telefon numaraları</li>
-              <li><strong className="text-white">Teknik Veriler:</strong> IP adresi, tarayıcı bilgisi, oturum çerezleri, cihaz tipi</li>
-              <li><strong className="text-white">Kullanım Verileri:</strong> Platform üzerindeki etkileşim ve davranış verileri</li>
+              <li><strong className="text-[var(--text)]">Kimlik ve İletişim Bilgileri:</strong> Ad-soyad, telefon numarası, e-posta adresi</li>
+              <li><strong className="text-[var(--text)]">Hesap Bilgileri:</strong> Şifre (hashlenmiş), dükkan adı, kullanıcı tercihleri</li>
+              <li><strong className="text-[var(--text)]">İşlem ve Fatura Verileri:</strong> Randevu bilgileri, hizmet tercihleri, ödeme kayıtları, fatura bilgileri (T.C. kimlik / vergi numarası, fatura adresi). Kart bilgileri BerberBot tarafından görülmez ve saklanmaz; ödeme kuruluşu iyzico tarafından işlenir.</li>
+              <li><strong className="text-[var(--text)]">WhatsApp Verileri:</strong> Gönderilen bildirim mesajlarının içeriği, iletim durumu ve BerberBot bildirim numarasına gönderilen mesajlar ile telefon numaraları</li>
+              <li><strong className="text-[var(--text)]">Teknik Veriler:</strong> IP adresi, tarayıcı bilgisi, oturum çerezleri, cihaz tipi</li>
+              <li><strong className="text-[var(--text)]">Kullanım Verileri:</strong> Platform üzerindeki etkileşim ve davranış verileri</li>
             </ul>
           </Section>
 
@@ -63,11 +63,11 @@ export default function GizlilikPolitikasiPage() {
           <Section title="5. Verilerin Paylaşılması">
             <p>Kişisel verileriniz aşağıdaki durumlar dışında üçüncü kişilerle paylaşılmaz:</p>
             <ul className="list-disc pl-6 mt-3 flex flex-col gap-2">
-              <li><strong className="text-white">Altyapı Sağlayıcıları:</strong> Veritabanı ve kimlik doğrulama (Supabase), uygulama barındırma (Vercel), e-posta gönderimi (Resend), güvenlik amaçlı istek sınırlama (Upstash)</li>
-              <li><strong className="text-white">Ödeme Kuruluşu:</strong> Abonelik ödemelerinin alınması ve iadesi için iyzico Ödeme Hizmetleri A.Ş.</li>
-              <li><strong className="text-white">Mali Müşavir / e-Fatura Sağlayıcısı:</strong> Yasal fatura düzenleme ve muhasebe yükümlülükleri için</li>
-              <li><strong className="text-white">WhatsApp (Meta):</strong> WhatsApp Business API üzerinden mesaj iletimi için gerekli minimum bilgi</li>
-              <li><strong className="text-white">Hukuki Zorunluluklar:</strong> Mahkeme kararı veya yasal düzenleme gereği yetkili kurumlara</li>
+              <li><strong className="text-[var(--text)]">Altyapı Sağlayıcıları:</strong> Veritabanı ve kimlik doğrulama (Supabase), uygulama barındırma (Vercel), e-posta gönderimi (Resend), güvenlik amaçlı istek sınırlama (Upstash)</li>
+              <li><strong className="text-[var(--text)]">Ödeme Kuruluşu:</strong> Abonelik ödemelerinin alınması ve iadesi için iyzico Ödeme Hizmetleri A.Ş.</li>
+              <li><strong className="text-[var(--text)]">Mali Müşavir / e-Fatura Sağlayıcısı:</strong> Yasal fatura düzenleme ve muhasebe yükümlülükleri için</li>
+              <li><strong className="text-[var(--text)]">WhatsApp (Meta):</strong> WhatsApp Business API üzerinden mesaj iletimi için gerekli minimum bilgi</li>
+              <li><strong className="text-[var(--text)]">Hukuki Zorunluluklar:</strong> Mahkeme kararı veya yasal düzenleme gereği yetkili kurumlara</li>
             </ul>
             <p className="mt-3">
               Verileriniz hiçbir koşulda reklam amaçlı üçüncü taraflarla paylaşılmaz veya satılmaz.

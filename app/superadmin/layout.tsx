@@ -37,7 +37,7 @@ export default function SuperAdminLayout({ children }: { children: React.ReactNo
         {/* Logo */}
         <div className="px-6 py-8 border-b relative z-10" style={{ borderColor: "var(--border)" }}>
           <div className="flex items-center gap-4">
-            <div className="w-10 h-10 rounded-xl flex items-center justify-center font-bold text-xl" style={{ background: "var(--accent)", color: "#0a0a0a" }}>
+            <div className="w-10 h-10 rounded-xl flex items-center justify-center font-bold text-xl" style={{ background: "var(--accent)", color: "var(--on-accent)" }}>
               SA
             </div>
             <div>

@@ -19,14 +19,14 @@ export function LegalPage({
   return (
     <div className="min-h-screen" style={{ background: "var(--bg)", color: "var(--text)" }}>
       <nav
-        style={{ borderBottom: "1px solid var(--border)", background: "rgba(10,10,10,0.8)" }}
+        style={{ borderBottom: "1px solid var(--border)", background: "rgba(250,247,242,0.85)" }}
         className="fixed top-0 left-0 right-0 h-16 flex items-center px-6 md:px-12 gap-5 z-50 backdrop-blur-md">
         <Link href="/" className="flex items-center gap-3">
           <div className="w-8 h-8 rounded-lg flex items-center justify-center text-base font-bold"
-            style={{ background: "var(--accent)", color: "#0a0a0a" }}>✂</div>
+            style={{ background: "var(--accent)", color: "var(--on-accent)" }}>✂</div>
           <span className="font-heading font-black text-xl tracking-tight">{SITE.name}</span>
         </Link>
-        <Link href="/" className="ml-auto flex items-center gap-2 text-sm font-medium transition-colors hover:text-white" style={{ color: "var(--text3)" }}>
+        <Link href="/" className="ml-auto flex items-center gap-2 text-sm font-medium transition-colors hover:text-[var(--text)]" style={{ color: "var(--text3)" }}>
           <ArrowLeft size={16} aria-hidden /> Ana Sayfa
         </Link>
       </nav>
@@ -58,7 +58,7 @@ export function LegalPage({
 export function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <section>
-      <h2 className="font-heading font-bold text-xl md:text-2xl mb-4 text-white">{title}</h2>
+      <h2 className="font-heading font-bold text-xl md:text-2xl mb-4 text-[var(--text)]">{title}</h2>
       {children}
     </section>
   );
@@ -78,16 +78,16 @@ export function Box({ children, tone = "default" }: { children: React.ReactNode;
 export function CompanyInfo({ includeKvkk = false }: { includeKvkk?: boolean }) {
   return (
     <Box>
-      <div><strong className="text-white">Unvan:</strong> {COMPANY.legalName}</div>
-      <div><strong className="text-white">Adres:</strong> {COMPANY.address}</div>
-      <div><strong className="text-white">Vergi Dairesi / No:</strong> {COMPANY.taxOffice} / {COMPANY.taxNumber}</div>
-      {COMPANY.mersisNo && <div><strong className="text-white">MERSİS No:</strong> {COMPANY.mersisNo}</div>}
-      <div><strong className="text-white">Telefon:</strong> {COMPANY.phone}</div>
-      <div><strong className="text-white">E-posta:</strong> <a className="underline" href={`mailto:${COMPANY.email}`}>{COMPANY.email}</a></div>
+      <div><strong className="text-[var(--text)]">Unvan:</strong> {COMPANY.legalName}</div>
+      <div><strong className="text-[var(--text)]">Adres:</strong> {COMPANY.address}</div>
+      <div><strong className="text-[var(--text)]">Vergi Dairesi / No:</strong> {COMPANY.taxOffice} / {COMPANY.taxNumber}</div>
+      {COMPANY.mersisNo && <div><strong className="text-[var(--text)]">MERSİS No:</strong> {COMPANY.mersisNo}</div>}
+      <div><strong className="text-[var(--text)]">Telefon:</strong> {COMPANY.phone}</div>
+      <div><strong className="text-[var(--text)]">E-posta:</strong> <a className="underline" href={`mailto:${COMPANY.email}`}>{COMPANY.email}</a></div>
       {includeKvkk && (
-        <div><strong className="text-white">KVKK Başvuru:</strong> <a className="underline" href={`mailto:${COMPANY.kvkkEmail}`}>{COMPANY.kvkkEmail}</a></div>
+        <div><strong className="text-[var(--text)]">KVKK Başvuru:</strong> <a className="underline" href={`mailto:${COMPANY.kvkkEmail}`}>{COMPANY.kvkkEmail}</a></div>
       )}
-      {COMPANY.kepAddress && <div><strong className="text-white">KEP:</strong> {COMPANY.kepAddress}</div>}
+      {COMPANY.kepAddress && <div><strong className="text-[var(--text)]">KEP:</strong> {COMPANY.kepAddress}</div>}
     </Box>
   );
 }

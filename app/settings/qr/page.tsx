@@ -21,14 +21,14 @@ export default async function QrPosterPage() {
   const qr = await QRCode.toDataURL(url, { width: 900, margin: 1, errorCorrectionLevel: "M" });
 
   return (
-    <div className="min-h-screen bg-neutral-200 print:bg-white flex items-center justify-center p-6 print:p-0">
+    <div className="min-h-screen bg-[var(--bg3)] print:bg-white flex items-center justify-center p-6 print:p-0">
       <style>{`@page { size: A4; margin: 0; } @media print { body { background: #fff !important; } }`}</style>
       <div
-        className="bg-white text-neutral-900 w-[210mm] min-h-[297mm] flex flex-col items-center justify-between py-[22mm] px-[18mm] shadow-2xl print:shadow-none"
+        className="bg-white text-[var(--text)] w-[210mm] min-h-[297mm] flex flex-col items-center justify-between py-[22mm] px-[18mm] shadow-2xl print:shadow-none"
         style={{ fontFamily: "'Plus Jakarta Sans', 'DM Sans', sans-serif" }}
       >
         <div className="text-center">
-          <div className="text-[14pt] font-semibold tracking-[0.3em] uppercase text-neutral-500">Online Randevu</div>
+          <div className="text-[14pt] font-semibold tracking-[0.3em] uppercase text-[var(--text3)]">Online Randevu</div>
           <h1 className="text-[40pt] font-black leading-tight mt-3">{ctx.shop.name}</h1>
         </div>
 
@@ -40,7 +40,7 @@ export default async function QrPosterPage() {
 
         <div className="text-center">
           <div className="text-[16pt] font-semibold break-all">{url.replace(/^https?:\/\//, "")}</div>
-          <div className="text-[11pt] text-neutral-500 mt-3">Onay ve hatırlatma mesajları WhatsApp ile gelir · BerberBot</div>
+          <div className="text-[11pt] text-[var(--text3)] mt-3">Onay ve hatırlatma mesajları WhatsApp ile gelir · BerberBot</div>
         </div>
       </div>
       <PrintButton />

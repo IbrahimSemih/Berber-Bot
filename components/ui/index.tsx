@@ -13,9 +13,9 @@ export function Button({ variant = "primary", size = "md", loading = false, disa
   const base = "inline-flex items-center justify-center gap-2 rounded-lg font-medium transition-all duration-150 cursor-pointer border-0 font-dm active:scale-95 disabled:opacity-60 disabled:cursor-not-allowed disabled:active:scale-100";
   const sizes = { sm: "px-3 py-1.5 text-xs", md: "px-4 py-2 text-sm" };
   const variants = {
-    primary: "bg-[var(--accent)] text-[#0a0a0a] hover:bg-[var(--accent2)] shadow-[0_0_0_1px_rgba(200,240,96,0.15)] hover:shadow-[0_0_16px_rgba(200,240,96,0.25)]",
+    primary: "bg-[var(--accent)] text-[var(--on-accent)] hover:bg-[var(--accent2)] shadow-[0_0_0_1px_var(--accent-dim2)] hover:shadow-[0_0_16px_var(--accent-dim3)]",
     ghost: "bg-transparent text-[var(--text2)] border border-[var(--border2)] hover:bg-[var(--bg3)] hover:text-[var(--text)]",
-    danger: "bg-[rgba(255,95,87,0.1)] text-[var(--red)] border border-[rgba(255,95,87,0.2)] hover:bg-[rgba(255,95,87,0.2)]",
+    danger: "bg-[var(--red-dim)] text-[var(--red)] border border-[rgba(185,60,52,0.25)] hover:bg-[rgba(185,60,52,0.14)]",
   };
   return (
     <button className={cn(base, sizes[size], variants[variant], className)} disabled={disabled || loading} aria-busy={loading} {...props}>
@@ -28,11 +28,11 @@ export function Button({ variant = "primary", size = "md", loading = false, disa
 // ─── Badge ────────────────────────────────────────────────────────────────────
 type BadgeColor = "green" | "orange" | "red" | "blue" | "gray";
 const badgeStyles: Record<BadgeColor, string> = {
-  green:  "bg-[rgba(76,175,125,0.12)]  text-[#4caf7d]",
-  orange: "bg-[rgba(255,170,51,0.12)]  text-[#ffaa33]",
-  red:    "bg-[rgba(255,95,87,0.12)]   text-[#ff5f57]",
-  blue:   "bg-[rgba(74,158,255,0.12)]  text-[#4a9eff]",
-  gray:   "bg-[rgba(255,255,255,0.06)] text-[var(--text3)]",
+  green:  "bg-[var(--green-dim)]  text-[var(--green)]",
+  orange: "bg-[var(--orange-dim)] text-[var(--orange)]",
+  red:    "bg-[var(--red-dim)]    text-[var(--red)]",
+  blue:   "bg-[var(--blue-dim)]   text-[var(--blue)]",
+  gray:   "bg-[var(--bg3)]        text-[var(--text2)]",
 };
 export function Badge({ color, children }: { color: BadgeColor; children: React.ReactNode }) {
   return (
@@ -62,11 +62,11 @@ export function SourceBadge({ source }: { source: AppointmentSource }) {
 
 // ─── Avatar ───────────────────────────────────────────────────────────────────
 const avColors = [
-  { bg: "#1a3a1a", color: "var(--accent)" },
-  { bg: "#1a2a3a", color: "#4a9eff" },
-  { bg: "#3a1a1a", color: "#ff5f57" },
-  { bg: "#3a2a1a", color: "#ffaa33" },
-  { bg: "#2a1a3a", color: "#c77dff" },
+  { bg: "var(--green-dim)", color: "var(--accent)" },
+  { bg: "var(--blue-dim)", color: "var(--blue)" },
+  { bg: "var(--red-dim)", color: "var(--red)" },
+  { bg: "var(--orange-dim)", color: "var(--orange)" },
+  { bg: "#F1EAF7", color: "#6B4C8A" },
 ];
 export function Avatar({ name, index = 0 }: { name: string; index?: number }) {
   const style = avColors[index % avColors.length];
@@ -88,7 +88,7 @@ export function Card({ children, className }: { children: React.ReactNode; class
         "border-[var(--border)] hover:border-[var(--accent-dim2)]",
         className
       )}
-      style={{ background: "var(--bg2)", boxShadow: "inset 0 1px 0 rgba(255, 255, 255, 0.05), 0 1px 2px rgba(0,0,0,0.3)" }}>
+      style={{ background: "var(--bg2)", boxShadow: "0 1px 2px var(--shadow)" }}>
       {children}
     </div>
   );
@@ -109,17 +109,17 @@ export function StatCard({ label, value, change, changeDir, icon: Icon }: {
   return (
     <div
       className="rounded-xl p-5 relative overflow-hidden border border-[var(--border)] hover:border-[var(--accent-dim2)] transition-colors duration-200 group"
-      style={{ background: "var(--bg2)", boxShadow: "inset 0 1px 0 rgba(255, 255, 255, 0.05)" }}>
+      style={{ background: "var(--bg2)", boxShadow: "0 1px 2px var(--shadow)" }}>
       <div className="absolute -top-8 -right-8 w-32 h-32 rounded-full pointer-events-none blur-2xl opacity-60 group-hover:opacity-100 transition-opacity duration-300"
         style={{ background: "radial-gradient(circle, var(--accent-dim2), transparent 70%)" }} />
       <div className="absolute top-4 right-4 w-9 h-9 rounded-lg flex items-center justify-center backdrop-blur-sm"
-        style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.06)", boxShadow: "inset 0 1px 0 rgba(255,255,255,0.08)", color: "var(--accent)" }}>
+        style={{ background: "var(--accent-dim)", border: "1px solid var(--accent-dim2)", color: "var(--accent)" }}>
         <Icon size={16} strokeWidth={2} aria-hidden />
       </div>
       <div className="text-xs mb-2 font-medium" style={{ color: "var(--text3)" }}>{label}</div>
       <div className="font-syne font-black text-3xl tabular-nums">{value}</div>
       {change && (
-        <div className="text-xs mt-1" style={{ color: changeDir === "up" ? "#4caf7d" : changeDir === "down" ? "#ff5f57" : "var(--orange)" }}>
+        <div className="text-xs mt-1" style={{ color: changeDir === "up" ? "var(--green)" : changeDir === "down" ? "var(--red)" : "var(--orange)" }}>
           {change}
         </div>
       )}
@@ -141,7 +141,7 @@ export function Skeleton({ className }: { className?: string }) {
 export function StatCardSkeleton() {
   return (
     <div className="rounded-xl p-5 relative overflow-hidden border border-[var(--border)]"
-      style={{ background: "var(--bg2)", boxShadow: "inset 0 1px 0 rgba(255, 255, 255, 0.05)" }}>
+      style={{ background: "var(--bg2)", boxShadow: "0 1px 2px var(--shadow)" }}>
       <Skeleton className="absolute top-4 right-4 w-9 h-9 rounded-lg" />
       <Skeleton className="h-3 w-24 mb-3" />
       <Skeleton className="h-8 w-16 mb-2" />
@@ -185,7 +185,7 @@ export function EmptyState({ icon: Icon, title, description, actionButton }: {
       <div className="relative mb-5">
         <div className="absolute inset-0 rounded-full blur-xl opacity-70" style={{ background: "var(--accent-dim2)" }} />
         <div className="relative w-14 h-14 rounded-2xl flex items-center justify-center"
-          style={{ background: "var(--bg3)", border: "1px solid var(--border2)", boxShadow: "inset 0 1px 0 rgba(255,255,255,0.06)", color: "var(--accent)" }}>
+          style={{ background: "var(--accent-dim)", border: "1px solid var(--accent-dim2)", color: "var(--accent)" }}>
           <Icon size={24} strokeWidth={1.75} aria-hidden />
         </div>
       </div>
@@ -200,7 +200,7 @@ export function EmptyState({ icon: Icon, title, description, actionButton }: {
 export function PageHeader({ title, children }: { title: string; children?: React.ReactNode }) {
   return (
     <div className="h-16 flex items-center px-4 sm:px-7 gap-2 sm:gap-3 sticky top-0 z-40 backdrop-blur-md"
-      style={{ background: "rgba(17,17,17,0.85)", borderBottom: "1px solid var(--border)" }}>
+      style={{ background: "rgba(250,247,242,0.88)", borderBottom: "1px solid var(--border)" }}>
       <h1 className="font-syne font-bold text-base sm:text-lg flex-1 truncate">{title}</h1>
       {children}
     </div>

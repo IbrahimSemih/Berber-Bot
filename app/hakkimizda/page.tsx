@@ -21,10 +21,10 @@ export default function HakkimizdaPage() {
 
       <Section title="Neye inanıyoruz?">
         <ul className={ul}>
-          <li><strong className="text-white">Basitlik:</strong> Kurulum dakikalar sürer, teknik bilgi gerekmez.</li>
-          <li><strong className="text-white">Şeffaflık:</strong> Tek plan, açık fiyat, otomatik yenileme ve gizli ücret yok.</li>
-          <li><strong className="text-white">Gelmeme (no-show) ile mücadele:</strong> Hatırlatma mesajları ve tek tıkla iptal bağlantısı sayesinde boş kalan koltuk azalır.</li>
-          <li><strong className="text-white">Veri güvenliği:</strong> Müşteri verileri yalnızca randevu hizmeti için kullanılır, asla satılmaz.</li>
+          <li><strong className="text-[var(--text)]">Basitlik:</strong> Kurulum dakikalar sürer, teknik bilgi gerekmez.</li>
+          <li><strong className="text-[var(--text)]">Şeffaflık:</strong> Tek plan, açık fiyat, otomatik yenileme ve gizli ücret yok.</li>
+          <li><strong className="text-[var(--text)]">Gelmeme (no-show) ile mücadele:</strong> Hatırlatma mesajları ve tek tıkla iptal bağlantısı sayesinde boş kalan koltuk azalır.</li>
+          <li><strong className="text-[var(--text)]">Veri güvenliği:</strong> Müşteri verileri yalnızca randevu hizmeti için kullanılır, asla satılmaz.</li>
         </ul>
       </Section>
 

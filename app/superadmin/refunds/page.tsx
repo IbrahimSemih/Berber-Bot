@@ -26,7 +26,7 @@ export default async function RefundsPage() {
     const ageDays = (now - new Date(p.created_at).getTime()) / (1000 * 60 * 60 * 24);
     const outsideWindow = ageDays > YEARLY_REFUND_DAYS;
     return (
-      <tr key={p.id} className="border-b last:border-0 transition-colors hover:bg-white/5" style={{ borderColor: "var(--border)" }}>
+      <tr key={p.id} className="border-b last:border-0 transition-colors hover:bg-[var(--bg3)]" style={{ borderColor: "var(--border)" }}>
         <td className="px-6 py-5">
           <div className="font-medium">{p.shopName}</div>
           <div className="text-xs mt-1" style={{ color: "var(--text3)" }}>

@@ -188,9 +188,9 @@ export default function DashboardPage() {
       <div className="p-4 sm:p-7 relative">
         {/* Ambient glow */}
         <div className="absolute top-0 right-0 w-[520px] h-[520px] pointer-events-none -z-0"
-          style={{ background: "radial-gradient(circle, rgba(200,240,96,0.06) 0%, transparent 70%)" }} aria-hidden />
+          style={{ background: "radial-gradient(circle, var(--accent-dim) 0%, transparent 70%)" }} aria-hidden />
         <div className="absolute bottom-0 left-0 w-[400px] h-[400px] pointer-events-none -z-0"
-          style={{ background: "radial-gradient(circle, rgba(200,240,96,0.04) 0%, transparent 70%)" }} aria-hidden />
+          style={{ background: "radial-gradient(circle, var(--accent-dim) 0%, transparent 70%)" }} aria-hidden />
 
         <div className="relative z-10">
           {/* Public booking link */}
@@ -198,11 +198,11 @@ export default function DashboardPage() {
             <Skeleton className="h-[76px] w-full rounded-xl mb-6" />
           ) : shopUrl && (
             <div className="mb-6 rounded-xl p-px"
-              style={{ background: "linear-gradient(120deg, var(--accent) 0%, rgba(200,240,96,0.25) 40%, var(--border) 100%)" }}>
+              style={{ background: "linear-gradient(120deg, var(--accent) 0%, var(--accent-dim3) 40%, var(--border) 100%)" }}>
               <div className="rounded-[11px] p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4 relative overflow-hidden"
                 style={{ background: "var(--bg2)" }}>
                 <div className="absolute -top-10 -left-10 w-40 h-40 rounded-full blur-3xl pointer-events-none"
-                  style={{ background: "rgba(200,240,96,0.08)" }} aria-hidden />
+                  style={{ background: "var(--accent-dim)" }} aria-hidden />
                 <div className="flex items-start gap-3 relative">
                   <div className="w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0"
                     style={{ background: "var(--accent-dim)", color: "var(--accent)", border: "1px solid var(--accent-dim2)" }}>
@@ -362,7 +362,7 @@ export default function DashboardPage() {
                       {formatTime(apt.scheduled_at)}
                     </div>
                     <div className="w-0.5 rounded flex-shrink-0 min-h-[36px]"
-                      style={{ background: apt.status === "confirmed" ? "#4caf7d" : apt.status === "pending" ? "#ffaa33" : "#555" }} />
+                      style={{ background: apt.status === "confirmed" ? "#2B7553" : apt.status === "pending" ? "#995709" : "#9AA09A" }} />
                     <div className="min-w-0">
                       <div className="text-sm font-medium truncate">{apt.customer?.name ?? apt.customer?.phone}</div>
                       <div className="text-xs mt-0.5 truncate" style={{ color: "var(--text3)" }}>{apt.service?.name}</div>

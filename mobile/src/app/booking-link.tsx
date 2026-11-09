@@ -73,7 +73,7 @@ export default function BookingLinkScreen() {
     <ScrollView style={{ backgroundColor: colors.bg }} contentContainerStyle={{ padding: spacing.xl, gap: spacing.lg }} keyboardShouldPersistTaps="handled">
       <Card style={{ alignItems: "center", gap: spacing.md }}>
         <View style={{ backgroundColor: "#fff", padding: spacing.lg, borderRadius: radius.md }}>
-          <QRCode value={url} size={200} quietZone={12} getRef={(c: any) => (qrRef.current = c)} backgroundColor="#ffffff" color="#0a0a0a" />
+          <QRCode value={url} size={200} quietZone={12} getRef={(c: any) => (qrRef.current = c)} backgroundColor="#ffffff" color="#1F2421" />
         </View>
         <AppText selectable style={{ color: colors.accent, fontWeight: "700", textAlign: "center" }}>
           {displayUrl}

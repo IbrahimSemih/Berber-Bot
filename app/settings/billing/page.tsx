@@ -37,12 +37,12 @@ function MobileSubscribeInfo() {
       {hasLinks ? (
         <div className="flex flex-wrap gap-3">
           {STORE_LINKS.appStore && (
-            <a href={STORE_LINKS.appStore} target="_blank" rel="noopener noreferrer" className="px-5 py-2.5 rounded-xl text-sm font-bold" style={{ background: "var(--accent)", color: "#0a0a0a" }}>
+            <a href={STORE_LINKS.appStore} target="_blank" rel="noopener noreferrer" className="px-5 py-2.5 rounded-xl text-sm font-bold" style={{ background: "var(--accent)", color: "var(--on-accent)" }}>
               App Store&apos;dan indir
             </a>
           )}
           {STORE_LINKS.playStore && (
-            <a href={STORE_LINKS.playStore} target="_blank" rel="noopener noreferrer" className="px-5 py-2.5 rounded-xl text-sm font-bold" style={{ background: "var(--accent)", color: "#0a0a0a" }}>
+            <a href={STORE_LINKS.playStore} target="_blank" rel="noopener noreferrer" className="px-5 py-2.5 rounded-xl text-sm font-bold" style={{ background: "var(--accent)", color: "var(--on-accent)" }}>
               Google Play&apos;den indir
             </a>
           )}
@@ -160,7 +160,7 @@ export default async function BillingPage({ searchParams }: { searchParams: { su
       )}
 
       {isLocked && (
-        <div className="p-5 rounded-xl border bg-red-500/10 border-red-500/20 text-red-500">
+        <div className="p-5 rounded-xl border bg-[var(--red-dim)] border-[rgba(185,60,52,0.25)] text-[var(--red)]">
           <div className="flex items-center gap-3 mb-2">
             <AlertTriangle className="w-6 h-6" />
             <h3 className="font-bold text-lg">Erişiminiz Kısıtlandı</h3>
@@ -168,7 +168,7 @@ export default async function BillingPage({ searchParams }: { searchParams: { su
           <p className="text-sm">
             {isTrialExpired ? `${TRIAL_DAYS} günlük ücretsiz deneme süreniz dolmuştur.` : "Abonelik süreniz dolmuştur."} Sisteme tekrar erişebilmek ve randevularınızı yönetmeye devam edebilmek için lütfen PRO plana geçiş yapın.
           </p>
-          <a href="#plans" className="inline-block mt-4 px-5 py-2.5 rounded-xl text-sm font-bold" style={{ background: "var(--accent)", color: "#0a0a0a" }}>{webBilling ? "Plan Seç ve Öde" : "Nasıl abone olurum?"}</a>
+          <a href="#plans" className="inline-block mt-4 px-5 py-2.5 rounded-xl text-sm font-bold" style={{ background: "var(--accent)", color: "var(--on-accent)" }}>{webBilling ? "Plan Seç ve Öde" : "Nasıl abone olurum?"}</a>
         </div>
       )}
 
@@ -180,12 +180,12 @@ export default async function BillingPage({ searchParams }: { searchParams: { su
               <p className="text-sm font-medium mb-1" style={{ color: "var(--text3)" }}>Mevcut Planınız</p>
               <h2 className="text-2xl font-bold flex items-center gap-2">
                 {plan.name}
-                {isActive && <span className="px-2 py-1 text-[10px] uppercase rounded-full bg-green-500/20 text-green-500 tracking-wider">Aktif</span>}
-                {isTrialing && !isTrialExpired && <span className="px-2 py-1 text-[10px] uppercase rounded-full bg-blue-500/20 text-blue-500 tracking-wider">Deneme Sürümü</span>}
+                {isActive && <span className="px-2 py-1 text-[10px] uppercase rounded-full bg-[var(--green-dim)] text-[var(--green)] tracking-wider">Aktif</span>}
+                {isTrialing && !isTrialExpired && <span className="px-2 py-1 text-[10px] uppercase rounded-full bg-[var(--blue-dim)] text-[var(--blue)] tracking-wider">Deneme Sürümü</span>}
               </h2>
             </div>
             <div className="w-12 h-12 rounded-xl flex items-center justify-center" style={{ background: "var(--bg3)" }}>
-              {isActive ? <Check className="w-6 h-6 text-green-500" /> : <Clock className="w-6 h-6 text-blue-500" />}
+              {isActive ? <Check className="w-6 h-6 text-[var(--green)]" /> : <Clock className="w-6 h-6 text-[var(--blue)]" />}
             </div>
           </div>
 
@@ -193,7 +193,7 @@ export default async function BillingPage({ searchParams }: { searchParams: { su
             <div className="flex justify-between pb-4 border-b" style={{ borderColor: "var(--border)" }}>
               <span style={{ color: "var(--text2)" }}>Durum</span>
               <span className="font-medium">
-                {isLocked ? <span className="text-red-500">Süresi Doldu</span> : "Kullanıma Açık"}
+                {isLocked ? <span className="text-[var(--red)]">Süresi Doldu</span> : "Kullanıma Açık"}
               </span>
             </div>
             <div className="flex justify-between pb-4 border-b" style={{ borderColor: "var(--border)" }}>
@@ -221,7 +221,7 @@ export default async function BillingPage({ searchParams }: { searchParams: { su
               </div>
               <div className="h-2 w-full rounded-full overflow-hidden" style={{ background: "var(--bg3)" }}>
                 <div 
-                  className={`h-full rounded-full transition-all duration-500 ${!shopLimits.canAddAppointment ? 'bg-red-500' : 'bg-blue-500'}`}
+                  className={`h-full rounded-full transition-all duration-500 ${!shopLimits.canAddAppointment ? 'bg-[var(--red)]' : 'bg-[var(--blue)]'}`}
                   style={{ width: `${calculatePercentage(usage.appointments, limits.appointments)}%` }} 
                 />
               </div>
@@ -237,7 +237,7 @@ export default async function BillingPage({ searchParams }: { searchParams: { su
               </div>
               <div className="h-2 w-full rounded-full overflow-hidden" style={{ background: "var(--bg3)" }}>
                 <div 
-                  className={`h-full rounded-full transition-all duration-500 ${!shopLimits.canAddStaff ? 'bg-red-500' : 'bg-purple-500'}`}
+                  className={`h-full rounded-full transition-all duration-500 ${!shopLimits.canAddStaff ? 'bg-[var(--red)]' : 'bg-[#6B4C8A]'}`}
                   style={{ width: `${calculatePercentage(usage.staff, limits.staff)}%` }} 
                 />
               </div>
@@ -260,10 +260,10 @@ export default async function BillingPage({ searchParams }: { searchParams: { su
             </p>
 
             <ul className="space-y-3 mb-8 text-sm flex-1">
-              <li className="flex items-center gap-2"><Check className="w-4 h-4 text-green-500" /> Sınırsız randevu yönetimi</li>
-              <li className="flex items-center gap-2"><Check className="w-4 h-4 text-green-500" /> Merkezi WhatsApp bildirimleri</li>
-              <li className="flex items-center gap-2"><Check className="w-4 h-4 text-green-500" /> Sınırsız personel ekleme</li>
-              <li className="flex items-center gap-2"><Check className="w-4 h-4 text-green-500" /> İptal riskini azaltan hatırlatıcılar</li>
+              <li className="flex items-center gap-2"><Check className="w-4 h-4 text-[var(--green)]" /> Sınırsız randevu yönetimi</li>
+              <li className="flex items-center gap-2"><Check className="w-4 h-4 text-[var(--green)]" /> Merkezi WhatsApp bildirimleri</li>
+              <li className="flex items-center gap-2"><Check className="w-4 h-4 text-[var(--green)]" /> Sınırsız personel ekleme</li>
+              <li className="flex items-center gap-2"><Check className="w-4 h-4 text-[var(--green)]" /> İptal riskini azaltan hatırlatıcılar</li>
             </ul>
 
             {webBilling ? <PurchaseOptions profileComplete={profileComplete} /> : <MobileSubscribeInfo />}

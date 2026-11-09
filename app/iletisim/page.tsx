@@ -22,7 +22,7 @@ export default function IletisimPage() {
           <a href={`mailto:${SUPPORT.email}`} className={`${card} hover:border-[var(--accent)]`} style={cardStyle}>
             <Mail size={22} style={{ color: "var(--accent)" }} className="flex-shrink-0" aria-hidden />
             <div>
-              <div className="font-bold text-white">E-posta</div>
+              <div className="font-bold text-[var(--text)]">E-posta</div>
               <div className="text-sm">{SUPPORT.email}</div>
             </div>
           </a>
@@ -30,7 +30,7 @@ export default function IletisimPage() {
             <a href={wa} target="_blank" rel="noreferrer" className={`${card} hover:border-[var(--accent)]`} style={cardStyle}>
               <MessageCircle size={22} style={{ color: "var(--accent)" }} className="flex-shrink-0" aria-hidden />
               <div>
-                <div className="font-bold text-white">WhatsApp Destek</div>
+                <div className="font-bold text-[var(--text)]">WhatsApp Destek</div>
                 <div className="text-sm">Mesaj gönderin</div>
               </div>
             </a>
@@ -38,14 +38,14 @@ export default function IletisimPage() {
           <div className={card} style={cardStyle}>
             <Clock size={22} style={{ color: "var(--accent)" }} className="flex-shrink-0" aria-hidden />
             <div>
-              <div className="font-bold text-white">Destek saatleri</div>
+              <div className="font-bold text-[var(--text)]">Destek saatleri</div>
               <div className="text-sm">{SUPPORT.hours}</div>
             </div>
           </div>
           <div className={card} style={cardStyle}>
             <MapPin size={22} style={{ color: "var(--accent)" }} className="flex-shrink-0" aria-hidden />
             <div>
-              <div className="font-bold text-white">Adres</div>
+              <div className="font-bold text-[var(--text)]">Adres</div>
               <div className="text-sm">{COMPANY.address}</div>
             </div>
           </div>

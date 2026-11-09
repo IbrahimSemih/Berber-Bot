@@ -19,13 +19,13 @@ export default function CancelForm({ token }: CancelFormProps) {
     toast((t) => (
       <div className="flex flex-col gap-3">
         <div className="flex items-center gap-2">
-          <AlertTriangle className="text-red-500 w-5 h-5" />
-          <span className="font-bold text-white">Emin misiniz?</span>
+          <AlertTriangle className="text-[var(--red)] w-5 h-5" />
+          <span className="font-bold text-[var(--text)]">Emin misiniz?</span>
         </div>
-        <p className="text-sm text-neutral-300">Randevunuzu iptal etmek istediğinize emin misiniz?</p>
+        <p className="text-sm text-[var(--text2)]">Randevunuzu iptal etmek istediğinize emin misiniz?</p>
         <div className="flex justify-end gap-2 mt-2">
-          <button className="px-3 py-1.5 text-xs rounded border border-neutral-700 text-neutral-300 hover:bg-neutral-800" onClick={() => toast.dismiss(t.id)}>Hayır, Vazgeç</button>
-          <button className="px-3 py-1.5 text-xs rounded bg-red-500/20 text-red-500 border border-red-500/30 hover:bg-red-500/30" onClick={async () => {
+          <button className="px-3 py-1.5 text-xs rounded border border-[var(--border2)] text-[var(--text2)] hover:bg-[var(--bg4)]" onClick={() => toast.dismiss(t.id)}>Hayır, Vazgeç</button>
+          <button className="px-3 py-1.5 text-xs rounded bg-[rgba(185,60,52,0.14)] text-[var(--red)] border border-[rgba(185,60,52,0.3)] hover:bg-[rgba(185,60,52,0.2)]" onClick={async () => {
             toast.dismiss(t.id);
             setIsLoading(true);
             setError(null);
@@ -62,12 +62,12 @@ export default function CancelForm({ token }: CancelFormProps) {
 
   if (isSuccess) {
     return (
-      <div className="mt-8 p-6 bg-red-500/10 border border-red-500/20 rounded-xl text-center animate-in fade-in zoom-in duration-300">
-        <div className="w-12 h-12 bg-red-500/20 text-red-500 rounded-full flex items-center justify-center mx-auto mb-3">
+      <div className="mt-8 p-6 bg-[var(--red-dim)] border border-[rgba(185,60,52,0.25)] rounded-xl text-center animate-in fade-in zoom-in duration-300">
+        <div className="w-12 h-12 bg-[rgba(185,60,52,0.14)] text-[var(--red)] rounded-full flex items-center justify-center mx-auto mb-3">
           <span className="text-xl">✓</span>
         </div>
-        <h3 className="text-red-500 font-bold mb-2">Randevunuz İptal Edildi</h3>
-        <p className="text-sm text-neutral-400">
+        <h3 className="text-[var(--red)] font-bold mb-2">Randevunuz İptal Edildi</h3>
+        <p className="text-sm text-[var(--text3)]">
           İşletmeye bilgi verildi. Yeni bir randevu almak isterseniz WhatsApp üzerinden tekrar iletişime geçebilirsiniz.
         </p>
       </div>
@@ -77,7 +77,7 @@ export default function CancelForm({ token }: CancelFormProps) {
   return (
     <div className="mt-6 flex flex-col items-center">
       {error && (
-        <div className="mb-4 p-3 bg-red-500/10 border border-red-500/20 text-red-500 rounded-lg text-sm text-center w-full">
+        <div className="mb-4 p-3 bg-[var(--red-dim)] border border-[rgba(185,60,52,0.25)] text-[var(--red)] rounded-lg text-sm text-center w-full">
           {error}
         </div>
       )}
@@ -87,14 +87,14 @@ export default function CancelForm({ token }: CancelFormProps) {
         disabled={isLoading}
         className={`w-full py-3 px-4 rounded-xl font-medium text-white transition-all
           ${isLoading 
-            ? 'bg-red-500/50 cursor-not-allowed' 
-            : 'bg-red-600 hover:bg-red-700 shadow-lg shadow-red-500/20 active:scale-[0.98]'
+            ? 'bg-[rgba(185,60,52,0.35)] cursor-not-allowed' 
+            : 'bg-[var(--red)] hover:bg-[#9E322B] shadow-lg shadow-[rgba(185,60,52,0.2)] active:scale-[0.98]'
           }`}
       >
         {isLoading ? 'İptal Ediliyor...' : 'Randevuyu İptal Et'}
       </button>
       
-      <p className="text-xs text-gray-500 mt-4 text-center">
+      <p className="text-xs text-[var(--text3)] mt-4 text-center">
         İptal işlemi geri alınamaz. Yeni bir randevu almak isterseniz WhatsApp üzerinden tekrar iletişime geçebilirsiniz.
       </p>
     </div>

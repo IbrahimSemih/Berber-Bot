@@ -2,10 +2,12 @@ import { useEffect, useState } from "react";
 import { AppState, Platform, StyleSheet, View } from "react-native";
 import { SplashScreen, Stack } from "expo-router";
 import { StatusBar } from "expo-status-bar";
+import { useFonts } from "expo-font";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import { focusManager, QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { AuthProvider, useAuth } from "@/lib/auth";
 import { RealtimeBridge } from "@/lib/realtime";
+import { fontAssets, HEADING, resolveFontFamily } from "@/lib/fonts";
 import { ToastProvider } from "@/components/toast";
 import { colors } from "@/theme";
 
@@ -20,16 +22,20 @@ if (Platform.OS !== "web") {
 }
 
 export default function RootLayout() {
+  // Yazı tipleri yüklenene kadar açılış ekranı kalır (yüklenemezse sistem fontuyla devam)
+  const [fontsLoaded, fontError] = useFonts(fontAssets);
   const [queryClient] = useState(
     () => new QueryClient({ defaultOptions: { queries: { retry: 1, staleTime: 30_000 } } })
   );
+
+  if (!fontsLoaded && !fontError) return null;
 
   return (
     <SafeAreaProvider>
       <QueryClientProvider client={queryClient}>
         <AuthProvider>
           <ToastProvider>
-            <StatusBar style="light" />
+            <StatusBar style="dark" />
             <RootNavigator />
           </ToastProvider>
         </AuthProvider>
@@ -98,7 +104,7 @@ const pageHeader = {
   headerShown: true,
   headerStyle: { backgroundColor: colors.bg },
   headerTintColor: colors.text,
-  headerTitleStyle: { color: colors.text, fontWeight: "700" as const },
+  headerTitleStyle: { color: colors.text, fontFamily: resolveFontFamily(HEADING, 600), fontSize: 19 },
   headerShadowVisible: false,
   headerBackTitle: "Geri",
 };

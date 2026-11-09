@@ -31,7 +31,7 @@ export default function PurchaseOptions({ profileComplete }: { profileComplete: 
         </span>
       </label>
 
-      <a href={href("yearly")} aria-disabled={!enabled} style={{ background: "var(--accent)", color: "#0a0a0a", ...disabledStyle }}
+      <a href={href("yearly")} aria-disabled={!enabled} style={{ background: "var(--accent)", color: "var(--on-accent)", ...disabledStyle }}
         className="w-full py-3.5 rounded-xl text-sm font-bold flex items-center justify-center gap-2 transition-all hover:-translate-y-0.5 shadow-lg text-center">
         <Zap className="w-4 h-4" />
         Yıllık ₺{PLANS.pro.yearlyPrice.toLocaleString("tr-TR")} · 2 ay bedava
@@ -40,7 +40,7 @@ export default function PurchaseOptions({ profileComplete }: { profileComplete: 
         İlk {YEARLY_REFUND_DAYS} gün koşulsuz iade
       </p>
       <a href={href("monthly")} aria-disabled={!enabled} style={{ borderColor: "var(--border2)", color: "var(--text2)", ...disabledStyle }}
-        className="w-full py-3 mt-3 rounded-xl text-sm font-medium block text-center border transition-colors hover:bg-white/5">
+        className="w-full py-3 mt-3 rounded-xl text-sm font-medium block text-center border transition-colors hover:bg-[var(--bg3)]">
         Aylık ₺{PLANS.pro.price.toLocaleString("tr-TR")} / Ay
       </a>
       <p className="text-[10px] text-center mt-3 opacity-60">

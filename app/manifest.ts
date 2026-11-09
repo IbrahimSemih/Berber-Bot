@@ -7,8 +7,8 @@ export default function manifest(): MetadataRoute.Manifest {
     description: "Berberler için online randevu sayfası ve WhatsApp bildirimleri",
     start_url: "/dashboard",
     display: "standalone",
-    background_color: "#0a0a0a",
-    theme_color: "#0a0a0a",
+    background_color: "#FAF7F2",
+    theme_color: "#FAF7F2",
     lang: "tr",
     icons: [
       { src: "/icon.svg", sizes: "any", type: "image/svg+xml" },

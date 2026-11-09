@@ -1,6 +1,16 @@
 import type { Metadata, Viewport } from "next";
 import { Toaster } from "react-hot-toast";
 import { SITE } from "@/lib/site-config";
+// Yazı tipleri npm paketinden kendi sunucumuzdan sunulur (build Google'a bağlı değil;
+// next/font/google, Next 14'te bazı Google font adreslerini çözemeyip build'i kırıyordu).
+// Alt kümeler unicode-range ile: tarayıcı yalnızca gerekeni (latin / latin-ext → Türkçe) indirir.
+// Mobil: mobile/src/lib/fonts.ts aynı aileler ve ağırlıklar.
+import "@fontsource/fraunces/600.css";
+import "@fontsource/fraunces/700.css";
+import "@fontsource/plus-jakarta-sans/400.css";
+import "@fontsource/plus-jakarta-sans/500.css";
+import "@fontsource/plus-jakarta-sans/600.css";
+import "@fontsource/plus-jakarta-sans/700.css";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -26,7 +36,7 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: "#0a0a0a",
+  themeColor: "#FAF7F2",
   width: "device-width",
   initialScale: 1,
 };
@@ -34,11 +44,6 @@ export const viewport: Viewport = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="tr">
-      <head>
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-        <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
-      </head>
       <body className="font-dm bg-bg text-txt antialiased">
         {children}
         <Toaster 
@@ -52,7 +57,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             success: {
               iconTheme: {
                 primary: 'var(--accent)',
-                secondary: '#0a0a0a',
+                secondary: '#FFFFFF',
               },
             },
           }}

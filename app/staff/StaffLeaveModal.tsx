@@ -57,7 +57,7 @@ export default function StaffLeaveModal({ shopId, staff, onClose }: Props) {
     toast((t) => (
       <div className="flex flex-col gap-3">
         <div className="flex items-center gap-2">
-          <AlertTriangle className="text-red-500 w-5 h-5" />
+          <AlertTriangle className="text-[var(--red)] w-5 h-5" />
           <span className="font-bold">Emin misiniz?</span>
         </div>
         <p className="text-sm">Bu izni silmek istediğinize emin misiniz?</p>
@@ -80,7 +80,7 @@ export default function StaffLeaveModal({ shopId, staff, onClose }: Props) {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center"
-      style={{ background: "rgba(0,0,0,0.75)", backdropFilter: "blur(4px)" }}
+      style={{ background: "var(--overlay)", backdropFilter: "blur(4px)" }}
       onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}>
       <div className="rounded-2xl p-7 w-[500px] max-h-[90vh] overflow-y-auto"
         style={{ background: "var(--bg2)", border: "1px solid var(--border2)" }}>
@@ -111,7 +111,7 @@ export default function StaffLeaveModal({ shopId, staff, onClose }: Props) {
         <div>
           <h3 className="text-sm font-semibold uppercase tracking-wide mb-3" style={{ color: "var(--text3)" }}>Mevcut İzinler</h3>
           {loading ? (
-            <p className="text-sm text-neutral-400">Yükleniyor...</p>
+            <p className="text-sm text-[var(--text3)]">Yükleniyor...</p>
           ) : leaves.length === 0 ? (
             <div className="p-4 rounded-lg text-center text-sm" style={{ background: "var(--bg3)", color: "var(--text3)", border: "1px solid var(--border2)" }}>
               Kayıtlı izin bulunmuyor.
@@ -126,14 +126,14 @@ export default function StaffLeaveModal({ shopId, staff, onClose }: Props) {
                   <li key={leave.id} className="flex items-center justify-between p-3 rounded-lg border transition-colors"
                     style={{ background: "var(--bg3)", borderColor: "var(--border2)" }}>
                     <div>
-                      <div className={`text-sm font-medium ${isPast ? 'text-neutral-500 line-through' : 'text-white'}`}>
+                      <div className={`text-sm font-medium ${isPast ? 'text-[var(--text3)] line-through' : 'text-[var(--text)]'}`}>
                         {start} - {end}
                       </div>
-                      {isPast && <div className="text-xs text-neutral-500">Geçmiş İzin</div>}
+                      {isPast && <div className="text-xs text-[var(--text3)]">Geçmiş İzin</div>}
                     </div>
                     <button 
                       onClick={() => handleDelete(leave.id)}
-                      className="text-xs text-red-500 hover:text-red-400 font-medium px-2 py-1 bg-red-500/10 rounded"
+                      className="text-xs text-[var(--red)] hover:text-[var(--red)] font-medium px-2 py-1 bg-[var(--red-dim)] rounded"
                     >
                       Sil
                     </button>

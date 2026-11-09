@@ -49,7 +49,7 @@ export default function ResetPasswordPage() {
         {success ? (
           <div className="text-center space-y-4 relative z-10">
             <div className="w-16 h-16 rounded-full flex items-center justify-center text-3xl mx-auto mb-4"
-              style={{ background: "var(--accent)", color: "#0a0a0a" }}>✓</div>
+              style={{ background: "var(--accent)", color: "var(--on-accent)" }}>✓</div>
             <h2 className="text-xl font-bold">Şifreniz Güncellendi</h2>
             <p className="text-sm" style={{ color: "var(--text2)" }}>
               Panele yönlendiriliyorsunuz...
@@ -68,7 +68,7 @@ export default function ResetPasswordPage() {
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="En az 6 karakter"
                 className="w-full px-4 py-3 rounded-xl text-sm border focus:outline-none transition-colors"
-                style={{ background: "rgba(0,0,0,0.2)", borderColor: "var(--border)", color: "var(--text)" }}
+                style={{ background: "var(--bg)", borderColor: "var(--border)", color: "var(--text)" }}
               />
             </div>
 
@@ -82,7 +82,7 @@ export default function ResetPasswordPage() {
               type="submit"
               disabled={loading}
               className="w-full py-3.5 rounded-xl text-sm font-bold transition-all disabled:opacity-50 hover:-translate-y-0.5 mt-2"
-              style={{ background: "var(--accent)", color: "#0a0a0a" }}
+              style={{ background: "var(--accent)", color: "var(--on-accent)" }}
             >
               {loading ? "Güncelleniyor..." : "Şifreyi Güncelle"}
             </button>

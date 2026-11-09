@@ -80,7 +80,7 @@ export default async function SuperAdminDashboard() {
           { label: "Tahmini MRR", value: `${estimatedMRR.toLocaleString("tr-TR")} ₺`, icon: "💰", accent: true, subtitle: `${activeSubscriptions} aktif abonelik` },
         ].map((stat, i) => (
           <div key={i} className="p-6 rounded-2xl border relative overflow-hidden group" style={{ background: "var(--bg2)", borderColor: "var(--border)" }}>
-            <div className="absolute inset-0 bg-gradient-to-br from-transparent to-black/20 opacity-0 group-hover:opacity-100 transition-opacity" />
+            <div className="absolute inset-0 bg-gradient-to-br from-transparent to-[var(--accent-dim)] opacity-0 group-hover:opacity-100 transition-opacity" />
             <div className="absolute top-0 right-0 w-20 h-20 pointer-events-none" style={{ background: "radial-gradient(circle at top right, var(--accent-dim2), transparent 70%)" }} />
             <div className="flex justify-between items-start mb-4 relative z-10">
               <div className="w-10 h-10 rounded-xl flex items-center justify-center text-xl" style={{ background: "var(--bg3)" }}>{stat.icon}</div>
@@ -144,7 +144,7 @@ export default async function SuperAdminDashboard() {
             <tbody>
               {recentShops && recentShops.length > 0 ? (
                 recentShops.map((shop) => (
-                  <tr key={shop.id} className="transition-colors hover:bg-white/5 border-b last:border-0" style={{ borderColor: "var(--border)" }}>
+                  <tr key={shop.id} className="transition-colors hover:bg-[var(--bg3)] border-b last:border-0" style={{ borderColor: "var(--border)" }}>
                     <td className="px-6 py-5 text-sm font-medium">{shop.name}</td>
                     <td className="px-6 py-5 text-sm">
                       <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold" style={{ 
@@ -204,10 +204,10 @@ function MiniStatCard({
 }
 
 const STATUS_STYLES: Record<string, { bg: string; color: string; label: string }> = {
-  active: { bg: "rgba(76, 175, 125, 0.1)", color: "#4caf7d", label: "Aktif" },
-  trialing: { bg: "rgba(74, 158, 255, 0.1)", color: "#4a9eff", label: "Deneme" },
-  past_due: { bg: "rgba(255, 170, 51, 0.1)", color: "#ffaa33", label: "Gecikmiş" },
-  canceled: { bg: "rgba(255, 95, 87, 0.1)", color: "#ff5f57", label: "İptal" },
+  active: { bg: "var(--green-dim)", color: "#2B7553", label: "Aktif" },
+  trialing: { bg: "var(--blue-dim)", color: "#2A65A0", label: "Deneme" },
+  past_due: { bg: "var(--orange-dim)", color: "#995709", label: "Gecikmiş" },
+  canceled: { bg: "var(--red-dim)", color: "#B93C34", label: "İptal" },
 };
 
 function SubscriptionBadge({ status }: { status: string | null }) {

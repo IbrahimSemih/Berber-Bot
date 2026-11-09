@@ -70,8 +70,8 @@ export default function StaffListScreen() {
                   value={s.is_active}
                   disabled={toggling === s.id}
                   onValueChange={() => toggleActive(s)}
-                  trackColor={{ false: colors.bg4, true: colors.accent2 }}
-                  thumbColor={s.is_active ? colors.accent : colors.text2}
+                  trackColor={{ false: colors.switchTrackOff, true: colors.switchTrackOn }}
+                  thumbColor={s.is_active ? colors.switchThumbOn : colors.switchThumbOff}
                 />
               }
             />

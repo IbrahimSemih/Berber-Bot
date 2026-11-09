@@ -45,7 +45,7 @@ export default function ForgotPasswordPage() {
         {success ? (
           <div className="text-center space-y-4 relative z-10">
             <div className="w-16 h-16 rounded-full flex items-center justify-center text-3xl mx-auto mb-4"
-              style={{ background: "var(--accent)", color: "#0a0a0a" }}>✓</div>
+              style={{ background: "var(--accent)", color: "var(--on-accent)" }}>✓</div>
             <h2 className="text-xl font-bold">Sıfırlama Linki Gönderildi</h2>
             <p className="text-sm" style={{ color: "var(--text2)" }}>
               <b>{email}</b> adresine şifre sıfırlama bağlantısı gönderdik. Lütfen e-postanızı kontrol edin.
@@ -67,7 +67,7 @@ export default function ForgotPasswordPage() {
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="isim@sirket.com"
                 className="w-full px-4 py-3 rounded-xl text-sm border focus:outline-none transition-colors"
-                style={{ background: "rgba(0,0,0,0.2)", borderColor: "var(--border)", color: "var(--text)" }}
+                style={{ background: "var(--bg)", borderColor: "var(--border)", color: "var(--text)" }}
               />
             </div>
 
@@ -81,7 +81,7 @@ export default function ForgotPasswordPage() {
               type="submit"
               disabled={loading}
               className="w-full py-3.5 rounded-xl text-sm font-bold transition-all disabled:opacity-50 hover:-translate-y-0.5 mt-2"
-              style={{ background: "var(--accent)", color: "#0a0a0a" }}
+              style={{ background: "var(--accent)", color: "var(--on-accent)" }}
             >
               {loading ? "Gönderiliyor..." : "Bağlantı Gönder"}
             </button>

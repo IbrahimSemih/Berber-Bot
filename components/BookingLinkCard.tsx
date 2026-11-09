@@ -132,7 +132,7 @@ export default function BookingLinkCard({ initialSlug, shopName }: { initialSlug
               // eslint-disable-next-line @next/next/no-img-element
               <img src={qrDataUrl} alt={`${shopName} randevu QR kodu`} className="w-full h-full" />
             ) : (
-              <span className="text-xs text-neutral-500">QR hazırlanıyor…</span>
+              <span className="text-xs text-[var(--text3)]">QR hazırlanıyor…</span>
             )}
           </div>
           <span className="text-[11px]" style={{ color: "var(--text3)" }}>Tezgaha / aynaya asın</span>

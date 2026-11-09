@@ -26,10 +26,10 @@ export default function SuperAdminLoginPage() {
     <div className="min-h-screen flex items-center justify-center p-4" style={{ background: "var(--bg)", color: "var(--text)" }}>
       <div className="max-w-md w-full p-8 rounded-2xl border relative overflow-hidden" style={{ background: "var(--bg2)", borderColor: "var(--border)" }}>
         {/* Glow effect - red for super admin */}
-        <div className="absolute -top-24 -right-24 w-48 h-48 rounded-full blur-[80px] pointer-events-none opacity-50 bg-red-600" />
+        <div className="absolute -top-24 -right-24 w-48 h-48 rounded-full blur-[80px] pointer-events-none opacity-50 bg-[var(--red)]" />
         
         <div className="text-center mb-8 relative z-10">
-          <div className="w-12 h-12 rounded-xl flex items-center justify-center text-2xl mx-auto mb-4 bg-red-600 text-white font-bold font-heading">
+          <div className="w-12 h-12 rounded-xl flex items-center justify-center text-2xl mx-auto mb-4 bg-[var(--red)] text-white font-bold font-heading">
             S
           </div>
           <h1 className="font-heading font-bold text-3xl mb-2 tracking-tight">Super Admin</h1>
@@ -49,7 +49,7 @@ export default function SuperAdminLoginPage() {
               required
               placeholder="isim@sirket.com"
               className="w-full px-4 py-3 rounded-xl text-sm border focus:outline-none transition-colors"
-              style={{ background: "rgba(0,0,0,0.2)", borderColor: "var(--border)", color: "var(--text)" }}
+              style={{ background: "var(--bg)", borderColor: "var(--border)", color: "var(--text)" }}
             />
           </div>
 
@@ -63,12 +63,12 @@ export default function SuperAdminLoginPage() {
               required
               placeholder="••••••••"
               className="w-full px-4 py-3 rounded-xl text-sm border focus:outline-none transition-colors"
-              style={{ background: "rgba(0,0,0,0.2)", borderColor: "var(--border)", color: "var(--text)" }}
+              style={{ background: "var(--bg)", borderColor: "var(--border)", color: "var(--text)" }}
             />
           </div>
 
           {errorMsg && (
-            <div className="text-sm p-3 rounded-lg border bg-red-50 border-red-200 text-red-600">
+            <div className="text-sm p-3 rounded-lg border bg-[var(--red-dim)] border-[rgba(185,60,52,0.25)] text-[var(--red)]">
               {errorMsg}
             </div>
           )}
@@ -76,7 +76,7 @@ export default function SuperAdminLoginPage() {
           <button
             type="submit"
             disabled={loading}
-            className="w-full py-3.5 rounded-xl text-sm font-bold transition-all disabled:opacity-50 hover:-translate-y-0.5 mt-2 bg-red-600 hover:bg-red-700 text-white"
+            className="w-full py-3.5 rounded-xl text-sm font-bold transition-all disabled:opacity-50 hover:-translate-y-0.5 mt-2 bg-[var(--red)] hover:bg-[#9E322B] text-white"
           >
             {loading ? "Giriş yapılıyor..." : "Giriş Yap"}
           </button>

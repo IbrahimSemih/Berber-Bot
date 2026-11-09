@@ -71,19 +71,19 @@ export default async function PublicShopPage({ params }: { params: { slug: strin
     <div className="mt-8 p-6 rounded-2xl border flex flex-col gap-4 text-sm" style={{ background: "var(--bg2)", borderColor: "var(--border)", color: "var(--text2)" }}>
       {address && (
         <a href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${shop.name} ${address}`)}`} target="_blank" rel="noreferrer"
-          className="flex items-start gap-3 hover:text-white transition-colors">
+          className="flex items-start gap-3 hover:text-[var(--text)] transition-colors">
           <MapPin size={18} className="flex-shrink-0 mt-0.5" style={{ color: "var(--accent)" }} aria-hidden />
           <span>{address}</span>
         </a>
       )}
       {phone && (
-        <a href={`tel:${phone}`} className="flex items-center gap-3 hover:text-white transition-colors">
+        <a href={`tel:${phone}`} className="flex items-center gap-3 hover:text-[var(--text)] transition-colors">
           <Phone size={18} className="flex-shrink-0" style={{ color: "var(--accent)" }} aria-hidden />
           <span>{phone.replace(/^\+90(\d{3})(\d{3})(\d{2})(\d{2})$/, "0$1 $2 $3 $4")}</span>
         </a>
       )}
       {instagram && (
-        <a href={`https://instagram.com/${instagram}`} target="_blank" rel="noreferrer" className="flex items-center gap-3 hover:text-white transition-colors">
+        <a href={`https://instagram.com/${instagram}`} target="_blank" rel="noreferrer" className="flex items-center gap-3 hover:text-[var(--text)] transition-colors">
           <Instagram size={18} className="flex-shrink-0" style={{ color: "var(--accent)" }} aria-hidden />
           <span>@{instagram}</span>
         </a>
@@ -140,7 +140,7 @@ export default async function PublicShopPage({ params }: { params: { slug: strin
         {contactCard}
 
         <p className="text-center text-xs mt-8" style={{ color: "var(--text3)" }}>
-          <a href={SITE.url} className="hover:text-white transition-colors">BerberBot</a> ile online randevu
+          <a href={SITE.url} className="hover:text-[var(--text)] transition-colors">BerberBot</a> ile online randevu
         </p>
       </div>
     </div>

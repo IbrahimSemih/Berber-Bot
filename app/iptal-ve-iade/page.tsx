@@ -28,7 +28,7 @@ export default function IptalVeIadePage() {
 
       <Section title="Yıllık Plan: İlk Günlerde Koşulsuz Tam İade">
         <ul className={ul}>
-          <li>Yıllık plan ödemesinden itibaren <strong className="text-white">{YEARLY_REFUND_DAYS} gün</strong> içinde talep ederseniz ödediğiniz tutarın tamamı iade edilir; gerekçe göstermeniz gerekmez.</li>
+          <li>Yıllık plan ödemesinden itibaren <strong className="text-[var(--text)]">{YEARLY_REFUND_DAYS} gün</strong> içinde talep ederseniz ödediğiniz tutarın tamamı iade edilir; gerekçe göstermeniz gerekmez.</li>
           <li>İade onaylandığında aboneliğiniz hemen sona erer.</li>
           <li>{YEARLY_REFUND_DAYS}. günden sonra iade yapılmaz; hizmet yıllık dönemin sonuna kadar devam eder.</li>
         </ul>

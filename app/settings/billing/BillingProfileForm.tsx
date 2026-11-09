@@ -96,7 +96,7 @@ export default function BillingProfileForm({ initial, complete }: { initial: Par
         {([["individual", "Bireysel / Şahıs"], ["corporate", "Kurumsal (Şirket)"]] as const).map(([value, text]) => (
           <button key={value} type="button" onClick={() => setForm((f) => ({ ...f, type: value }))} aria-pressed={form.type === value}
             className="px-4 py-1.5 rounded-md text-xs font-bold transition-colors"
-            style={form.type === value ? { background: "var(--accent)", color: "#0a0a0a" } : { color: "var(--text2)" }}>
+            style={form.type === value ? { background: "var(--accent)", color: "var(--on-accent)" } : { color: "var(--text2)" }}>
             {text}
           </button>
         ))}

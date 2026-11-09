@@ -87,14 +87,14 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         </button>
         <div className="flex items-center gap-2">
           <div className="w-7 h-7 rounded-lg flex items-center justify-center"
-            style={{ background: "var(--accent)", color: "#0a0a0a" }}><Scissors size={14} strokeWidth={2.5} aria-hidden /></div>
+            style={{ background: "var(--accent)", color: "var(--on-accent)" }}><Scissors size={14} strokeWidth={2.5} aria-hidden /></div>
           <span className="font-heading font-black text-base tracking-tight">BerberBot</span>
         </div>
       </div>
 
       {/* Mobile Overlay */}
       {sidebarOpen && (
-        <div className="md:hidden fixed inset-0 bg-black/60 z-40" onClick={() => setSidebarOpen(false)} />
+        <div className="md:hidden fixed inset-0 bg-[var(--overlay)] z-40" onClick={() => setSidebarOpen(false)} />
       )}
 
       {/* ── SIDEBAR ── */}
@@ -107,8 +107,8 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         {/* Logo */}
         <div className="px-5 py-6" style={{ borderBottom: "1px solid var(--border)" }}>
           <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-xl flex items-center justify-center shadow-[0_0_16px_rgba(200,240,96,0.25)]"
-              style={{ background: "var(--accent)", color: "#0a0a0a" }}><Scissors size={18} strokeWidth={2.5} aria-hidden /></div>
+            <div className="w-9 h-9 rounded-xl flex items-center justify-center shadow-[0_0_16px_var(--accent-dim3)]"
+              style={{ background: "var(--accent)", color: "var(--on-accent)" }}><Scissors size={18} strokeWidth={2.5} aria-hidden /></div>
             <div>
               <div className="font-heading font-black text-base tracking-tight">BerberBot</div>
               <div className="text-xs" style={{ color: "var(--text3)" }}>Admin Panel</div>
@@ -136,7 +136,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                 <div className="flex-1 flex items-center justify-between">
                   <span>{item.label}</span>
                   {item.href === "/notifications" && unreadCount > 0 && (
-                    <span className="bg-red-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full">
+                    <span className="bg-[var(--red)] text-white text-[10px] font-bold px-2 py-0.5 rounded-full">
                       {unreadCount}
                     </span>
                   )}
@@ -165,7 +165,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           <div className="flex items-center gap-3 p-2 rounded-lg transition-opacity">
             <Link href="/profile" className="flex items-center gap-3 flex-1 hover:opacity-80">
               <div className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-black font-heading"
-                style={{ background: "linear-gradient(135deg, var(--accent) 0%, #80c020 100%)", color: "#0a0a0a" }}>{shopInitials}</div>
+                style={{ background: "linear-gradient(135deg, var(--accent) 0%, var(--accent2) 100%)", color: "var(--on-accent)" }}>{shopInitials}</div>
               <div className="flex-1">
                 <div className="text-sm font-medium truncate max-w-[120px]">{shopName}</div>
                 <div className="text-xs" style={{ color: "var(--text3)" }}>Profilim</div>

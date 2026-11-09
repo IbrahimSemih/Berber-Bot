@@ -125,7 +125,7 @@ export default function ProfileScreen() {
         <ListRow title="Destek" subtitle={config.supportEmail} onPress={() => Linking.openURL(`mailto:${config.supportEmail}`)} />
       </Card>
 
-      <Card style={{ gap: spacing.md, borderColor: "rgba(255, 95, 87, 0.35)" }}>
+      <Card style={{ gap: spacing.md, borderColor: colors.redBorder }}>
         <AppText variant="heading" style={{ color: colors.red }}>
           Hesabı sil
         </AppText>
