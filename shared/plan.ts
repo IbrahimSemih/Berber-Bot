@@ -40,6 +40,10 @@ export const YEARLY_REFUND_DAYS = 30;
 // protect_shop_billing_fields trigger'ındaki '7 days' değerini de güncelleyin.
 export const TRIAL_DAYS = 7;
 
+// Onaylı randevudan kaç saat önce müşteriye WhatsApp hatırlatması gider
+// (settings.reminder_hours = 0 ise gönderilmez)
+export const REMINDER_HOURS_BEFORE = 3;
+
 // Abonelik bitişinden kaç gün önce sahibine hatırlatma e-postası gönderilsin
 export const EXPIRY_REMINDER_DAYS = 3;
 

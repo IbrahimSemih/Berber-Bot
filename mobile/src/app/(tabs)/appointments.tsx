@@ -1,13 +1,108 @@
-// Faz 3: tam ekran (web: app/appointments). Şimdilik iskelet.
-import { AppText, Card, Screen } from "@/components/ui";
+// Randevular (web: app/appointments). Gün seçici + durum filtresi; onay/iptal/personel atama.
+import { useState } from "react";
+import { Pressable, RefreshControl, ScrollView, StyleSheet, View } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
+import { router } from "expo-router";
+import { addDaysToDateString, todayInIstanbul } from "@shared/time";
+import { relativeDayLabel } from "@/lib/format";
+import { useDayAppointments, useStaff, type AppointmentStatus } from "@/lib/queries";
+import { AppointmentCard, useAppointmentActions } from "@/components/appointment-card";
+import { CalendarSheet } from "@/components/sheets";
+import { AppText, Button, Chip, EmptyState, ErrorBanner } from "@/components/ui";
+import { colors, radius, spacing } from "@/theme";
+
+type Filter = "all" | Extract<AppointmentStatus, "pending" | "confirmed" | "cancelled">;
+const FILTERS: { key: Filter; label: string }[] = [
+  { key: "all", label: "Tümü" },
+  { key: "pending", label: "Bekleyen" },
+  { key: "confirmed", label: "Onaylı" },
+  { key: "cancelled", label: "İptal" },
+];
 
 export default function AppointmentsScreen() {
+  const [date, setDate] = useState(() => todayInIstanbul());
+  const [filter, setFilter] = useState<Filter>("all");
+  const [calendarOpen, setCalendarOpen] = useState(false);
+  const query = useDayAppointments(date);
+  const staff = useStaff();
+  const actions = useAppointmentActions();
+
+  const all = query.data ?? [];
+  const list = filter === "all" ? all : all.filter((a) => a.status === filter);
+  const count = (f: Filter) => (f === "all" ? all.length : all.filter((a) => a.status === f).length);
+
   return (
-    <Screen edges={["top"]}>
-      <AppText variant="title">Randevular</AppText>
-      <Card>
-        <AppText variant="muted">Bu ekran bir sonraki sürümde eklenecek. Şimdilik web panelini kullanabilirsiniz.</AppText>
-      </Card>
-    </Screen>
+    <SafeAreaView style={styles.screen} edges={["top"]}>
+      <View style={styles.header}>
+        <AppText variant="title">Randevular</AppText>
+        <Button title="+ Yeni" onPress={() => router.push({ pathname: "/new-appointment", params: { date } })} style={styles.newBtn} />
+      </View>
+
+      <View style={styles.dayBar}>
+        <Pressable accessibilityRole="button" accessibilityLabel="Önceki gün" onPress={() => setDate((d) => addDaysToDateString(d, -1))} hitSlop={10} style={styles.arrow}>
+          <AppText style={styles.arrowText}>‹</AppText>
+        </Pressable>
+        <Pressable accessibilityRole="button" accessibilityLabel="Tarih seç" onPress={() => setCalendarOpen(true)} style={styles.dayLabel}>
+          <AppText style={{ fontWeight: "700" }}>{relativeDayLabel(date)}</AppText>
+          <AppText variant="small">Tarih seçmek için dokunun</AppText>
+        </Pressable>
+        <Pressable accessibilityRole="button" accessibilityLabel="Sonraki gün" onPress={() => setDate((d) => addDaysToDateString(d, 1))} hitSlop={10} style={styles.arrow}>
+          <AppText style={styles.arrowText}>›</AppText>
+        </Pressable>
+      </View>
+
+      <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.filterBar} contentContainerStyle={styles.filters}>
+        {FILTERS.map((f) => (
+          <Chip key={f.key} label={`${f.label}${query.data ? ` (${count(f.key)})` : ""}`} active={filter === f.key} onPress={() => setFilter(f.key)} />
+        ))}
+      </ScrollView>
+
+      <ScrollView
+        contentContainerStyle={styles.list}
+        refreshControl={<RefreshControl refreshing={query.isRefetching} onRefresh={() => void query.refetch()} tintColor={colors.accent} />}
+      >
+        {query.isError ? <ErrorBanner message="Randevular yüklenemedi. Aşağı çekerek yenileyin." /> : null}
+        {!query.isLoading && !query.isError && list.length === 0 ? (
+          <EmptyState
+            title={filter === "all" ? "Bu gün için randevu yok" : "Bu filtrede randevu yok"}
+            description={filter === "all" ? "Telefonla alınan randevuları + Yeni ile ekleyebilirsiniz." : undefined}
+          />
+        ) : null}
+        {list.map((apt) => (
+          <AppointmentCard key={apt.id} apt={apt} staffList={staff.data ?? []} actions={actions} />
+        ))}
+      </ScrollView>
+
+      <CalendarSheet
+        visible={calendarOpen}
+        title="Tarih seç"
+        value={date}
+        onSelect={setDate}
+        onClose={() => setCalendarOpen(false)}
+      />
+    </SafeAreaView>
   );
 }
+
+const styles = StyleSheet.create({
+  screen: { flex: 1, backgroundColor: colors.bg },
+  header: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", paddingHorizontal: spacing.xl, paddingTop: spacing.lg },
+  newBtn: { minHeight: 40, paddingHorizontal: spacing.lg },
+  dayBar: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginHorizontal: spacing.xl,
+    marginTop: spacing.lg,
+    backgroundColor: colors.bg2,
+    borderColor: colors.border,
+    borderWidth: 1,
+    borderRadius: radius.lg,
+  },
+  arrow: { paddingHorizontal: spacing.lg, paddingVertical: spacing.md },
+  arrowText: { fontSize: 26, color: colors.text },
+  dayLabel: { flex: 1, alignItems: "center", paddingVertical: spacing.sm },
+  // Yatay ScrollView varsayılan olarak kalan yüksekliği doldurur; çipler uzamasın
+  filterBar: { flexGrow: 0, flexShrink: 0 },
+  filters: { gap: spacing.sm, paddingHorizontal: spacing.xl, paddingVertical: spacing.md, alignItems: "center" },
+  list: { paddingHorizontal: spacing.xl, paddingBottom: spacing.xxl, gap: spacing.md },
+});

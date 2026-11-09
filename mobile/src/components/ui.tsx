@@ -2,6 +2,7 @@
 import type { ReactNode } from "react";
 import {
   ActivityIndicator,
+  Switch,
   KeyboardAvoidingView,
   Platform,
   Pressable,
@@ -173,6 +174,122 @@ export function Brand({ subtitle }: { subtitle?: string }) {
   );
 }
 
+export function Badge({ label, color }: { label: string; color: string }) {
+  return (
+    <View style={[styles.badge, { borderColor: color }]}>
+      <Text style={{ color, fontSize: 11, fontWeight: "700" }}>{label}</Text>
+    </View>
+  );
+}
+
+export function Chip({
+  label,
+  active,
+  onPress,
+}: {
+  label: string;
+  active: boolean;
+  onPress: () => void;
+}) {
+  return (
+    <Pressable
+      accessibilityRole="button"
+      accessibilityState={{ selected: active }}
+      onPress={onPress}
+      style={[styles.chip, active && styles.chipActive]}
+    >
+      <Text style={{ color: active ? colors.onAccent : colors.text2, fontWeight: "700", fontSize: 13 }}>{label}</Text>
+    </Pressable>
+  );
+}
+
+/** Menü / liste satırı: başlık, alt metin, sağda değer veya ok */
+export function ListRow({
+  title,
+  subtitle,
+  right,
+  onPress,
+  danger,
+}: {
+  title: string;
+  subtitle?: string | null;
+  right?: ReactNode;
+  onPress?: () => void;
+  danger?: boolean;
+}) {
+  const content = (
+    <View style={styles.listRow}>
+      <View style={{ flex: 1 }}>
+        <Text style={[textStyles.body, { fontWeight: "600" }, danger && { color: colors.red }]}>{title}</Text>
+        {subtitle ? <Text style={[textStyles.small, { marginTop: 2 }]}>{subtitle}</Text> : null}
+      </View>
+      {right ?? (onPress ? <Text style={{ color: colors.text3, fontSize: 20 }}>›</Text> : null)}
+    </View>
+  );
+  if (!onPress) return content;
+  return (
+    <Pressable accessibilityRole="button" onPress={onPress} style={({ pressed }) => pressed && { opacity: 0.7 }}>
+      {content}
+    </Pressable>
+  );
+}
+
+export function SwitchRow({
+  title,
+  subtitle,
+  value,
+  onValueChange,
+  disabled,
+}: {
+  title: string;
+  subtitle?: string;
+  value: boolean;
+  onValueChange: (v: boolean) => void;
+  disabled?: boolean;
+}) {
+  return (
+    <View style={styles.listRow}>
+      <View style={{ flex: 1, paddingRight: spacing.md }}>
+        <Text style={[textStyles.body, { fontWeight: "600" }]}>{title}</Text>
+        {subtitle ? <Text style={[textStyles.small, { marginTop: 2 }]}>{subtitle}</Text> : null}
+      </View>
+      <Switch
+        accessibilityLabel={title}
+        value={value}
+        onValueChange={onValueChange}
+        disabled={disabled}
+        trackColor={{ false: colors.bg4, true: colors.accent2 }}
+        thumbColor={value ? colors.accent : colors.text2}
+      />
+    </View>
+  );
+}
+
+export function Divider() {
+  return <View style={{ height: 1, backgroundColor: colors.border }} />;
+}
+
+export function EmptyState({ title, description }: { title: string; description?: string }) {
+  return (
+    <View style={{ alignItems: "center", paddingVertical: spacing.xxl, gap: spacing.xs }}>
+      <Text style={[textStyles.body, { color: colors.text2, fontWeight: "600" }]}>{title}</Text>
+      {description ? <Text style={[textStyles.small, { textAlign: "center" }]}>{description}</Text> : null}
+    </View>
+  );
+}
+
+/** Seçim alanı görünümünde buton (tarih, saat, hizmet seçimi) */
+export function SelectField({ label, value, placeholder, onPress }: { label?: string; value?: string | null; placeholder: string; onPress: () => void }) {
+  return (
+    <View style={styles.field}>
+      {label ? <Text style={textStyles.label}>{label}</Text> : null}
+      <Pressable accessibilityRole="button" onPress={onPress} style={[styles.input, { justifyContent: "center" }]}>
+        <Text style={{ color: value ? colors.text : colors.text3, fontSize: 16 }}>{value || placeholder}</Text>
+      </Pressable>
+    </View>
+  );
+}
+
 const buttonVariants = {
   primary: { bg: colors.accent, border: colors.accent, text: colors.onAccent },
   secondary: { bg: colors.bg3, border: colors.border2, text: colors.text },
@@ -236,6 +353,17 @@ const styles = StyleSheet.create({
     borderRadius: radius.md,
     padding: spacing.md,
   },
+  badge: { borderWidth: 1, borderRadius: radius.pill, paddingHorizontal: 8, paddingVertical: 3, alignSelf: "flex-start" },
+  chip: {
+    paddingVertical: 8,
+    paddingHorizontal: 14,
+    borderRadius: radius.pill,
+    borderWidth: 1,
+    borderColor: colors.border2,
+    backgroundColor: colors.bg3,
+  },
+  chipActive: { backgroundColor: colors.accent, borderColor: colors.accent },
+  listRow: { flexDirection: "row", alignItems: "center", paddingVertical: spacing.md, gap: spacing.md, minHeight: 52 },
   logo: {
     width: 56,
     height: 56,

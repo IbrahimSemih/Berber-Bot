@@ -9,4 +9,6 @@ export const config = {
   supabaseAnonKey: required("EXPO_PUBLIC_SUPABASE_ANON_KEY", process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY),
   apiUrl: (process.env.EXPO_PUBLIC_API_URL || "https://berberbot.com").replace(/\/+$/, ""),
   siteUrl: (process.env.EXPO_PUBLIC_SITE_URL || "https://berberbot.com").replace(/\/+$/, ""),
+  // Web'deki lib/site-config.ts → SUPPORT.email ile aynı olmalı
+  supportEmail: process.env.EXPO_PUBLIC_SUPPORT_EMAIL || "destek@berberbot.com",
 };
