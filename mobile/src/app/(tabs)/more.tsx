@@ -33,6 +33,7 @@ export default function MoreScreen() {
     { title: "Personeller", subtitle: "Müsaitlik ve izinler", href: "/staff" as Href },
     { title: "Hizmetler", subtitle: "Fiyat ve süreler", href: "/services" },
     { title: "Dükkan ayarları", subtitle: "Çalışma saatleri, otomatik onay, bildirimler", href: "/shop-settings" },
+    { title: "Abonelik", subtitle: shop?.subscription_status === "active" ? "Pro" : "Pro'ya geç", href: "/subscription" },
     { title: "Profil", subtitle: session?.user.email, href: "/profile" },
   ];
 

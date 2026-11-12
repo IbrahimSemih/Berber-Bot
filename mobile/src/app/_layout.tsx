@@ -91,6 +91,7 @@ function RootNavigator() {
           <Stack.Screen name="shop-settings" options={{ ...pageHeader, title: "Dükkan Ayarları" }} />
           <Stack.Screen name="booking-link" options={{ ...pageHeader, title: "Randevu Linki ve QR" }} />
           <Stack.Screen name="notifications" options={{ ...pageHeader, title: "Bildirimler" }} />
+          <Stack.Screen name="subscription" options={{ ...pageHeader, title: "Abonelik" }} />
         </Stack.Protected>
         {/* Hesap silme ve şifre değiştirme abonelik bitse de kullanılabilir */}
         <Stack.Protected guard={ready || status === "locked"}>

@@ -9,6 +9,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { computeIsLocked, getAccessEndDate } from "@shared/plan";
 import { supabase } from "./supabase";
 import { unregisterPush } from "./push";
+import { resetPurchases } from "./purchases";
 
 export type MobileShop = {
   id: string;
@@ -20,6 +21,7 @@ export type MobileShop = {
   trial_end: string | null;
   current_period_end: string | null;
   billing_provider?: string | null;
+  store_will_renew?: boolean | null;
 };
 
 export type AuthStatus = "loading" | "signedOut" | "noShop" | "banned" | "locked" | "ready" | "error";
@@ -49,10 +51,10 @@ const BASE_COLUMNS = "id, name, slug, owner_id, status, subscription_status, tri
 async function fetchOwnShop(uid: string): Promise<MobileShop | null> {
   let result = await supabase
     .from("shops")
-    .select(`${BASE_COLUMNS}, billing_provider`)
+    .select(`${BASE_COLUMNS}, billing_provider, store_will_renew`)
     .eq("owner_id", uid)
     .maybeSingle();
-  // 2026-11-08c migration'ı çalıştırılmamış bir veritabanında billing_provider sütunu yoksa temel sütunlarla tekrar dene
+  // 2026-11-08c migration'ı çalıştırılmamış bir veritabanında billing_provider / store_will_renew sütunları yoksa temel sütunlarla tekrar dene
   if (result.error?.code === "42703") {
     result = (await supabase.from("shops").select(BASE_COLUMNS).eq("owner_id", uid).maybeSingle()) as typeof result;
   }
@@ -105,6 +107,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const signOut = useCallback(async () => {
     await unregisterPush(); // oturum kapanmadan, token hâlâ geçerliyken
+    await resetPurchases();
     await supabase.auth.signOut();
     queryClient.clear(); // önceki kullanıcının önbelleğe alınmış verisi kalmasın
   }, [queryClient]);

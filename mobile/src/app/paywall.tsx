@@ -1,12 +1,12 @@
-// Deneme veya abonelik süresi dolduğunda. Mağaza üzerinden satın alma (RevenueCat)
-// Faz 4'te eklenecek. Apple 3.1.1: iOS'ta web'den satın almaya yönlendiren link/metin OLMAMALI.
+// Deneme veya abonelik süresi dolduğunda. Mağaza üzerinden satın alma (RevenueCat).
+// Apple 3.1.1: iOS'ta web'den satın almaya yönlendiren link/metin OLMAMALI.
 import { useState } from "react";
 import { router } from "expo-router";
 import { TRIAL_DAYS } from "@shared/plan";
 import { formatTrLongDate } from "@shared/time";
 import { useAuth } from "@/lib/auth";
-import { AppText, Button, Card, Screen } from "@/components/ui";
-import { colors } from "@/theme";
+import { SubscriptionPlans } from "@/components/subscription-plans";
+import { AppText, Button, Screen } from "@/components/ui";
 
 export default function PaywallScreen() {
   const { shop, accessEndsAt, refreshShop, signOut } = useAuth();
@@ -14,7 +14,7 @@ export default function PaywallScreen() {
   const wasTrial = shop?.subscription_status === "trialing";
 
   return (
-    <Screen contentStyle={{ justifyContent: "center" }}>
+    <Screen>
       <AppText variant="title">{wasTrial ? "Deneme süreniz doldu" : "Aboneliğiniz sona erdi"}</AppText>
       <AppText variant="muted">
         {wasTrial
@@ -22,11 +22,11 @@ export default function PaywallScreen() {
           : `Aboneliğiniz${accessEndsAt ? ` ${formatTrLongDate(accessEndsAt)} tarihinde` : ""} sona erdi.`}{" "}
         Randevu sayfanız ve paneliniz abonelik başlatılana kadar kapalı kalır. Verileriniz silinmez.
       </AppText>
-      <Card style={{ borderColor: colors.accent }}>
-        <AppText variant="heading">BerberBot Pro</AppText>
-        <AppText variant="muted">Sınırsız randevu, personel ve WhatsApp bildirimleri.</AppText>
-        <AppText variant="small">Uygulama içi abonelik çok yakında burada olacak.</AppText>
-      </Card>
+
+      <AppText variant="heading">BerberBot Pro</AppText>
+      <AppText variant="muted">Sınırsız randevu, personel ve WhatsApp bildirimleri.</AppText>
+      <SubscriptionPlans />
+
       <Button
         title="Durumu yenile"
         variant="secondary"
