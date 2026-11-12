@@ -26,6 +26,8 @@ export default async function InvoicesPage() {
     .from("payments")
     .select("id, shop_id, amount, status, billing_interval, created_at, payment_id, billing_snapshot, invoice_issued_at, invoice_number, shops(name)")
     .in("status", ["success", "refunded"])
+    // Mağaza test (sandbox) satın alımları gerçek gelir değil; faturalanmaz
+    .or("environment.is.null,environment.neq.sandbox")
     .order("created_at", { ascending: false })
     .limit(200);
 

@@ -13,6 +13,8 @@ export default async function RefundsPage() {
     .from("payments")
     .select("id, shop_id, amount, status, billing_interval, created_at, refund_requested_at, refund_reason, refunded_at, shops(name)")
     .in("status", ["success", "refunded"])
+    // Mağaza test (sandbox) satın alımları gerçek gelir değil; faturalanmaz
+    .or("environment.is.null,environment.neq.sandbox")
     .order("refund_requested_at", { ascending: false, nullsFirst: false })
     .order("created_at", { ascending: false })
     .limit(100);
