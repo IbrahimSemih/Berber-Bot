@@ -68,6 +68,15 @@ npx eas-cli@latest build --profile development --platform android
 - **Saat dilimi kontrolü:** "Daha fazla" ekranının altında "Saat dilimi doğru / HATALI" yazar.
   - Android'de (Hermes) HATALI görünürse `@formatjs/intl-datetimeformat` polyfill'i eklenmelidir.
 
+## Push bildirimleri (bir kez kurulum)
+
+Kod: `src/lib/push.tsx` (izin, token kaydı, bildirime dokununca randevular ekranını o güne açma). Sunucu: `lib/notify.ts` ve `/api/mobile/v1/push-tokens`.
+
+1. **EAS projesi:** `npx eas-cli@latest init` komutu `app.json` içine `extra.eas.projectId` ekler. Bu değer yoksa uygulama push token almaz (sessizce atlar).
+2. **Android (FCM):** Firebase'de proje oluşturun, `com.berberbot.app` paketiyle Android uygulaması ekleyin, `google-services.json` dosyasını `mobile/` klasörüne koyup `app.json` → `android.googleServicesFile` ile gösterin. Firebase'den servis hesabı anahtarını (JSON) indirip `npx eas-cli@latest credentials` ile EAS'a yükleyin (FCM V1). Anahtar dosyasını repoya eklemeyin.
+3. **iOS (APNs):** Apple Developer hesabı gerekir; EAS ilk iOS build'inde push anahtarını kendisi oluşturur.
+4. **Test:** Expo Go'da uzaktan bildirim çalışmaz; development build ile gerçek cihaz/emülatörde giriş yapın, web'deki randevu sayfasından randevu alın. Bildirim, dükkan ayarlarında "yeni randevu bildirimi" açıksa gelir.
+
 ## Kontroller
 
 ```bash

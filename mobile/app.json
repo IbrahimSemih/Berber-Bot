@@ -18,6 +18,7 @@
     },
     "android": {
       "package": "com.berberbot.app",
+      "googleServicesFile": "./google-services.json",
       "adaptiveIcon": {
         "backgroundColor": "#FAF7F2",
         "foregroundImage": "./assets/images/android-icon-foreground.png",
@@ -40,11 +41,29 @@
           "imageWidth": 76
         }
       ],
-      "expo-sharing"
+      "expo-sharing",
+      [
+        "expo-notifications",
+        {
+          "color": "#2F6B4F",
+          "defaultChannel": "default"
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true,
       "reactCompiler": true
-    }
+    },
+    "extra": {
+      "router": {
+        "asyncRoutes": {
+          "web": true
+        }
+      },
+      "eas": {
+        "projectId": "beae9d41-7d65-4ed1-bc56-8a6f0f1a28e9"
+      }
+    },
+    "owner": "devisb35"
   }
 }

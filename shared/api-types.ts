@@ -79,7 +79,8 @@ export type OkResponse = { ok: true };
 export type PushTokenRequest = { token: string; platform: "ios" | "android" };
 export type RemovePushTokenRequest = { token: string };
 
-// Push bildirimi `data` alanı (bildirime dokununca ilgili ekranı açmak için)
+// Push bildirimi `data` alanı (bildirime dokununca ilgili ekranı açmak için).
+// date: randevunun Türkiye saatine göre günü ("YYYY-MM-DD"), randevular ekranı o güne açılır.
 export type PushData =
-  | { type: "new_booking"; appointmentId: string }
-  | { type: "cancel"; appointmentId: string };
+  | { type: "new_booking"; appointmentId: string; date: string }
+  | { type: "cancel"; appointmentId: string; date: string };

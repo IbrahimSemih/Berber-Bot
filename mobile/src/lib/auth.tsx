@@ -8,6 +8,7 @@ import type { Session } from "@supabase/supabase-js";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { computeIsLocked, getAccessEndDate } from "@shared/plan";
 import { supabase } from "./supabase";
+import { unregisterPush } from "./push";
 
 export type MobileShop = {
   id: string;
@@ -103,6 +104,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [userId, refetch]);
 
   const signOut = useCallback(async () => {
+    await unregisterPush(); // oturum kapanmadan, token hâlâ geçerliyken
     await supabase.auth.signOut();
     queryClient.clear(); // önceki kullanıcının önbelleğe alınmış verisi kalmasın
   }, [queryClient]);

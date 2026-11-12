@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { apiLimiter, getIp } from "@/lib/rate-limit";
 import { computeIsLocked } from "@/lib/plan-limits";
-import { formatTrDateTime } from "@/lib/time";
+import { formatIstanbulDate, formatTrDateTime } from "@/lib/time";
 import { sendAppointmentCancellation } from "@/lib/appointment-messages";
 import { notifyShop } from "@/lib/notify";
 
@@ -82,7 +82,7 @@ export async function POST(request: Request) {
         push: {
           title: "Randevu iptal edildi",
           body: `${who} · ${appointment.service_name ? `${appointment.service_name} · ` : ""}${when}`,
-          data: { type: "cancel", appointmentId: appointment.id },
+          data: { type: "cancel", appointmentId: appointment.id, date: formatIstanbulDate(appointment.scheduled_at) },
         },
       });
     }
