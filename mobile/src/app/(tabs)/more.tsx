@@ -7,7 +7,7 @@ import { formatTrLongDate } from "@shared/time";
 import { useAuth } from "@/lib/auth";
 import { useNotifications } from "@/lib/queries";
 import { checkIstanbulTimeZone } from "@/lib/tz-check";
-import { AppText, Badge, Button, Card, Divider, ListRow, Screen } from "@/components/ui";
+import { AppText, Badge, Button, Card, Divider, HeroHeader, ListRow, Screen } from "@/components/ui";
 import { colors } from "@/theme";
 
 export default function MoreScreen() {
@@ -38,8 +38,9 @@ export default function MoreScreen() {
   ];
 
   return (
-    <Screen edges={["top"]}>
-      <AppText variant="title">Daha fazla</AppText>
+    <View style={{ flex: 1, backgroundColor: colors.bg }}>
+    <HeroHeader title="Daha fazla" />
+    <Screen edges={[]}>
 
       <Card>
         <AppText variant="label">Dükkan</AppText>
@@ -74,5 +75,6 @@ export default function MoreScreen() {
 
       <Button title="Çıkış yap" variant="danger" onPress={signOut} />
     </Screen>
+    </View>
   );
 }

@@ -1,7 +1,7 @@
 "use client";
+import { useShop } from "@/components/layout/ShopContext";
 import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
-import AdminLayout from "@/components/layout/AdminLayout";
 import {
   StatCard, StatCardSkeleton, TableSkeleton, Skeleton, EmptyState,
   Card, CardHeader, PageHeader, Button, StatusBadge, SourceBadge, Avatar,
@@ -9,7 +9,7 @@ import {
 import { formatTime } from "@/lib/utils";
 import { istanbulDayRange, istanbulToUtc, todayInIstanbul } from "@/lib/time";
 import AddAppointmentModal from "@/components/AddAppointmentModal";
-import { confirmAppointmentAndNotify, cancelAppointmentByOwner } from "@/app/appointments/actions";
+import { confirmAppointmentAndNotify, cancelAppointmentByOwner } from "@/app/(panel)/appointments/actions";
 import { toast } from "react-hot-toast";
 import { Calendar, CalendarX2, Clock, Users, Wallet, Plus, RefreshCw, Copy, ExternalLink, Link2, Check, X } from "lucide-react";
 
@@ -36,6 +36,7 @@ export default function DashboardPage() {
   const [acting, setActing] = useState<RowAction>(null);
 
   const supabase = createClient();
+  const shop = useShop();
 
   useEffect(() => {
     if (shopSlug) {
@@ -44,51 +45,38 @@ export default function DashboardPage() {
   }, [shopSlug]);
 
   async function load() {
+    if (!shop) return;
     setLoading(true);
-
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) {
-      window.location.href = "/login";
-      return;
-    }
-
-    const { data: shop } = await supabase.from("shops").select("id, slug").eq("owner_id", user.id).single();
-    if (!shop) {
-      setLoading(false);
-      return; // Or show error
-    }
 
     const shopId = shop.id;
     setCurrentShopId(shopId);
     setShopSlug(shop.slug);
 
-    // Bugünkü randevular (Türkiye saatine göre gün sınırları)
+    // Bugünkü randevular, toplam müşteri ve bu ay ciro birbirinden bağımsız: paralel
     const { start: dayStart, end: dayEnd } = istanbulDayRange(todayInIstanbul());
-    const { data } = await supabase
-      .from("appointments")
-      .select("*, customer:customers(*), service:services(*)")
-      .eq("shop_id", shopId)
-      .gte("scheduled_at", dayStart.toISOString())
-      .lt("scheduled_at", dayEnd.toISOString())
-      .order("scheduled_at");
+    const monthStart = istanbulToUtc(`${todayInIstanbul().slice(0, 7)}-01`, "00:00");
+    const [{ data }, { count }, { data: revenue }] = await Promise.all([
+      supabase
+        .from("appointments")
+        .select("*, customer:customers(*), service:services(*)")
+        .eq("shop_id", shopId)
+        .gte("scheduled_at", dayStart.toISOString())
+        .lt("scheduled_at", dayEnd.toISOString())
+        .order("scheduled_at"),
+      supabase
+        .from("customers")
+        .select("*", { count: "exact", head: true })
+        .eq("shop_id", shopId),
+      supabase
+        .from("appointments")
+        .select("service:services(price)")
+        .eq("shop_id", shopId)
+        .gte("scheduled_at", monthStart.toISOString())
+        .in("status", ["confirmed", "completed"]),
+    ]);
 
     setApts((data as Apt[]) ?? []);
-
-    // Toplam müşteri
-    const { count } = await supabase
-      .from("customers")
-      .select("*", { count: "exact", head: true })
-      .eq("shop_id", shopId);
     setTotalCustomers(count ?? 0);
-
-    // Bu ay ciro
-    const monthStart = istanbulToUtc(`${todayInIstanbul().slice(0, 7)}-01`, "00:00");
-    const { data: revenue } = await supabase
-      .from("appointments")
-      .select("service:services(price)")
-      .eq("shop_id", shopId)
-      .gte("scheduled_at", monthStart.toISOString())
-      .in("status", ["confirmed", "completed"]);
     const total = (revenue ?? []).reduce((sum: number, a: any) => sum + (a.service?.price ?? 0), 0);
     setMonthRevenue(total);
 
@@ -97,7 +85,8 @@ export default function DashboardPage() {
 
   useEffect(() => {
     load();
-  }, []);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [shop?.id]);
 
   useEffect(() => {
     if (!currentShopId) return;
@@ -177,7 +166,7 @@ export default function DashboardPage() {
   );
 
   return (
-    <AdminLayout>
+    <>
       <PageHeader title="Dashboard">
         <span className="hidden sm:inline text-sm" style={{ color: "var(--text3)" }}>
           {new Date().toLocaleDateString("tr-TR", { weekday: "long", day: "numeric", month: "long", year: "numeric" })}
@@ -382,6 +371,6 @@ export default function DashboardPage() {
           onAdd={() => { setShowModal(false); load(); }}
         />
       )}
-    </AdminLayout>
+    </>
   );
 }

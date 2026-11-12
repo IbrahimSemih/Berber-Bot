@@ -82,7 +82,7 @@ export default function LandingPage() {
         initial={{ y: -100 }}
         animate={{ y: 0 }}
         transition={{ duration: 0.5 }}
-        style={{ borderBottom: "1px solid var(--border)", background: "rgba(250,247,242,0.85)" }}
+        style={{ borderBottom: "1px solid var(--border)", background: "color-mix(in srgb, var(--bg) 85%, transparent)" }}
         className="fixed top-0 left-0 right-0 h-16 flex items-center px-4 md:px-12 gap-5 z-50 backdrop-blur-md">
         <Link href="/" className="flex items-center gap-3">
           <div className="w-8 h-8 rounded-lg flex items-center justify-center text-base font-bold shadow-[0_0_15px_var(--accent-dim3)]"
@@ -114,7 +114,7 @@ export default function LandingPage() {
           <motion.div
             initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }}
             className="fixed top-16 left-0 right-0 z-40 p-6 flex flex-col gap-4 border-b md:hidden"
-            style={{ background: "rgba(250,247,242,0.97)", borderColor: "var(--border)", backdropFilter: "blur(20px)" }}>
+            style={{ background: "color-mix(in srgb, var(--bg) 97%, transparent)", borderColor: "var(--border)", backdropFilter: "blur(20px)" }}>
             {navLinks.map((l) => (
               <a key={l.href} href={l.href} onClick={() => setMobileMenuOpen(false)} className="text-base font-medium py-2" style={{ color: "var(--text2)" }}>{l.label}</a>
             ))}

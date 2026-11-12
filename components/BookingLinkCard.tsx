@@ -6,7 +6,7 @@ import QRCode from "qrcode";
 import { toast } from "react-hot-toast";
 import { Copy, Download, Printer, ExternalLink } from "lucide-react";
 import { Button, Card, CardHeader } from "@/components/ui";
-import { updateShopSlug } from "@/app/settings/actions";
+import { updateShopSlug } from "@/app/(panel)/settings/actions";
 import { slugify, validateSlug } from "@/lib/slug";
 
 // Yazarken tire/boşluk bırakılabilsin diye sondaki ayırıcı korunur

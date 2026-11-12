@@ -14,7 +14,7 @@ import {
   type TextStyle,
   type ViewStyle,
 } from "react-native";
-import { SafeAreaView, type Edge } from "react-native-safe-area-context";
+import { SafeAreaView, useSafeAreaInsets, type Edge } from "react-native-safe-area-context";
 import { colors, radius, spacing } from "@/theme";
 import { HEADING } from "@/lib/fonts";
 import { Text, TextInput } from "@/components/text";
@@ -79,7 +79,7 @@ export function Button({
 }: {
   title: string;
   onPress: () => void;
-  variant?: "primary" | "secondary" | "ghost" | "danger";
+  variant?: "primary" | "secondary" | "ghost" | "danger" | "onHero";
   loading?: boolean;
   disabled?: boolean;
   style?: StyleProp<ViewStyle>;
@@ -290,11 +290,48 @@ export function SelectField({ label, value, placeholder, onPress }: { label?: st
   );
 }
 
+/**
+ * Sekme ekranlarının yeşil başlık bandı. Durum çubuğunun altına kadar uzanır.
+ * `overlap` verilirse alt kısma boşluk bırakır; altındaki içerik negatif
+ * marginTop ile banda biner (Bugün ekranındaki özet kartları).
+ */
+export function HeroHeader({
+  title,
+  eyebrow,
+  right,
+  children,
+  overlap = 0,
+}: {
+  title: string;
+  eyebrow?: string;
+  right?: ReactNode;
+  children?: ReactNode;
+  overlap?: number;
+}) {
+  const insets = useSafeAreaInsets();
+  return (
+    <View style={[styles.hero, { paddingTop: insets.top + spacing.lg, paddingBottom: spacing.lg + overlap }]}>
+      <View style={styles.heroRow}>
+        <View style={{ flex: 1 }}>
+          {eyebrow ? <Text style={[textStyles.small, { color: colors.onHero2 }]}>{eyebrow}</Text> : null}
+          <Text style={[textStyles.title, { color: colors.onHero }]} numberOfLines={1}>
+            {title}
+          </Text>
+        </View>
+        {right}
+      </View>
+      {children}
+    </View>
+  );
+}
+
 const buttonVariants = {
   primary: { bg: colors.accent, border: colors.accent, text: colors.onAccent },
   secondary: { bg: colors.bg3, border: colors.border2, text: colors.text },
   ghost: { bg: "transparent", border: "transparent", text: colors.text2 },
   danger: { bg: colors.redDim, border: colors.redBorder, text: colors.red },
+  // Yeşil başlık bandının üstünde: kırık beyaz buton, yeşil yazı
+  onHero: { bg: colors.bg2, border: colors.bg2, text: colors.accent },
 };
 
 export const textStyles = StyleSheet.create({
@@ -310,6 +347,8 @@ export const textStyles = StyleSheet.create({
 const styles = StyleSheet.create({
   flex: { flex: 1 },
   screen: { flex: 1, backgroundColor: colors.bg },
+  hero: { backgroundColor: colors.hero, paddingHorizontal: spacing.xl, gap: spacing.md },
+  heroRow: { flexDirection: "row", alignItems: "center", gap: spacing.md },
   screenContent: { padding: spacing.xl, gap: spacing.lg, flexGrow: 1 },
   button: {
     minHeight: 50,

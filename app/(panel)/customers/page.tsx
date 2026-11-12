@@ -1,6 +1,6 @@
 "use client";
+import { useShop } from "@/components/layout/ShopContext";
 import { useState, useEffect } from "react";
-import AdminLayout from "@/components/layout/AdminLayout";
 import { Card, PageHeader, Avatar, Button } from "@/components/ui";
 import toast from "react-hot-toast";
 import { anonymizeCustomer } from "./actions";
@@ -42,28 +42,27 @@ export default function CustomersPage() {
   const [query, setQuery] = useState("");
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [loading, setLoading] = useState(true);
+  const shop = useShop();
 
   useEffect(() => {
+    if (!shop) return;
+    const shopId = shop.id;
     async function loadData() {
       const supabase = createClient();
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) { window.location.href = "/login"; return; }
-      const { data: shop } = await supabase.from("shops").select("id").eq("owner_id", user.id).single();
-      if (!shop) { setLoading(false); return; }
-      
-      const shopId = shop.id;
-
-      const { data: customersData } = await supabase.from("customers").select("*").eq("shop_id", shopId).order("created_at", { ascending: false });
-      const { data: appointmentsData } = await supabase.from("appointments").select(`
+      // Müşteriler ve randevular paralel
+      const [{ data: customersData }, { data: appointmentsData }] = await Promise.all([
+        supabase.from("customers").select("*").eq("shop_id", shopId).order("created_at", { ascending: false }),
+        supabase.from("appointments").select(`
         id, customer_id, status, scheduled_at,
         service:services(name, price)
-      `).eq("shop_id", shopId);
+      `).eq("shop_id", shopId),
+      ]);
 
       if (customersData && appointmentsData) {
         const enhancedCustomers = customersData.map(c => {
           const c_appointments = appointmentsData.filter(a => a.customer_id === c.id && a.status !== "cancelled");
           const total_appointments = c_appointments.length;
-          
+
           let total_spent = 0;
           const serviceCounts: Record<string, number> = {};
           let last_visit: string | undefined = undefined;
@@ -81,7 +80,7 @@ export default function CustomersPage() {
                 serviceCounts[sName] = (serviceCounts[sName] || 0) + 1;
               }
             }
-            
+
             const aDate = new Date(a.scheduled_at).getTime();
             // Eğer geçmişteyse (veya gelecekte değilse) son ziyareti hesapla
             if (aDate > last_date && aDate < Date.now()) {
@@ -112,7 +111,7 @@ export default function CustomersPage() {
       setLoading(false);
     }
     loadData();
-  }, []);
+  }, [shop?.id]);
 
   const handleAnonymize = (customer: Customer) => {
     toast((t) => (
@@ -149,14 +148,14 @@ export default function CustomersPage() {
 
   if (loading) {
     return (
-      <AdminLayout>
+      <>
         <div className="p-7">Yükleniyor...</div>
-      </AdminLayout>
+      </>
     );
   }
 
   return (
-    <AdminLayout>
+    <>
       <PageHeader title="Müşteriler">
         <Button variant="ghost" size="sm" onClick={() => exportCustomersCsv(customers)} disabled={customers.length === 0}>
           Excel&apos;e aktar (CSV)
@@ -227,6 +226,6 @@ export default function CustomersPage() {
           </table>
         </Card>
       </div>
-    </AdminLayout>
+    </>
   );
 }

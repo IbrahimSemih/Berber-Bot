@@ -1,9 +1,9 @@
 "use client";
 
+import { useShop } from "@/components/layout/ShopContext";
 import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { markAsRead, markAllAsRead, clearAllNotifications } from "./actions";
-import AdminLayout from "@/components/layout/AdminLayout";
 import { toast } from "react-hot-toast";
 import { AlertTriangle } from "lucide-react";
 
@@ -20,25 +20,17 @@ export default function NotificationsPage() {
   const supabase = createClient();
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [loading, setLoading] = useState(true);
-  const [shopId, setShopId] = useState<string | null>(null);
+  const shop = useShop();
+  const shopId = shop?.id ?? null;
 
   useEffect(() => {
     async function fetchNotifications() {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
-
-      const { data: shop } = await supabase
-        .from("shops")
-        .select("id")
-        .eq("owner_id", user.id)
-        .single();
-
-      if (shop) {
-        setShopId(shop.id);
+      if (!shopId) return;
+      {
         const { data } = await supabase
           .from("notifications")
           .select("*")
-          .eq("shop_id", shop.id)
+          .eq("shop_id", shopId)
           .order("created_at", { ascending: false });
 
         setNotifications(data || []);
@@ -64,7 +56,7 @@ export default function NotificationsPage() {
           }
         )
         .subscribe();
-        
+
       return () => {
         supabase.removeChannel(channel);
       }
@@ -72,7 +64,7 @@ export default function NotificationsPage() {
   }, [supabase, shopId]);
 
   const handleMarkAsRead = async (id: string) => {
-    setNotifications((prev) => 
+    setNotifications((prev) =>
       prev.map(n => n.id === id ? { ...n, is_read: true } : n)
     );
     await markAsRead(id);
@@ -108,14 +100,14 @@ export default function NotificationsPage() {
 
   if (loading) {
     return (
-      <AdminLayout>
+      <>
         <div className="p-8">Yükleniyor...</div>
-      </AdminLayout>
+      </>
     );
   }
 
   return (
-    <AdminLayout>
+    <>
       <div className="p-8 max-w-4xl mx-auto">
         <div className="flex items-center justify-between mb-8">
           <div>
@@ -123,13 +115,13 @@ export default function NotificationsPage() {
             <p className="text-[var(--text3)]">Gelen bildirimlerinizi buradan takip edebilirsiniz.</p>
           </div>
           <div className="flex gap-4">
-            <button 
+            <button
               onClick={handleMarkAllAsRead}
               className="px-4 py-2 text-sm bg-[var(--bg3)] hover:bg-[var(--bg4)] text-[var(--text)] rounded-lg transition"
             >
               Tümünü Okundu İşaretle
             </button>
-            <button 
+            <button
               onClick={handleClearAll}
               className="px-4 py-2 text-sm bg-[var(--red-dim)] hover:bg-[rgba(185,60,52,0.2)] text-[var(--red)] rounded-lg transition border border-[rgba(185,60,52,0.3)]"
             >
@@ -145,12 +137,12 @@ export default function NotificationsPage() {
             </div>
           ) : (
             notifications.map((notif) => (
-              <div 
+              <div
                 key={notif.id}
                 onClick={() => !notif.is_read && handleMarkAsRead(notif.id)}
                 className={`p-5 rounded-2xl border transition flex gap-4 items-start ${
-                  notif.is_read 
-                    ? "bg-[var(--bg2)] border-[var(--border)] opacity-70" 
+                  notif.is_read
+                    ? "bg-[var(--bg2)] border-[var(--border)] opacity-70"
                     : "bg-[var(--bg3)] border-[var(--border2)] cursor-pointer shadow-lg"
                 }`}
               >
@@ -173,6 +165,6 @@ export default function NotificationsPage() {
           )}
         </div>
       </div>
-    </AdminLayout>
+    </>
   );
 }

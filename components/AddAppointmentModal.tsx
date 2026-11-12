@@ -2,7 +2,7 @@
 import { useState, useEffect } from "react";
 import { Button, Input, Select } from "@/components/ui";
 import { createClient } from "@/lib/supabase/client";
-import { createAppointmentByOwner } from "@/app/appointments/actions";
+import { createAppointmentByOwner } from "@/app/(panel)/appointments/actions";
 import { todayInIstanbul } from "@/lib/time";
 import { toast } from "react-hot-toast";
 

@@ -1,26 +1,30 @@
-// Palet: "Krem ve orman yeşili" (açık tema). Web'deki app/globals.css ile aynı
+// Palet: "Kum ve orman yeşili" (açık tema). Web'deki app/globals.css ile aynı
 // değerler; birini değiştirirseniz diğerini de güncelleyin. Tüm yazı renkleri
 // zemin tonlarında en az 4,5:1 kontrast sağlar.
 export const colors = {
-  bg: "#FAF7F2", // sayfa zemini (sıcak krem)
-  bg2: "#FFFFFF", // kart / panel
-  bg3: "#F3EEE6", // hafif dolgu: pasif buton, çip
-  bg4: "#E9E2D6", // belirgin dolgu / pasif anahtar
-  border: "#E5DED2",
-  border2: "#D6CCBD",
+  bg: "#EDE5D8", // sayfa zemini (sıcak kum)
+  bg2: "#FBF7F0", // kart / panel (kırık beyaz)
+  bg3: "#F2EBDF", // hafif dolgu: pasif buton, çip
+  bg4: "#E4D9C7", // belirgin dolgu / pasif anahtar
+  border: "#DDD1BE",
+  border2: "#CDBFA8",
   text: "#1F2421",
-  text2: "#565B55",
-  text3: "#656A63",
+  text2: "#525750",
+  text3: "#5A5F58",
   accent: "#2F6B4F", // orman yeşili: ana buton, vurgu
   accent2: "#285C44", // basılı / anahtar izi
   accentDim: "rgba(47, 107, 79, 0.08)",
   accentDim2: "rgba(47, 107, 79, 0.14)",
   onAccent: "#FFFFFF",
+  hero: "#2F6B4F", // yeşil başlık bandı
+  onHero: "#FAF7F2", // yeşil zemin üstündeki yazı
+  onHero2: "#CFE3D6", // yeşil zemin üstündeki ikincil yazı
+  onHeroDim: "rgba(250, 247, 242, 0.14)", // yeşil zemin üstünde buton dolgusu
   warm: "#C9813A", // ikincil sıcak vurgu (dekoratif)
-  red: "#B93C34",
-  orange: "#995709",
+  red: "#AD3730",
+  orange: "#925307",
   blue: "#2A65A0",
-  green: "#2B7553",
+  green: "#286E4E",
   redDim: "#FBEAE8",
   redBorder: "rgba(185, 60, 52, 0.3)",
   orangeDim: "#FBF0DE",

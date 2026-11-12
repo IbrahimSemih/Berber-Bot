@@ -24,9 +24,11 @@ export async function middleware(request: NextRequest) {
     }
   );
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  // getClaims oturum JWT'sini imza anahtarıyla yerelde doğrular (asimetrik
+  // anahtarlarda Auth sunucusuna gitmez); her sayfa geçişinde bir ağ isteği kazanılır.
+  const { data: claimsData } = await supabase.auth.getClaims();
+  const userId = claimsData?.claims?.sub ?? null;
+  const user = userId ? { id: userId } : null;
 
   const pathname = request.nextUrl.pathname;
 

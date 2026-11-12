@@ -1,6 +1,6 @@
 "use client";
+import { useShop } from "@/components/layout/ShopContext";
 import { useState, useEffect } from "react";
-import AdminLayout from "@/components/layout/AdminLayout";
 import BookingLinkCard from "@/components/BookingLinkCard";
 import { Card, CardHeader, PageHeader, Button, Toggle, Input } from "@/components/ui";
 import { createClient } from "@/lib/supabase/client";
@@ -23,6 +23,7 @@ const DAYS = [
 const DURATION_OPTIONS = [10, 15, 20, 25, 30, 40, 45, 50, 60, 75, 90, 105, 120, 150, 180, 240];
 
 export default function SettingsPage() {
+  const panelShop = useShop();
   const [currentShopId, setCurrentShopId] = useState<string | null>(null);
   const [shopSlug, setShopSlug] = useState<string | null>(null);
   const [settingsId, setSettingsId] = useState<string | null>(null);
@@ -62,17 +63,18 @@ export default function SettingsPage() {
 
   useEffect(() => {
     async function loadData() {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) { window.location.href = "/login"; return; }
-      const { data: shop } = await supabase.from("shops").select("id, name, slug").eq("owner_id", user.id).single();
-      if (!shop) { setLoading(false); return; }
-
-      const shopId = shop.id;
+      if (!panelShop) return;
+      const shopId = panelShop.id;
       setCurrentShopId(shopId);
-      setShopSlug(shop.slug);
-      setShopName(shop.name || "");
 
-      const { data: settingsData } = await supabase.from("settings").select("*").eq("shop_id", shopId).limit(1).maybeSingle();
+      // Ad ve slug bu sayfada değişebildiği için güncel hali okunur; hepsi paralel
+      const [{ data: shop }, { data: settingsData }] = await Promise.all([
+        supabase.from("shops").select("name, slug").eq("id", shopId).single(),
+        supabase.from("settings").select("*").eq("shop_id", shopId).limit(1).maybeSingle(),
+        loadServices(shopId),
+      ]);
+      setShopSlug(shop?.slug ?? null);
+      setShopName(shop?.name || "");
       if (settingsData) {
         setSettingsId(settingsData.id);
         setPhone(settingsData.whatsapp_number || "");
@@ -97,12 +99,11 @@ export default function SettingsPage() {
         setReminder(settingsData.reminder_hours !== 0);
       }
 
-      await loadServices(shopId);
       setLoading(false);
     }
     loadData();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [panelShop?.id]);
 
   const updateWorkingHour = (dayValue: number, field: keyof WorkingHour, value: string | boolean) => {
     setWorkingHours(prev => prev.map(wh =>
@@ -254,16 +255,16 @@ export default function SettingsPage() {
 
   if (loading) {
     return (
-      <AdminLayout>
+      <>
         <div className="p-7">Yükleniyor...</div>
-      </AdminLayout>
+      </>
     );
   }
 
   const labelClass = "block text-xs font-semibold uppercase tracking-wide mb-1.5";
 
   return (
-    <AdminLayout>
+    <>
       <PageHeader title="Ayarlar">
         <Button onClick={save} disabled={saving}>
           {saving ? "Kaydediliyor..." : saved ? "✓ Kaydedildi!" : "Kaydet"}
@@ -433,6 +434,6 @@ export default function SettingsPage() {
         </Card>
 
       </div>
-    </AdminLayout>
+    </>
   );
 }

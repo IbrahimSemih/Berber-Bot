@@ -19,7 +19,7 @@ export function LegalPage({
   return (
     <div className="min-h-screen" style={{ background: "var(--bg)", color: "var(--text)" }}>
       <nav
-        style={{ borderBottom: "1px solid var(--border)", background: "rgba(250,247,242,0.85)" }}
+        style={{ borderBottom: "1px solid var(--border)", background: "color-mix(in srgb, var(--bg) 85%, transparent)" }}
         className="fixed top-0 left-0 right-0 h-16 flex items-center px-6 md:px-12 gap-5 z-50 backdrop-blur-md">
         <Link href="/" className="flex items-center gap-3">
           <div className="w-8 h-8 rounded-lg flex items-center justify-center text-base font-bold"
