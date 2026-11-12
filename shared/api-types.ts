@@ -76,6 +76,17 @@ export type AppointmentActionResponse = { notified: boolean };
 export type OkResponse = { ok: true };
 
 // POST /push-tokens, DELETE /push-tokens
+// POST /billing/sync yanıtı: dükkanın güncel abonelik alanları
+export type BillingSyncResponse = {
+  shop: {
+    subscription_status: string;
+    current_period_end: string | null;
+    billing_provider: string | null;
+    store_will_renew: boolean | null;
+  };
+  changed: boolean;
+};
+
 export type PushTokenRequest = { token: string; platform: "ios" | "android" };
 export type RemovePushTokenRequest = { token: string };
 

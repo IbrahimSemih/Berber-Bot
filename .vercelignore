@@ -1,2 +1,3 @@
-# Expo mobil uygulaması Vercel deploy'una dahil değil
-mobile/
+# Expo mobil uygulaması Vercel deploy'una dahil değil. Baştaki "/" şart: yoksa
+# app/api/mobile da (mobil API) dışarıda kalır.
+/mobile/
