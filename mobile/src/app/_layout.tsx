@@ -36,7 +36,6 @@ export default function RootLayout() {
       <QueryClientProvider client={queryClient}>
         <AuthProvider>
           <ToastProvider>
-            <StatusBar style="dark" />
             <RootNavigator />
           </ToastProvider>
         </AuthProvider>
@@ -61,6 +60,8 @@ function RootNavigator() {
 
   return (
     <View style={styles.root}>
+      {/* Panel ekranlarının üstü yeşil (başlık bandı / üst bar); giriş akışı kum zeminli */}
+      <StatusBar style={ready ? "light" : "dark"} />
       {ready && shop ? <RealtimeBridge shopId={shop.id} /> : null}
       {ready && session ? <PushBridge userId={session.user.id} /> : null}
       <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: colors.bg } }}>
@@ -102,18 +103,23 @@ function RootNavigator() {
   );
 }
 
-// Uygulama içi ekranlarda geri butonlu koyu üst bar
+// Uygulama içi ekranlarda geri butonlu yeşil üst bar
 const pageHeader = {
   headerShown: true,
-  headerStyle: { backgroundColor: colors.bg },
-  headerTintColor: colors.text,
-  headerTitleStyle: { color: colors.text, fontFamily: resolveFontFamily(HEADING, 600), fontSize: 19 },
+  headerStyle: { backgroundColor: colors.hero },
+  headerTintColor: colors.onHero,
+  headerTitleStyle: { color: colors.onHero, fontFamily: resolveFontFamily(HEADING, 600), fontSize: 19 },
   headerShadowVisible: false,
   headerBackTitle: "Geri",
 };
 
-// Giriş akışındaki alt ekranlarda başlıksız üst bar
-const authHeader = { ...pageHeader, headerTitle: "" } as const;
+// Giriş akışındaki alt ekranlarda başlıksız, kum zeminli üst bar
+const authHeader = {
+  ...pageHeader,
+  headerTitle: "",
+  headerStyle: { backgroundColor: colors.bg },
+  headerTintColor: colors.text,
+} as const;
 
 const styles = StyleSheet.create({
   root: { flex: 1, backgroundColor: colors.bg },

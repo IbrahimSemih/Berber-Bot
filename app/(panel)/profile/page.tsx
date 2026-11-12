@@ -1,6 +1,5 @@
 "use client";
 import { useState, useEffect } from "react";
-import AdminLayout from "@/components/layout/AdminLayout";
 import { Card, PageHeader, Button, Input } from "@/components/ui";
 import { createClient } from "@/lib/supabase/client";
 import { deleteAccountAction } from "./actions";
@@ -26,7 +25,8 @@ export default function ProfilePage() {
 
   useEffect(() => {
     async function loadUser() {
-      const { data: { user } } = await supabase.auth.getUser();
+      const { data: { session } } = await supabase.auth.getSession(); // yerel, ağ isteği yok; yetkiyi RLS uygular
+      const user = session?.user;
       if (user) {
         setUserId(user.id);
         setEmail(user.email || "");
@@ -134,7 +134,7 @@ export default function ProfilePage() {
   };
 
   return (
-    <AdminLayout>
+    <>
       <PageHeader title="Profilim" />
       <div className="p-4 md:p-7 max-w-5xl flex flex-col gap-8">
         
@@ -295,6 +295,6 @@ export default function ProfilePage() {
         </div>
 
       </div>
-    </AdminLayout>
+    </>
   );
 }

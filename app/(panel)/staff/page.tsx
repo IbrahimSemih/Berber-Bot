@@ -1,6 +1,6 @@
 "use client";
+import { useShop } from "@/components/layout/ShopContext";
 import { useState, useEffect } from "react";
-import AdminLayout from "@/components/layout/AdminLayout";
 import { Card, PageHeader, Button, Avatar } from "@/components/ui";
 import { createClient } from "@/lib/supabase/client";
 import { Staff } from "@/types";
@@ -14,23 +14,20 @@ export default function StaffPage() {
   const [staffList, setStaffList] = useState<Staff[]>([]);
   const [loading, setLoading] = useState(true);
   const [shopId, setShopId] = useState("");
-  
+
   // Modal states
   const [modalOpen, setModalOpen] = useState(false);
   const [editingStaff, setEditingStaff] = useState<Staff | null>(null);
-  
+
   const [leaveModalOpen, setLeaveModalOpen] = useState(false);
   const [leaveStaff, setLeaveStaff] = useState<Staff | null>(null);
 
   const supabase = createClient();
+  const shop = useShop();
 
   const loadData = async () => {
+    if (!shop) return;
     setLoading(true);
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) { window.location.href = "/login"; return; }
-    const { data: shop } = await supabase.from("shops").select("id").eq("owner_id", user.id).single();
-    if (!shop) { setLoading(false); return; }
-    
     setShopId(shop.id);
 
     const { data: staffData } = await supabase
@@ -47,7 +44,8 @@ export default function StaffPage() {
 
   useEffect(() => {
     loadData();
-  }, []);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [shop?.id]);
 
   const openNewModal = async () => {
     // Check limit first
@@ -98,7 +96,7 @@ export default function StaffPage() {
   const handleToggleAvailability = async (id: string, currentStatus: boolean) => {
     // Optimistic UI update
     setStaffList(prev => prev.map(s => s.id === id ? { ...s, is_active: !currentStatus } : s));
-    
+
     // DB Update
     const { error } = await supabase.from("staff").update({ is_active: !currentStatus }).eq("id", id);
     if (error) {
@@ -111,18 +109,18 @@ export default function StaffPage() {
 
   if (loading) {
     return (
-      <AdminLayout>
+      <>
         <div className="p-7">Yükleniyor...</div>
-      </AdminLayout>
+      </>
     );
   }
 
   return (
-    <AdminLayout>
+    <>
       <PageHeader title="Personeller">
         <Button onClick={openNewModal}>+ Yeni Personel</Button>
       </PageHeader>
-      
+
       <div className="p-7">
         <Card>
           <table className="w-full border-collapse">
@@ -155,7 +153,7 @@ export default function StaffPage() {
                     <td className="px-4 py-3 text-sm" style={{ color: "var(--text3)" }}>{s.phone || "—"}</td>
                     <td className="px-4 py-3">
                       <div className="flex items-center gap-2">
-                        <div 
+                        <div
                           onClick={() => handleToggleAvailability(s.id, s.is_active)}
                           className={`relative inline-flex h-5 w-9 cursor-pointer items-center rounded-full transition-colors ${
                             s.is_active ? 'bg-[var(--green)]' : 'bg-[var(--border2)]'
@@ -190,24 +188,24 @@ export default function StaffPage() {
       </div>
 
       {modalOpen && (
-        <StaffModal 
-          shopId={shopId} 
+        <StaffModal
+          shopId={shopId}
           existingStaff={editingStaff}
-          onClose={() => setModalOpen(false)} 
+          onClose={() => setModalOpen(false)}
           onSuccess={() => {
             setModalOpen(false);
             loadData();
-          }} 
+          }}
         />
       )}
 
       {leaveModalOpen && leaveStaff && (
-        <StaffLeaveModal 
+        <StaffLeaveModal
           shopId={shopId}
           staff={leaveStaff}
           onClose={() => setLeaveModalOpen(false)}
         />
       )}
-    </AdminLayout>
+    </>
   );
 }

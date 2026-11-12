@@ -1,7 +1,7 @@
 "use client";
+import { useShop } from "@/components/layout/ShopContext";
 import { useState, useEffect } from "react";
 import { createClient } from "@/lib/supabase/client";
-import AdminLayout from "@/components/layout/AdminLayout";
 import { Card, PageHeader, Button, StatusBadge, SourceBadge, Avatar, Badge, TableSkeleton, EmptyState } from "@/components/ui";
 import { formatTime, relativeDay, formatPrice } from "@/lib/utils";
 import AddAppointmentModal from "@/components/AddAppointmentModal";
@@ -42,6 +42,7 @@ export default function AppointmentsPage() {
   const [acting, setActing] = useState<RowAction>(null);
 
   const supabase = createClient();
+  const shop = useShop();
 
   async function load(shopId?: string) {
     const id = shopId || currentShopId;
@@ -68,19 +69,13 @@ export default function AppointmentsPage() {
   }
 
   useEffect(() => {
-    async function init() {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) { window.location.href = "/login"; return; }
-
-      const { data: shop } = await supabase.from("shops").select("id").eq("owner_id", user.id).single();
-      if (!shop) { setLoading(false); return; }
-
-      setCurrentShopId(shop.id);
-      load(shop.id);
-      loadStaff(shop.id);
-    }
-    init();
-  }, []);
+    if (!shop) return;
+    setCurrentShopId(shop.id);
+    // Randevular ve personel listesi paralel yüklenir
+    load(shop.id);
+    loadStaff(shop.id);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [shop?.id]);
 
   useEffect(() => {
     if (!currentShopId) return;
@@ -210,7 +205,7 @@ export default function AppointmentsPage() {
   ));
 
   return (
-    <AdminLayout>
+    <>
       <PageHeader title="Randevular">
         <div className="hidden sm:flex gap-1.5">{filterButtons}</div>
         <Button onClick={() => setShowModal(true)}><Plus size={15} aria-hidden /> <span className="hidden sm:inline">Yeni Randevu</span><span className="sm:hidden">Ekle</span></Button>
@@ -344,6 +339,6 @@ export default function AppointmentsPage() {
           onAdd={() => { setShowModal(false); load(); }}
         />
       )}
-    </AdminLayout>
+    </>
   );
 }

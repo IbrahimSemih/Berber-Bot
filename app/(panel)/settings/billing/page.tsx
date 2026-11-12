@@ -6,7 +6,6 @@ import { Check, AlertTriangle, CreditCard, Clock, Zap } from "lucide-react";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { getShopUsageAndLimits, TRIAL_DAYS, YEARLY_REFUND_DAYS } from "@/lib/plan-limits";
 import { isBillingProfileComplete, type BillingProfile } from "@/lib/checkout";
-import AdminLayout from "@/components/layout/AdminLayout";
 import { PageHeader } from "@/components/ui";
 import RefundRequestButton from "./RefundRequestButton";
 import BillingProfileForm from "./BillingProfileForm";
@@ -136,7 +135,7 @@ export default async function BillingPage({ searchParams }: { searchParams: { su
   };
 
   return (
-    <AdminLayout>
+    <>
       <PageHeader title="Abonelik ve Fatura" />
       <div className="p-7 max-w-4xl mx-auto space-y-8">
         <div>
@@ -331,6 +330,6 @@ export default async function BillingPage({ searchParams }: { searchParams: { su
         )}
       </div>
       </div>
-    </AdminLayout>
+    </>
   );
 }

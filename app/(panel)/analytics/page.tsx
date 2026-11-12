@@ -1,7 +1,7 @@
 "use client";
+import { useShop } from "@/components/layout/ShopContext";
 import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
-import AdminLayout from "@/components/layout/AdminLayout";
 import { StatCard, Card, CardHeader, PageHeader } from "@/components/ui";
 import BarChart from "@/components/charts/BarChart";
 import AreaChart from "@/components/charts/AreaChart";
@@ -66,25 +66,16 @@ export default function AnalyticsPage() {
   const [staffPerf, setStaffPerf] = useState<StaffPerf[]>([]);
 
   const supabase = createClient();
+  const shop = useShop();
 
   useEffect(() => {
     loadData();
-  }, []);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [shop?.id]);
 
   async function loadData() {
+    if (!shop) return;
     setLoading(true);
-
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) {
-      window.location.href = "/login";
-      return;
-    }
-
-    const { data: shop } = await supabase.from("shops").select("id").eq("owner_id", user.id).single();
-    if (!shop) {
-      setLoading(false);
-      return;
-    }
 
     // Fetch last 6 months of appointments
     const sixMonthsAgo = new Date();
@@ -268,19 +259,19 @@ export default function AnalyticsPage() {
 
   if (loading) {
     return (
-      <AdminLayout>
+      <>
         <PageHeader title="Analitik" />
         <div className="p-7">
           <div className="flex items-center justify-center py-20">
             <div className="text-sm" style={{ color: "var(--text3)" }}>Veriler yükleniyor...</div>
           </div>
         </div>
-      </AdminLayout>
+      </>
     );
   }
 
   return (
-    <AdminLayout>
+    <>
       <PageHeader title="Analitik">
         <span className="hidden sm:inline text-sm" style={{ color: "var(--text3)" }}>
           Son 6 aylık veriler
@@ -480,6 +471,6 @@ export default function AnalyticsPage() {
           </Card>
         )}
       </div>
-    </AdminLayout>
+    </>
   );
 }

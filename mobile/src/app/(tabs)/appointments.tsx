@@ -1,14 +1,13 @@
 // Randevular (web: app/appointments). Gün seçici + durum filtresi; onay/iptal/personel atama.
 import { useState } from "react";
 import { Pressable, RefreshControl, ScrollView, StyleSheet, View } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
 import { router, useLocalSearchParams } from "expo-router";
 import { addDaysToDateString, isValidDateString, todayInIstanbul } from "@shared/time";
 import { relativeDayLabel } from "@/lib/format";
 import { useDayAppointments, useStaff, type AppointmentStatus } from "@/lib/queries";
 import { AppointmentCard, useAppointmentActions } from "@/components/appointment-card";
 import { CalendarSheet } from "@/components/sheets";
-import { AppText, Button, Chip, EmptyState, ErrorBanner } from "@/components/ui";
+import { AppText, Button, Chip, EmptyState, ErrorBanner, HeroHeader } from "@/components/ui";
 import { colors, radius, spacing } from "@/theme";
 
 type Filter = "all" | Extract<AppointmentStatus, "pending" | "confirmed" | "cancelled">;
@@ -43,11 +42,11 @@ export default function AppointmentsScreen() {
   const count = (f: Filter) => (f === "all" ? all.length : all.filter((a) => a.status === f).length);
 
   return (
-    <SafeAreaView style={styles.screen} edges={["top"]}>
-      <View style={styles.header}>
-        <AppText variant="title">Randevular</AppText>
-        <Button title="+ Yeni" onPress={() => router.push({ pathname: "/new-appointment", params: { date } })} style={styles.newBtn} />
-      </View>
+    <View style={styles.screen}>
+      <HeroHeader
+        title="Randevular"
+        right={<Button title="+ Yeni" variant="onHero" onPress={() => router.push({ pathname: "/new-appointment", params: { date } })} style={styles.newBtn} />}
+      />
 
       <View style={styles.dayBar}>
         <Pressable accessibilityRole="button" accessibilityLabel="Önceki gün" onPress={() => setDate((d) => addDaysToDateString(d, -1))} hitSlop={10} style={styles.arrow}>
@@ -91,13 +90,12 @@ export default function AppointmentsScreen() {
         onSelect={setDate}
         onClose={() => setCalendarOpen(false)}
       />
-    </SafeAreaView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: colors.bg },
-  header: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", paddingHorizontal: spacing.xl, paddingTop: spacing.lg },
   newBtn: { minHeight: 40, paddingHorizontal: spacing.lg },
   dayBar: {
     flexDirection: "row",

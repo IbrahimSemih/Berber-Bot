@@ -1,7 +1,6 @@
 // Müşteriler (web: app/customers). Arama, istatistik, arama/WhatsApp, KVKK silme, CSV paylaşımı.
 import { useMemo, useState } from "react";
 import { FlatList, Linking, Platform, RefreshControl, StyleSheet, View } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
 import { useQueryClient } from "@tanstack/react-query";
 import { File, Paths } from "expo-file-system";
 import * as Sharing from "expo-sharing";
@@ -12,7 +11,7 @@ import { confirmAction } from "@/lib/confirm";
 import { formatPhone, formatPrice, isAnonymizedPhone } from "@/lib/format";
 import { useCustomers, type CustomerRow } from "@/lib/queries";
 import { PickerSheet } from "@/components/sheets";
-import { AppText, Button, Card, EmptyState, ErrorBanner, Input } from "@/components/ui";
+import { AppText, Button, Card, EmptyState, ErrorBanner, HeroHeader, Input } from "@/components/ui";
 import { useToast } from "@/components/toast";
 import { colors, spacing } from "@/theme";
 
@@ -126,12 +125,12 @@ export default function CustomersScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.screen} edges={["top"]}>
-      <View style={styles.header}>
-        <AppText variant="title">Müşteriler</AppText>
-        <Button title="CSV" variant="secondary" onPress={exportCsv} loading={exporting} disabled={!query.data?.length} style={styles.csvBtn} />
-      </View>
-      <View style={{ paddingHorizontal: spacing.xl, paddingBottom: spacing.md }}>
+    <View style={styles.screen}>
+      <HeroHeader
+        title="Müşteriler"
+        right={<Button title="CSV" variant="onHero" onPress={exportCsv} loading={exporting} disabled={!query.data?.length} style={styles.csvBtn} />}
+      />
+      <View style={{ paddingHorizontal: spacing.xl, paddingVertical: spacing.md }}>
         <Input value={search} onChangeText={setSearch} placeholder="İsim veya telefon ara" autoCorrect={false} clearButtonMode="while-editing" />
       </View>
       {query.isError ? (
@@ -193,13 +192,12 @@ export default function CustomersScreen() {
         }}
         onClose={() => setSelected(null)}
       />
-    </SafeAreaView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: colors.bg },
-  header: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", paddingHorizontal: spacing.xl, paddingTop: spacing.lg, paddingBottom: spacing.md },
   csvBtn: { minHeight: 38, paddingHorizontal: spacing.lg },
   list: { paddingHorizontal: spacing.xl, paddingBottom: spacing.xxl, gap: spacing.md },
   card: { gap: spacing.xs },

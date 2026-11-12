@@ -1,13 +1,12 @@
 // Bugün (web: app/dashboard). Bugünkü randevular, özet ve hızlı işlemler.
 import { RefreshControl, ScrollView, StyleSheet, View } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
 import { router } from "expo-router";
 import { formatTrLongDateWithWeekday, todayInIstanbul } from "@shared/time";
 import { useAuth } from "@/lib/auth";
 import { formatPrice } from "@/lib/format";
 import { useDayAppointments, useStaff } from "@/lib/queries";
 import { AppointmentCard, useAppointmentActions } from "@/components/appointment-card";
-import { AppText, Button, Card, EmptyState, ErrorBanner, InfoBanner } from "@/components/ui";
+import { AppText, Button, Card, EmptyState, ErrorBanner, HeroHeader, InfoBanner } from "@/components/ui";
 import { colors, spacing } from "@/theme";
 
 export default function TodayScreen() {
@@ -22,21 +21,16 @@ export default function TodayScreen() {
   const expected = active.reduce((sum, a) => sum + Number(a.service?.price ?? 0), 0);
 
   return (
-    <SafeAreaView style={styles.screen} edges={["top"]}>
+    <View style={styles.screen}>
       <ScrollView
-        contentContainerStyle={styles.content}
+        contentContainerStyle={{ paddingBottom: spacing.xl }}
         refreshControl={
           <RefreshControl refreshing={query.isRefetching} onRefresh={() => void query.refetch()} tintColor={colors.accent} />
         }
       >
-        <View>
-          <AppText variant="small">{formatTrLongDateWithWeekday(new Date())}</AppText>
-          <AppText variant="title">{shop?.name}</AppText>
-        </View>
-
-        {trialDaysLeft !== null ? <InfoBanner message={`Ücretsiz deneme: ${trialDaysLeft} gün kaldı.`} /> : null}
-
-        <View style={styles.stats}>
+        <HeroHeader eyebrow={formatTrLongDateWithWeekday(new Date())} title={shop?.name ?? ""} overlap={OVERLAP} />
+        <View style={styles.content}>
+        <View style={[styles.stats, { marginTop: -OVERLAP }]}>
           <Card style={styles.stat}>
             <AppText variant="small">Randevu</AppText>
             <AppText variant="title">{query.isLoading ? "–" : active.length}</AppText>
@@ -55,6 +49,8 @@ export default function TodayScreen() {
           </Card>
         </View>
 
+        {trialDaysLeft !== null ? <InfoBanner message={`Ücretsiz deneme: ${trialDaysLeft} gün kaldı.`} /> : null}
+
         <View style={styles.sectionHeader}>
           <AppText variant="heading">Bugünün randevuları</AppText>
           <Button title="+ Ekle" variant="secondary" onPress={() => router.push({ pathname: "/new-appointment", params: { date: today } })} style={styles.addBtn} />
@@ -68,16 +64,20 @@ export default function TodayScreen() {
         {(query.data ?? []).map((apt) => (
           <AppointmentCard key={apt.id} apt={apt} staffList={staff.data ?? []} actions={actions} />
         ))}
+        </View>
       </ScrollView>
-    </SafeAreaView>
+    </View>
   );
 }
 
+// Özet kartlarının yeşil banda binen kısmı
+const OVERLAP = 44;
+
 const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: colors.bg },
-  content: { padding: spacing.xl, gap: spacing.lg },
+  content: { paddingHorizontal: spacing.xl, gap: spacing.lg },
   stats: { flexDirection: "row", gap: spacing.sm },
-  stat: { flex: 1, padding: spacing.md },
+  stat: { flex: 1, padding: spacing.md, shadowColor: "#000", shadowOpacity: 0.08, shadowRadius: 10, shadowOffset: { width: 0, height: 4 }, elevation: 3 },
   sectionHeader: { flexDirection: "row", alignItems: "center", justifyContent: "space-between" },
   addBtn: { minHeight: 38, paddingHorizontal: spacing.md },
 });
