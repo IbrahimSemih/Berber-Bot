@@ -2,8 +2,8 @@
 import { useState } from "react";
 import { Pressable, RefreshControl, ScrollView, StyleSheet, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { router } from "expo-router";
-import { addDaysToDateString, todayInIstanbul } from "@shared/time";
+import { router, useLocalSearchParams } from "expo-router";
+import { addDaysToDateString, isValidDateString, todayInIstanbul } from "@shared/time";
 import { relativeDayLabel } from "@/lib/format";
 import { useDayAppointments, useStaff, type AppointmentStatus } from "@/lib/queries";
 import { AppointmentCard, useAppointmentActions } from "@/components/appointment-card";
@@ -20,8 +20,19 @@ const FILTERS: { key: Filter; label: string }[] = [
 ];
 
 export default function AppointmentsScreen() {
-  const [date, setDate] = useState(() => todayInIstanbul());
+  // ?date=YYYY-MM-DD: bildirime dokununca randevunun gününe açılır
+  const params = useLocalSearchParams<{ date?: string }>();
+  const [date, setDate] = useState(() => (isValidDateString(params.date) ? params.date : todayInIstanbul()));
   const [filter, setFilter] = useState<Filter>("all");
+  // Sekme açıkken yeni bir bildirime dokunulursa parametre değişir: o güne geç
+  const [seenDateParam, setSeenDateParam] = useState(params.date);
+  if (params.date !== seenDateParam) {
+    setSeenDateParam(params.date);
+    if (isValidDateString(params.date)) {
+      setDate(params.date);
+      setFilter("all");
+    }
+  }
   const [calendarOpen, setCalendarOpen] = useState(false);
   const query = useDayAppointments(date);
   const staff = useStaff();

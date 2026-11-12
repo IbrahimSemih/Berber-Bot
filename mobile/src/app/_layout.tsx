@@ -7,6 +7,7 @@ import { SafeAreaProvider } from "react-native-safe-area-context";
 import { focusManager, QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { AuthProvider, useAuth } from "@/lib/auth";
 import { RealtimeBridge } from "@/lib/realtime";
+import { PushBridge } from "@/lib/push";
 import { fontAssets, HEADING, resolveFontFamily } from "@/lib/fonts";
 import { ToastProvider } from "@/components/toast";
 import { colors } from "@/theme";
@@ -50,7 +51,7 @@ export default function RootLayout() {
  * banlı → banned, deneme/abonelik bitti → paywall (+ profil), aksi halde → sekmeler ve yönetim ekranları.
  */
 function RootNavigator() {
-  const { status, shop } = useAuth();
+  const { status, shop, session } = useAuth();
 
   useEffect(() => {
     if (status !== "loading") SplashScreen.hide();
@@ -61,6 +62,7 @@ function RootNavigator() {
   return (
     <View style={styles.root}>
       {ready && shop ? <RealtimeBridge shopId={shop.id} /> : null}
+      {ready && session ? <PushBridge userId={session.user.id} /> : null}
       <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: colors.bg } }}>
         <Stack.Protected guard={status === "loading" || status === "error"}>
           <Stack.Screen name="status" />

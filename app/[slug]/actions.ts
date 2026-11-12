@@ -236,7 +236,7 @@ export async function createBooking(data: {
         push: {
           title: status === "pending" ? "Yeni randevu talebi" : "Yeni randevu",
           body: `${customerName} · ${service.name} · ${when}`,
-          data: { type: "new_booking", appointmentId: inserted.id },
+          data: { type: "new_booking", appointmentId: inserted.id, date: data.date },
         },
       });
     }
