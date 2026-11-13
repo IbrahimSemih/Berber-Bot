@@ -12,9 +12,11 @@ import { useAuth } from "@/lib/auth";
 import { config } from "@/lib/config";
 import { AppText, Button, Card, ErrorBanner, Input } from "@/components/ui";
 import { useToast } from "@/components/toast";
-import { colors, radius, spacing } from "@/theme";
+import { radius, spacing } from "@/theme";
+import { useColors } from "@/lib/theme";
 
 export default function BookingLinkScreen() {
+  const colors = useColors();
   const { shop, refreshShop } = useAuth();
   const toast = useToast();
   const qrRef = useRef<any>(null);

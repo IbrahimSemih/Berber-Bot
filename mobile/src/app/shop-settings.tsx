@@ -13,7 +13,8 @@ import { supabase } from "@/lib/supabase";
 import { PickerSheet, timeOptions } from "@/components/sheets";
 import { AppText, Button, Card, Divider, ErrorBanner, Input, Loading, SelectField, SwitchRow } from "@/components/ui";
 import { useToast } from "@/components/toast";
-import { colors, spacing } from "@/theme";
+import { spacing } from "@/theme";
+import { useColors } from "@/lib/theme";
 
 const DAY_LABELS: Record<number, string> = { 1: "Pazartesi", 2: "Salı", 3: "Çarşamba", 4: "Perşembe", 5: "Cuma", 6: "Cumartesi", 0: "Pazar" };
 const TIMES = timeOptions("00:00", "23:45");
@@ -45,6 +46,7 @@ function toForm(shopName: string, s: Settings | null): Form {
 }
 
 export default function ShopSettingsScreen() {
+  const colors = useColors();
   const settings = useSettings();
   if (settings.isLoading) return <Loading />;
   if (settings.isError) {
@@ -59,6 +61,7 @@ export default function ShopSettingsScreen() {
 }
 
 function SettingsForm({ settings }: { settings: Settings | null }) {
+  const colors = useColors();
   const { shop, refreshShop } = useAuth();
   const queryClient = useQueryClient();
   const toast = useToast();

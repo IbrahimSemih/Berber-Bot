@@ -10,9 +10,11 @@ import { qk, useShopLimits, useStaff, type Staff } from "@/lib/queries";
 import { supabase } from "@/lib/supabase";
 import { AppText, Button, Card, Divider, EmptyState, ErrorBanner, ListRow } from "@/components/ui";
 import { useToast } from "@/components/toast";
-import { colors, spacing } from "@/theme";
+import { spacing } from "@/theme";
+import { useColors } from "@/lib/theme";
 
 export default function StaffListScreen() {
+  const colors = useColors();
   const { shop } = useAuth();
   const queryClient = useQueryClient();
   const toast = useToast();

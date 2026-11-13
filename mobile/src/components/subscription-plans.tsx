@@ -3,7 +3,7 @@
 // Kullanım Koşulları ve Gizlilik linkleri. Apple 3.1.1: web'den satın almaya
 // yönlendiren link/metin YOK.
 import { useState } from "react";
-import { Pressable, StyleSheet, View } from "react-native";
+import { Pressable, View } from "react-native";
 import * as WebBrowser from "expo-web-browser";
 import { useQuery } from "@tanstack/react-query";
 import type { PurchasesPackage } from "react-native-purchases";
@@ -20,7 +20,8 @@ import {
 } from "@/lib/purchases";
 import { useToast } from "@/components/toast";
 import { AppText, Button, Card, ErrorBanner, InfoBanner, LinkText, Loading } from "@/components/ui";
-import { colors, radius, spacing } from "@/theme";
+import { radius, spacing } from "@/theme";
+import { useColors, makeStyles } from "@/lib/theme";
 
 type PlanKey = "monthly" | "annual";
 
@@ -176,6 +177,8 @@ function PlanOption({
   selected: boolean;
   onPress: () => void;
 }) {
+  const colors = useColors();
+  const styles = useStyles();
   return (
     <Pressable accessibilityRole="radio" accessibilityState={{ selected }} onPress={onPress}>
       <Card style={[styles.option, selected && styles.optionSelected]}>
@@ -192,7 +195,7 @@ function PlanOption({
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = makeStyles((colors) => ({
   option: { borderWidth: 1.5, borderColor: colors.border },
   optionSelected: { borderColor: colors.accent, backgroundColor: colors.accentDim },
   optionRow: { flexDirection: "row", alignItems: "center", gap: spacing.md },
@@ -207,4 +210,4 @@ const styles = StyleSheet.create({
   },
   radioSelected: { borderColor: colors.accent },
   radioDot: { width: 10, height: 10, borderRadius: radius.pill, backgroundColor: colors.accent },
-});
+}));

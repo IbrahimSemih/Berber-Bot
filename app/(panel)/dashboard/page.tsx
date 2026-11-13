@@ -351,7 +351,7 @@ export default function DashboardPage() {
                       {formatTime(apt.scheduled_at)}
                     </div>
                     <div className="w-0.5 rounded flex-shrink-0 min-h-[36px]"
-                      style={{ background: apt.status === "confirmed" ? "#2B7553" : apt.status === "pending" ? "#995709" : "#9AA09A" }} />
+                      style={{ background: apt.status === "confirmed" ? "var(--green)" : apt.status === "pending" ? "var(--orange)" : "var(--text3)" }} />
                     <div className="min-w-0">
                       <div className="text-sm font-medium truncate">{apt.customer?.name ?? apt.customer?.phone}</div>
                       <div className="text-xs mt-0.5 truncate" style={{ color: "var(--text3)" }}>{apt.service?.name}</div>

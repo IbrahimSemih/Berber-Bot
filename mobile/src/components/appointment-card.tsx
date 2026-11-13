@@ -2,7 +2,7 @@
 // "Randevular" ekranları ortak kullanır. Onay/iptal sunucuda (WhatsApp mesajı
 // gider), personel atama doğrudan Supabase'e (RLS) yazılır — web ile aynı.
 import { useState } from "react";
-import { Linking, Pressable, StyleSheet, View } from "react-native";
+import { Linking, Pressable, View } from "react-native";
 import { useQueryClient } from "@tanstack/react-query";
 import { formatIstanbulTime } from "@shared/time";
 import type { AppointmentActionResponse } from "@shared/api-types";
@@ -15,14 +15,22 @@ import type { Appointment, AppointmentStatus, Staff } from "@/lib/queries";
 import { AppText, Badge, Button, Card } from "@/components/ui";
 import { PickerSheet } from "@/components/sheets";
 import { useToast } from "@/components/toast";
-import { colors, spacing } from "@/theme";
+import { spacing, type Colors } from "@/theme";
+import { useColors, makeStyles } from "@/lib/theme";
 
-export const STATUS_LABEL: Record<AppointmentStatus, { text: string; color: string }> = {
-  pending: { text: "Onay bekliyor", color: colors.orange },
-  confirmed: { text: "Onaylı", color: colors.green },
-  completed: { text: "Tamamlandı", color: colors.blue },
-  cancelled: { text: "İptal", color: colors.red },
+type StatusColor = "orange" | "green" | "blue" | "red";
+const STATUS_INFO: Record<AppointmentStatus, { text: string; color: StatusColor }> = {
+  pending: { text: "Onay bekliyor", color: "orange" },
+  confirmed: { text: "Onaylı", color: "green" },
+  completed: { text: "Tamamlandı", color: "blue" },
+  cancelled: { text: "İptal", color: "red" },
 };
+
+/** Durum etiketi ve o temadaki rengi */
+export function statusLabel(status: AppointmentStatus, colors: Colors): { text: string; color: string } {
+  const info = STATUS_INFO[status] ?? STATUS_INFO.confirmed;
+  return { text: info.text, color: colors[info.color] };
+}
 
 export function useAppointmentActions() {
   const { shop } = useAuth();
@@ -95,8 +103,10 @@ export function AppointmentCard({
   staffList: Staff[];
   actions: ReturnType<typeof useAppointmentActions>;
 }) {
+  const colors = useColors();
+  const styles = useStyles();
   const [pickStaff, setPickStaff] = useState(false);
-  const status = STATUS_LABEL[apt.status] ?? STATUS_LABEL.confirmed;
+  const status = statusLabel(apt.status, colors);
   const isBusy = actions.busy === apt.id;
   const phone = apt.customer?.phone;
   const canCall = !!phone && !isAnonymizedPhone(phone);
@@ -162,11 +172,11 @@ export function AppointmentCard({
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = makeStyles((colors) => ({
   card: { gap: spacing.sm },
   top: { flexDirection: "row", alignItems: "center", gap: spacing.md },
   time: { width: 56, color: colors.accent },
   meta: { flexDirection: "row", alignItems: "center", gap: spacing.md },
   actions: { flexDirection: "row", gap: spacing.sm, marginTop: spacing.xs },
   actionBtn: { flex: 1, minHeight: 42 },
-});
+}));

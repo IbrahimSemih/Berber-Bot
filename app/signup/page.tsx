@@ -186,7 +186,7 @@ export default function SignupPage() {
           </label>
 
           {error && (
-            <div className="text-sm p-3 rounded-lg border" style={{ background: "rgba(239, 68, 68, 0.1)", borderColor: "rgba(239, 68, 68, 0.2)", color: "#f87171" }}>
+            <div className="text-sm p-3 rounded-lg border" style={{ background: "var(--red-dim)", borderColor: "color-mix(in srgb, var(--red) 30%, transparent)", color: "var(--red)" }}>
               {error}
             </div>
           )}

@@ -1,5 +1,5 @@
 // Bildirimler (web: app/notifications). Okundu işaretle, tümünü okundu say, temizle.
-import { FlatList, Pressable, RefreshControl, StyleSheet, View } from "react-native";
+import { FlatList, Pressable, RefreshControl, View } from "react-native";
 import { Stack } from "expo-router";
 import { useQueryClient } from "@tanstack/react-query";
 import { formatTrDateTime } from "@shared/time";
@@ -10,9 +10,12 @@ import { qk, useNotifications, type NotificationRow } from "@/lib/queries";
 import { supabase } from "@/lib/supabase";
 import { AppText, Button, Card, EmptyState, ErrorBanner } from "@/components/ui";
 import { useToast } from "@/components/toast";
-import { colors, spacing } from "@/theme";
+import { spacing } from "@/theme";
+import { useColors, makeStyles } from "@/lib/theme";
 
 export default function NotificationsScreen() {
+  const colors = useColors();
+  const styles = useStyles();
   const { shop } = useAuth();
   const queryClient = useQueryClient();
   const toast = useToast();
@@ -81,11 +84,11 @@ export default function NotificationsScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = makeStyles((colors) => ({
   screen: { flex: 1, backgroundColor: colors.bg },
   toolbar: { flexDirection: "row", gap: spacing.sm, paddingHorizontal: spacing.xl, paddingTop: spacing.lg },
   toolBtn: { flex: 1, minHeight: 40 },
   list: { padding: spacing.xl, gap: spacing.md },
   card: { gap: spacing.xs },
   dot: { width: 8, height: 8, borderRadius: 4, backgroundColor: colors.accent, marginTop: 7 },
-});
+}));

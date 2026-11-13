@@ -1,14 +1,17 @@
 // Alttan açılan seçim pencereleri: liste seçimi ve takvim. Ek paket gerektirmez,
 // telefonda ve tarayıcı önizlemesinde aynı çalışır. Tarihler "YYYY-MM-DD" (Türkiye takvimi).
 import { useRef, useState, type ReactNode } from "react";
-import { Modal, Pressable, ScrollView, StyleSheet, View } from "react-native";
+import { Modal, Pressable, ScrollView, View } from "react-native";
 import { Text } from "@/components/text";
 import { HEADING } from "@/lib/fonts";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { dayOfWeekOf, todayInIstanbul } from "@shared/time";
-import { colors, radius, spacing } from "@/theme";
+import { radius, spacing } from "@/theme";
+import { useColors, makeStyles } from "@/lib/theme";
 
 function Sheet({ visible, title, onClose, children }: { visible: boolean; title: string; onClose: () => void; children: ReactNode }) {
+  const colors = useColors();
+  const styles = useStyles();
   const insets = useSafeAreaInsets();
   return (
     <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose} statusBarTranslucent>
@@ -44,6 +47,8 @@ export function PickerSheet({
   onSelect: (value: string) => void;
   onClose: () => void;
 }) {
+  const colors = useColors();
+  const styles = useStyles();
   const scrollRef = useRef<React.ComponentRef<typeof ScrollView>>(null);
   // Uzun listelerde (saatler) seçili değer görünsün: açılınca ona kaydır
   const selectedIndex = selected != null ? options.findIndex((o) => o.value === selected) : -1;
@@ -109,6 +114,8 @@ export function CalendarSheet({
   onSelect: (date: string) => void;
   onClose: () => void;
 }) {
+  const colors = useColors();
+  const styles = useStyles();
   const [cursor, setCursor] = useState(() => monthOf(value || todayInIstanbul()));
   const today = todayInIstanbul();
 
@@ -199,7 +206,7 @@ export function timeOptions(from = "07:00", to = "23:45"): PickerOption[] {
 }
 
 
-const styles = StyleSheet.create({
+const useStyles = makeStyles((colors) => ({
   backdrop: { flex: 1, backgroundColor: colors.overlay },
   sheet: {
     backgroundColor: colors.bg2,
@@ -218,4 +225,4 @@ const styles = StyleSheet.create({
   grid: { flexDirection: "row", flexWrap: "wrap" },
   cell: { width: `${100 / 7}%`, height: 44, alignItems: "center", justifyContent: "center", textAlign: "center" },
   dayCircle: { width: 36, height: 36, borderRadius: 18, alignItems: "center", justifyContent: "center" },
-});
+}));

@@ -12,7 +12,8 @@ import { confirmAction } from "@/lib/confirm";
 import { supabase } from "@/lib/supabase";
 import { AppText, Button, Card, Divider, ErrorBanner, InfoBanner, Input, ListRow } from "@/components/ui";
 import { useToast } from "@/components/toast";
-import { colors, spacing } from "@/theme";
+import { spacing } from "@/theme";
+import { useColors } from "@/lib/theme";
 
 const LEGAL = [
   { title: "Kullanım Koşulları", path: "/kullanim-kosullari" },
@@ -21,6 +22,7 @@ const LEGAL = [
 ];
 
 export default function ProfileScreen() {
+  const colors = useColors();
   const { session, shop, status, signOut } = useAuth();
   const toast = useToast();
   const currentEmail = session?.user.email ?? "";

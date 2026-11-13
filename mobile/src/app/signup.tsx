@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useColors } from "@/lib/theme";
 import { Pressable, View } from "react-native";
 import { router } from "expo-router";
 import * as WebBrowser from "expo-web-browser";
@@ -7,9 +8,9 @@ import { supabase } from "@/lib/supabase";
 import { config } from "@/lib/config";
 import { authErrorMessage } from "@/lib/auth-errors";
 import { AppText, Button, ErrorBanner, Input, LinkText, Screen } from "@/components/ui";
-import { colors } from "@/theme";
 
 export default function SignupScreen() {
+  const colors = useColors();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [passwordConfirm, setPasswordConfirm] = useState("");

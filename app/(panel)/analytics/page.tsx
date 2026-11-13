@@ -43,8 +43,8 @@ interface StaffPerf {
 }
 
 const DONUT_COLORS = [
-  "var(--accent)", "#2A65A0", "#B93C34", "#995709", "#6B4C8A",
-  "#2B7553", "#C9813A", "#4E8F73", "#8A6D3B", "#3E7CB1",
+  "var(--accent)", "var(--blue)", "var(--red)", "var(--orange)", "var(--green)",
+  "var(--warm)", "#8E7CC3", "#5FA8A0", "#B8925A", "#6E9BD1",
 ];
 
 export default function AnalyticsPage() {

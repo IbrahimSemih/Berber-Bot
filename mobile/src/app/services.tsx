@@ -10,13 +10,15 @@ import { qk, useServices, type Service } from "@/lib/queries";
 import { supabase } from "@/lib/supabase";
 import { AppText, Button, Card, Chip, Divider, EmptyState, ErrorBanner, Input, ListRow } from "@/components/ui";
 import { useToast } from "@/components/toast";
-import { colors, spacing } from "@/theme";
+import { spacing } from "@/theme";
+import { useColors } from "@/lib/theme";
 
 const DURATION_OPTIONS = [10, 15, 20, 25, 30, 40, 45, 50, 60, 75, 90, 105, 120, 150, 180, 240];
 
 type Draft = { id: string | null; name: string; duration: number; price: string };
 
 export default function ServicesScreen() {
+  const colors = useColors();
   const { shop } = useAuth();
   const queryClient = useQueryClient();
   const toast = useToast();

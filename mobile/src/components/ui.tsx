@@ -7,7 +7,6 @@ import {
   Platform,
   Pressable,
   ScrollView,
-  StyleSheet,
   View,
   type StyleProp,
   type TextInputProps,
@@ -15,7 +14,9 @@ import {
   type ViewStyle,
 } from "react-native";
 import { SafeAreaView, useSafeAreaInsets, type Edge } from "react-native-safe-area-context";
-import { colors, radius, spacing } from "@/theme";
+import { Image } from "expo-image";
+import { radius, spacing, type Colors } from "@/theme";
+import { useColors, makeStyles } from "@/lib/theme";
 import { HEADING } from "@/lib/fonts";
 import { Text, TextInput } from "@/components/text";
 
@@ -30,6 +31,7 @@ export function Screen({
   edges?: Edge[];
   contentStyle?: StyleProp<ViewStyle>;
 }) {
+  const styles = useStyles();
   return (
     <SafeAreaView style={styles.screen} edges={edges}>
       <KeyboardAvoidingView style={styles.flex} behavior={Platform.OS === "ios" ? "padding" : undefined}>
@@ -62,6 +64,7 @@ export function AppText({
   numberOfLines?: number;
   selectable?: boolean;
 }) {
+  const textStyles = useTextStyles();
   return (
     <Text style={[textStyles[variant], style]} {...rest}>
       {children}
@@ -84,8 +87,10 @@ export function Button({
   disabled?: boolean;
   style?: StyleProp<ViewStyle>;
 }) {
+  const colors = useColors();
+  const styles = useStyles();
   const isDisabled = disabled || loading;
-  const v = buttonVariants[variant];
+  const v = makeButtonVariants(colors)[variant];
   return (
     <Pressable
       accessibilityRole="button"
@@ -110,6 +115,9 @@ export function Button({
 }
 
 export function Input({ label, error, style, ...rest }: TextInputProps & { label?: string; error?: string | null }) {
+  const textStyles = useTextStyles();
+  const colors = useColors();
+  const styles = useStyles();
   return (
     <View style={styles.field}>
       {label ? <Text style={textStyles.label}>{label}</Text> : null}
@@ -125,10 +133,13 @@ export function Input({ label, error, style, ...rest }: TextInputProps & { label
 }
 
 export function Card({ children, style }: { children: ReactNode; style?: StyleProp<ViewStyle> }) {
+  const styles = useStyles();
   return <View style={[styles.card, style]}>{children}</View>;
 }
 
 export function ErrorBanner({ message }: { message: string | null | undefined }) {
+  const colors = useColors();
+  const styles = useStyles();
   if (!message) return null;
   return (
     <View style={styles.errorBanner} accessibilityRole="alert">
@@ -138,6 +149,8 @@ export function ErrorBanner({ message }: { message: string | null | undefined })
 }
 
 export function InfoBanner({ message }: { message: string | null | undefined }) {
+  const colors = useColors();
+  const styles = useStyles();
   if (!message) return null;
   return (
     <View style={styles.infoBanner}>
@@ -147,6 +160,7 @@ export function InfoBanner({ message }: { message: string | null | undefined }) 
 }
 
 export function LinkText({ children, onPress }: { children: ReactNode; onPress: () => void }) {
+  const colors = useColors();
   return (
     <Text accessibilityRole="link" onPress={onPress} style={{ color: colors.accent, fontWeight: "600" }}>
       {children}
@@ -155,6 +169,8 @@ export function LinkText({ children, onPress }: { children: ReactNode; onPress: 
 }
 
 export function Loading() {
+  const colors = useColors();
+  const styles = useStyles();
   return (
     <View style={[styles.flex, { alignItems: "center", justifyContent: "center", backgroundColor: colors.bg }]}>
       <ActivityIndicator color={colors.accent} size="large" />
@@ -163,11 +179,16 @@ export function Loading() {
 }
 
 export function Brand({ subtitle }: { subtitle?: string }) {
+  const textStyles = useTextStyles();
+  const styles = useStyles();
   return (
     <View style={{ alignItems: "center", marginBottom: spacing.xxl }}>
-      <View style={styles.logo}>
-        <Text style={{ fontSize: 26 }}>✂</Text>
-      </View>
+      <Image
+        source={require("../../assets/images/icon.png")}
+        style={styles.logo}
+        contentFit="cover"
+        accessibilityIgnoresInvertColors
+      />
       <Text style={textStyles.title}>BerberBot</Text>
       {subtitle ? <Text style={[textStyles.muted, { marginTop: spacing.xs }]}>{subtitle}</Text> : null}
     </View>
@@ -175,6 +196,7 @@ export function Brand({ subtitle }: { subtitle?: string }) {
 }
 
 export function Badge({ label, color }: { label: string; color: string }) {
+  const styles = useStyles();
   return (
     <View style={[styles.badge, { borderColor: color }]}>
       <Text style={{ color, fontSize: 11, fontWeight: "700" }}>{label}</Text>
@@ -191,6 +213,8 @@ export function Chip({
   active: boolean;
   onPress: () => void;
 }) {
+  const colors = useColors();
+  const styles = useStyles();
   return (
     <Pressable
       accessibilityRole="button"
@@ -217,6 +241,9 @@ export function ListRow({
   onPress?: () => void;
   danger?: boolean;
 }) {
+  const textStyles = useTextStyles();
+  const colors = useColors();
+  const styles = useStyles();
   const content = (
     <View style={styles.listRow}>
       <View style={{ flex: 1 }}>
@@ -247,6 +274,9 @@ export function SwitchRow({
   onValueChange: (v: boolean) => void;
   disabled?: boolean;
 }) {
+  const textStyles = useTextStyles();
+  const colors = useColors();
+  const styles = useStyles();
   return (
     <View style={styles.listRow}>
       <View style={{ flex: 1, paddingRight: spacing.md }}>
@@ -266,10 +296,13 @@ export function SwitchRow({
 }
 
 export function Divider() {
+  const colors = useColors();
   return <View style={{ height: 1, backgroundColor: colors.border }} />;
 }
 
 export function EmptyState({ title, description }: { title: string; description?: string }) {
+  const textStyles = useTextStyles();
+  const colors = useColors();
   return (
     <View style={{ alignItems: "center", paddingVertical: spacing.xxl, gap: spacing.xs }}>
       <Text style={[textStyles.body, { color: colors.text2, fontWeight: "600" }]}>{title}</Text>
@@ -280,6 +313,9 @@ export function EmptyState({ title, description }: { title: string; description?
 
 /** Seçim alanı görünümünde buton (tarih, saat, hizmet seçimi) */
 export function SelectField({ label, value, placeholder, onPress }: { label?: string; value?: string | null; placeholder: string; onPress: () => void }) {
+  const textStyles = useTextStyles();
+  const colors = useColors();
+  const styles = useStyles();
   return (
     <View style={styles.field}>
       {label ? <Text style={textStyles.label}>{label}</Text> : null}
@@ -308,6 +344,9 @@ export function HeroHeader({
   children?: ReactNode;
   overlap?: number;
 }) {
+  const textStyles = useTextStyles();
+  const colors = useColors();
+  const styles = useStyles();
   const insets = useSafeAreaInsets();
   return (
     <View style={[styles.hero, { paddingTop: insets.top + spacing.lg, paddingBottom: spacing.lg + overlap }]}>
@@ -325,16 +364,16 @@ export function HeroHeader({
   );
 }
 
-const buttonVariants = {
+const makeButtonVariants = (colors: Colors) => ({
   primary: { bg: colors.accent, border: colors.accent, text: colors.onAccent },
   secondary: { bg: colors.bg3, border: colors.border2, text: colors.text },
   ghost: { bg: "transparent", border: "transparent", text: colors.text2 },
   danger: { bg: colors.redDim, border: colors.redBorder, text: colors.red },
   // Yeşil başlık bandının üstünde: kırık beyaz buton, yeşil yazı
   onHero: { bg: colors.bg2, border: colors.bg2, text: colors.accent },
-};
+});
 
-export const textStyles = StyleSheet.create({
+export const useTextStyles = makeStyles((colors) => ({
   // Başlıklar Fraunces (fontFamily: HEADING → components/text.tsx gerçek dosyayı seçer)
   title: { color: colors.text, fontSize: 26, lineHeight: 32, fontWeight: "700", fontFamily: HEADING },
   heading: { color: colors.text, fontSize: 18, lineHeight: 24, fontWeight: "600", fontFamily: HEADING },
@@ -342,9 +381,9 @@ export const textStyles = StyleSheet.create({
   muted: { color: colors.text2, fontSize: 14, lineHeight: 20 },
   small: { color: colors.text3, fontSize: 12, lineHeight: 17 },
   label: { color: colors.text2, fontSize: 13, fontWeight: "600", marginBottom: 6 },
-});
+}));
 
-const styles = StyleSheet.create({
+const useStyles = makeStyles((colors) => ({
   flex: { flex: 1 },
   screen: { flex: 1, backgroundColor: colors.bg },
   hero: { backgroundColor: colors.hero, paddingHorizontal: spacing.xl, gap: spacing.md },
@@ -404,13 +443,11 @@ const styles = StyleSheet.create({
   },
   chipActive: { backgroundColor: colors.accent, borderColor: colors.accent },
   listRow: { flexDirection: "row", alignItems: "center", paddingVertical: spacing.md, gap: spacing.md, minHeight: 52 },
+  // Uygulama ikonunun kendisi (assets/images/icon.png)
   logo: {
-    width: 56,
-    height: 56,
-    borderRadius: radius.lg,
-    backgroundColor: colors.accentDim2,
-    alignItems: "center",
-    justifyContent: "center",
+    width: 72,
+    height: 72,
+    borderRadius: 18,
     marginBottom: spacing.md,
   },
-});
+}));

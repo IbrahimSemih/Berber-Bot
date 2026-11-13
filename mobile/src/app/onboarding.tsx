@@ -1,13 +1,14 @@
 // Dükkan kurulumu (web: app/onboarding). Dükkan sunucuda oluşturulur: POST /api/mobile/v1/shop
 import { useState } from "react";
-import { Pressable, StyleSheet, View } from "react-native";
+import { Pressable, View } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { isValidTimeString, timeToMinutes } from "@shared/time";
 import type { CreateShopRequest, CreateShopResponse } from "@shared/api-types";
 import { apiFetch, errorMessage } from "@/lib/api";
 import { useAuth } from "@/lib/auth";
 import { AppText, Button, Card, ErrorBanner, Input, Screen } from "@/components/ui";
-import { colors, radius, spacing } from "@/theme";
+import { radius, spacing } from "@/theme";
+import { useColors, makeStyles } from "@/lib/theme";
 
 const DAYS = [
   { id: 1, label: "Pzt" },
@@ -20,6 +21,8 @@ const DAYS = [
 ];
 
 export default function OnboardingScreen() {
+  const colors = useColors();
+  const styles = useStyles();
   const { refreshShop, signOut, session } = useAuth();
   const [shopName, setShopName] = useState("");
   const [workStart, setWorkStart] = useState("09:00");
@@ -139,7 +142,7 @@ export default function OnboardingScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = makeStyles((colors) => ({
   flex: { flex: 1 },
   row: { flexDirection: "row", gap: spacing.md, alignItems: "flex-end" },
   chips: { flexDirection: "row", flexWrap: "wrap", gap: spacing.sm },
@@ -161,4 +164,4 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     paddingHorizontal: spacing.md,
   },
-});
+}));

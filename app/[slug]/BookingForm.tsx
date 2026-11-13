@@ -311,7 +311,7 @@ export default function BookingForm({ shop, services, staffList, bookableDates }
                     </div>
                   ) : isStaffOnLeave ? (
                     <div className="col-span-3 sm:col-span-6 p-4 rounded-xl text-sm font-medium border text-center"
-                      style={{ background: "rgba(255,165,0,0.1)", borderColor: "rgba(255,165,0,0.3)", color: "#ffb74d" }}>
+                      style={{ background: "var(--orange-dim)", borderColor: "color-mix(in srgb, var(--orange) 30%, transparent)", color: "var(--orange)" }}>
                       ⚠️ Seçtiğiniz personel bu tarihte izinlidir. Lütfen başka bir gün seçin veya geri dönüp farklı bir personel tercih edin.
                     </div>
                   ) : dayClosed ? (

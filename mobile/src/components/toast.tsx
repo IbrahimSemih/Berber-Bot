@@ -1,9 +1,10 @@
 // Kısa bilgi mesajı (ekranın altında 2,5 sn). Başarı/hata geri bildirimi için.
 import { createContext, useCallback, useContext, useRef, useState, type ReactNode } from "react";
-import { StyleSheet, View } from "react-native";
+import { View } from "react-native";
 import { Text } from "@/components/text";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { colors, radius, spacing } from "@/theme";
+import { radius, spacing } from "@/theme";
+import { useColors, makeStyles } from "@/lib/theme";
 
 type ToastKind = "success" | "error" | "info";
 type ToastState = { message: string; kind: ToastKind } | null;
@@ -11,6 +12,8 @@ type ToastState = { message: string; kind: ToastKind } | null;
 const ToastContext = createContext<(message: string, kind?: ToastKind) => void>(() => {});
 
 export function ToastProvider({ children }: { children: ReactNode }) {
+  const colors = useColors();
+  const styles = useStyles();
   const [toast, setToast] = useState<ToastState>(null);
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const insets = useSafeAreaInsets();
@@ -39,7 +42,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
 
 export const useToast = () => useContext(ToastContext);
 
-const styles = StyleSheet.create({
+const useStyles = makeStyles((colors) => ({
   wrap: { position: "absolute", left: spacing.lg, right: spacing.lg, alignItems: "center" },
   toast: {
     backgroundColor: colors.bg3,
@@ -49,4 +52,4 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.lg,
     maxWidth: 480,
   },
-});
+}));

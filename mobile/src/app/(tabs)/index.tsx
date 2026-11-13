@@ -1,5 +1,5 @@
 // Bugün (web: app/dashboard). Bugünkü randevular, özet ve hızlı işlemler.
-import { RefreshControl, ScrollView, StyleSheet, View } from "react-native";
+import { RefreshControl, ScrollView, View } from "react-native";
 import { router } from "expo-router";
 import { formatTrLongDateWithWeekday, todayInIstanbul } from "@shared/time";
 import { useAuth } from "@/lib/auth";
@@ -7,9 +7,12 @@ import { formatPrice } from "@/lib/format";
 import { useDayAppointments, useStaff } from "@/lib/queries";
 import { AppointmentCard, useAppointmentActions } from "@/components/appointment-card";
 import { AppText, Button, Card, EmptyState, ErrorBanner, HeroHeader, InfoBanner } from "@/components/ui";
-import { colors, spacing } from "@/theme";
+import { spacing } from "@/theme";
+import { useColors, makeStyles } from "@/lib/theme";
 
 export default function TodayScreen() {
+  const colors = useColors();
+  const styles = useStyles();
   const { shop, trialDaysLeft } = useAuth();
   const today = todayInIstanbul();
   const query = useDayAppointments(today);
@@ -73,11 +76,11 @@ export default function TodayScreen() {
 // Özet kartlarının yeşil banda binen kısmı
 const OVERLAP = 44;
 
-const styles = StyleSheet.create({
+const useStyles = makeStyles((colors) => ({
   screen: { flex: 1, backgroundColor: colors.bg },
   content: { paddingHorizontal: spacing.xl, gap: spacing.lg },
   stats: { flexDirection: "row", gap: spacing.sm },
   stat: { flex: 1, padding: spacing.md, shadowColor: "#000", shadowOpacity: 0.08, shadowRadius: 10, shadowOffset: { width: 0, height: 4 }, elevation: 3 },
   sectionHeader: { flexDirection: "row", alignItems: "center", justifyContent: "space-between" },
   addBtn: { minHeight: 38, paddingHorizontal: spacing.md },
-});
+}));

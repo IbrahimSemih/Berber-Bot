@@ -145,14 +145,14 @@ export default async function BillingPage({ searchParams }: { searchParams: { su
         </div>
 
       {searchParams.success && (
-        <div className="p-4 rounded-xl flex items-center gap-3 border" style={{ background: "rgba(34, 197, 94, 0.1)", borderColor: "rgba(34, 197, 94, 0.2)", color: "#22c55e" }}>
+        <div className="p-4 rounded-xl flex items-center gap-3 border" style={{ background: "var(--green-dim)", borderColor: "color-mix(in srgb, var(--green) 30%, transparent)", color: "var(--green)" }}>
           <Check className="w-5 h-5" />
           <p className="font-medium">Ödemeniz başarıyla alındı. PRO plana yükseltildiniz!</p>
         </div>
       )}
 
       {searchParams.error && (
-        <div className="p-4 rounded-xl flex items-center gap-3 border" style={{ background: "rgba(239, 68, 68, 0.1)", borderColor: "rgba(239, 68, 68, 0.2)", color: "#ef4444" }}>
+        <div className="p-4 rounded-xl flex items-center gap-3 border" style={{ background: "var(--red-dim)", borderColor: "color-mix(in srgb, var(--red) 30%, transparent)", color: "var(--red)" }}>
           <AlertTriangle className="w-5 h-5" />
           <p className="font-medium">{ERROR_MESSAGES[searchParams.error] ?? `Ödeme işlemi başlatılamadı: ${searchParams.error}`}</p>
         </div>
@@ -269,7 +269,7 @@ export default async function BillingPage({ searchParams }: { searchParams: { su
           </div>
         ) : (
           <div className="p-6 rounded-2xl border flex flex-col items-center justify-center text-center" style={{ background: "var(--bg2)", borderColor: "var(--border)" }}>
-            <div className="w-16 h-16 rounded-full flex items-center justify-center mb-4" style={{ background: "rgba(34, 197, 94, 0.1)", color: "#22c55e" }}>
+            <div className="w-16 h-16 rounded-full flex items-center justify-center mb-4" style={{ background: "var(--green-dim)", color: "var(--green)" }}>
               <Check className="w-8 h-8" />
             </div>
             <h3 className="text-xl font-bold mb-2">Harika Gidiyorsunuz!</h3>

@@ -1,5 +1,7 @@
 import { useEffect, useState } from "react";
-import { AppState, Platform, StyleSheet, View } from "react-native";
+import { makeStyles, ThemeProvider, useColors, useTheme } from "@/lib/theme";
+import type { Colors } from "@/theme";
+import { AppState, Platform, View } from "react-native";
 import { SplashScreen, Stack } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import { useFonts } from "expo-font";
@@ -10,7 +12,6 @@ import { RealtimeBridge } from "@/lib/realtime";
 import { PushBridge } from "@/lib/push";
 import { fontAssets, HEADING, resolveFontFamily } from "@/lib/fonts";
 import { ToastProvider } from "@/components/toast";
-import { colors } from "@/theme";
 
 SplashScreen.preventAutoHideAsync().catch(() => {});
 
@@ -33,15 +34,25 @@ export default function RootLayout() {
 
   return (
     <SafeAreaProvider>
+      <ThemeProvider>
       <QueryClientProvider client={queryClient}>
         <AuthProvider>
           <ToastProvider>
-            <RootNavigator />
+            <ThemeGate>
+              <RootNavigator />
+            </ThemeGate>
           </ToastProvider>
         </AuthProvider>
       </QueryClientProvider>
+      </ThemeProvider>
     </SafeAreaProvider>
   );
+}
+
+/** Kayıtlı tema tercihi okunana kadar bekler (açılış ekranı açık kalır, renk titremesi olmaz). */
+function ThemeGate({ children }: { children: React.ReactNode }) {
+  const { ready } = useTheme();
+  return ready ? <>{children}</> : null;
 }
 
 /**
@@ -50,6 +61,11 @@ export default function RootLayout() {
  * banlı → banned, deneme/abonelik bitti → paywall (+ profil), aksi halde → sekmeler ve yönetim ekranları.
  */
 function RootNavigator() {
+  const colors = useColors();
+  const { scheme } = useTheme();
+  const pageHeader = makePageHeader(colors);
+  const authHeader = makeAuthHeader(colors);
+  const styles = useStyles();
   const { status, shop, session } = useAuth();
 
   useEffect(() => {
@@ -60,10 +76,11 @@ function RootNavigator() {
 
   return (
     <View style={styles.root}>
-      {/* Panel ekranlarının üstü yeşil (başlık bandı / üst bar); giriş akışı kum zeminli */}
-      <StatusBar style={ready ? "light" : "dark"} />
+      {/* Panelde üst kısım her iki temada da koyu başlık bandı; giriş akışı zemin renginde */}
+      <StatusBar style={ready || scheme === "dark" ? "light" : "dark"} />
       {ready && shop ? <RealtimeBridge shopId={shop.id} /> : null}
-      {ready && session ? <PushBridge userId={session.user.id} /> : null}
+      {/* Bildirim API'leri web önizlemede yok */}
+      {ready && session && Platform.OS !== "web" ? <PushBridge userId={session.user.id} /> : null}
       <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: colors.bg } }}>
         <Stack.Protected guard={status === "loading" || status === "error"}>
           <Stack.Screen name="status" />
@@ -103,24 +120,28 @@ function RootNavigator() {
   );
 }
 
-// Uygulama içi ekranlarda geri butonlu yeşil üst bar
-const pageHeader = {
-  headerShown: true,
-  headerStyle: { backgroundColor: colors.hero },
-  headerTintColor: colors.onHero,
-  headerTitleStyle: { color: colors.onHero, fontFamily: resolveFontFamily(HEADING, 600), fontSize: 19 },
-  headerShadowVisible: false,
-  headerBackTitle: "Geri",
-};
+// Uygulama içi ekranlarda geri butonlu üst bar (başlık bandı rengi)
+function makePageHeader(colors: Colors) {
+  return {
+    headerShown: true,
+    headerStyle: { backgroundColor: colors.hero },
+    headerTintColor: colors.onHero,
+    headerTitleStyle: { color: colors.onHero, fontFamily: resolveFontFamily(HEADING, 600), fontSize: 19 },
+    headerShadowVisible: false,
+    headerBackTitle: "Geri",
+  };
+}
 
-// Giriş akışındaki alt ekranlarda başlıksız, kum zeminli üst bar
-const authHeader = {
-  ...pageHeader,
-  headerTitle: "",
-  headerStyle: { backgroundColor: colors.bg },
-  headerTintColor: colors.text,
-} as const;
+// Giriş akışındaki alt ekranlarda başlıksız, zemin renginde üst bar
+function makeAuthHeader(colors: Colors) {
+  return {
+    ...makePageHeader(colors),
+    headerTitle: "",
+    headerStyle: { backgroundColor: colors.bg },
+    headerTintColor: colors.text,
+  } as const;
+}
 
-const styles = StyleSheet.create({
+const useStyles = makeStyles((colors) => ({
   root: { flex: 1, backgroundColor: colors.bg },
-});
+}));

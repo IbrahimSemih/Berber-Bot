@@ -1,4 +1,5 @@
 // Menü: dükkan yönetimi ekranları, hesap ve uygulama bilgisi.
+import { useColors, useTheme, type ThemePref } from "@/lib/theme";
 import { useMemo } from "react";
 import { View } from "react-native";
 import { router, type Href } from "expo-router";
@@ -7,10 +8,17 @@ import { formatTrLongDate } from "@shared/time";
 import { useAuth } from "@/lib/auth";
 import { useNotifications } from "@/lib/queries";
 import { checkIstanbulTimeZone } from "@/lib/tz-check";
-import { AppText, Badge, Button, Card, Divider, HeroHeader, ListRow, Screen } from "@/components/ui";
-import { colors } from "@/theme";
+import { AppText, Badge, Button, Card, Chip, Divider, HeroHeader, ListRow, Screen } from "@/components/ui";
+
+const THEME_OPTIONS: { value: ThemePref; label: string }[] = [
+  { value: "system", label: "Sistem" },
+  { value: "light", label: "Açık" },
+  { value: "dark", label: "Koyu" },
+];
 
 export default function MoreScreen() {
+  const { pref, setPref } = useTheme();
+  const colors = useColors();
   const { shop, session, accessEndsAt, signOut } = useAuth();
   const notifications = useNotifications();
   const unread = (notifications.data ?? []).filter((n) => !n.is_read).length;
@@ -67,6 +75,16 @@ export default function MoreScreen() {
             />
           </View>
         ))}
+      </Card>
+
+      <Card>
+        <AppText variant="label">Görünüm</AppText>
+        <View style={{ flexDirection: "row", gap: 8 }} accessibilityRole="radiogroup">
+          {THEME_OPTIONS.map((o) => (
+            <Chip key={o.value} label={o.label} active={pref === o.value} onPress={() => setPref(o.value)} />
+          ))}
+        </View>
+        <AppText variant="small">Sistem: telefonun açık/koyu ayarını izler.</AppText>
       </Card>
 
       <AppText variant="small">
