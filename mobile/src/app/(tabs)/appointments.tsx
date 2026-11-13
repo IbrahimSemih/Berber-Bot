@@ -1,6 +1,6 @@
 // Randevular (web: app/appointments). Gün seçici + durum filtresi; onay/iptal/personel atama.
 import { useState } from "react";
-import { Pressable, RefreshControl, ScrollView, StyleSheet, View } from "react-native";
+import { Pressable, RefreshControl, ScrollView, View } from "react-native";
 import { router, useLocalSearchParams } from "expo-router";
 import { addDaysToDateString, isValidDateString, todayInIstanbul } from "@shared/time";
 import { relativeDayLabel } from "@/lib/format";
@@ -8,7 +8,8 @@ import { useDayAppointments, useStaff, type AppointmentStatus } from "@/lib/quer
 import { AppointmentCard, useAppointmentActions } from "@/components/appointment-card";
 import { CalendarSheet } from "@/components/sheets";
 import { AppText, Button, Chip, EmptyState, ErrorBanner, HeroHeader } from "@/components/ui";
-import { colors, radius, spacing } from "@/theme";
+import { radius, spacing } from "@/theme";
+import { useColors, makeStyles } from "@/lib/theme";
 
 type Filter = "all" | Extract<AppointmentStatus, "pending" | "confirmed" | "cancelled">;
 const FILTERS: { key: Filter; label: string }[] = [
@@ -19,6 +20,8 @@ const FILTERS: { key: Filter; label: string }[] = [
 ];
 
 export default function AppointmentsScreen() {
+  const colors = useColors();
+  const styles = useStyles();
   // ?date=YYYY-MM-DD: bildirime dokununca randevunun gününe açılır
   const params = useLocalSearchParams<{ date?: string }>();
   const [date, setDate] = useState(() => (isValidDateString(params.date) ? params.date : todayInIstanbul()));
@@ -94,7 +97,7 @@ export default function AppointmentsScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = makeStyles((colors) => ({
   screen: { flex: 1, backgroundColor: colors.bg },
   newBtn: { minHeight: 40, paddingHorizontal: spacing.lg },
   dayBar: {
@@ -114,4 +117,4 @@ const styles = StyleSheet.create({
   filterBar: { flexGrow: 0, flexShrink: 0 },
   filters: { gap: spacing.sm, paddingHorizontal: spacing.xl, paddingVertical: spacing.md, alignItems: "center" },
   list: { paddingHorizontal: spacing.xl, paddingBottom: spacing.xxl, gap: spacing.md },
-});
+}));

@@ -85,10 +85,10 @@ export default function CancelForm({ token }: CancelFormProps) {
       <button
         onClick={handleCancel}
         disabled={isLoading}
-        className={`w-full py-3 px-4 rounded-xl font-medium text-white transition-all
+        className={`w-full py-3 px-4 rounded-xl font-medium text-[var(--bg2)] transition-all
           ${isLoading 
-            ? 'bg-[rgba(185,60,52,0.35)] cursor-not-allowed' 
-            : 'bg-[var(--red)] hover:bg-[#9E322B] shadow-lg shadow-[rgba(185,60,52,0.2)] active:scale-[0.98]'
+            ? 'bg-[var(--red)] opacity-50 cursor-not-allowed' 
+            : 'bg-[var(--red)] hover:opacity-90 shadow-lg shadow-[var(--shadow)] active:scale-[0.98]'
           }`}
       >
         {isLoading ? 'İptal Ediliyor...' : 'Randevuyu İptal Et'}

@@ -25,6 +25,8 @@
   --on-hero: #FAF7F2;     /* yeşil zemin üstündeki yazı */
   --on-hero2: #CFE3D6;    /* yeşil zemin üstündeki ikincil yazı (4,5:1+) */
   --on-hero-dim: rgba(250, 247, 242, 0.12); /* yeşil zemin üstünde hover / seçili */
+  --hero-cta: #FBF7F0;      /* bant üstündeki ana buton */
+  --on-hero-cta: #2F6B4F;
   --accent2: #285C44;     /* hover / basılı */
   --on-accent: #FFFFFF;   /* accent zemin üstündeki yazı */
   --accent-dim: rgba(47, 107, 79, 0.08);
@@ -41,6 +43,46 @@
   --green-dim: #E6F2EC;
   --overlay: rgba(31, 36, 33, 0.45);   /* modal arka planı */
   --shadow: rgba(31, 36, 33, 0.08);
+}
+
+/* Koyu tema: "Gece mavisi ve bakır". <html data-theme="dark"> ile açılır (seçim
+   app/layout.tsx'teki betikte; ThemeToggle değiştirir). Mobil: mobile/src/theme.ts
+   darkColors aynı değerler. Tüm yazı renkleri zeminlerde en az 4,4:1 (çoğu 6:1+). */
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --bg: #18222E;          /* gece mavisi zemin */
+  --bg2: #212E3C;         /* kart / panel */
+  --bg3: #2A3847;         /* dolgu: input, pasif buton */
+  --bg4: #33445A;         /* belirgin dolgu / hover */
+  --border: #2E3D4D;
+  --border2: #3D5066;
+  --text: #F2EEE8;
+  --text2: #C3CBD4;
+  --text3: #A3AEBB;
+  --accent: #E3A15C;      /* bakır: ana buton, vurgu */
+  --accent2: #EDB57A;     /* hover (koyu temada açılır) */
+  --on-accent: #1B1408;   /* bakır zemin üstündeki yazı (8:1) */
+  --hero: #111A24;        /* başlık bandı */
+  --nav: #111A24;         /* kenar menüsü */
+  --on-hero: #F2EEE8;
+  --on-hero2: #A3AEBB;
+  --on-hero-dim: rgba(242, 238, 232, 0.08);
+  --hero-cta: #E3A15C;
+  --on-hero-cta: #1B1408;
+  --accent-dim: rgba(227, 161, 92, 0.12);
+  --accent-dim2: rgba(227, 161, 92, 0.2);
+  --accent-dim3: rgba(227, 161, 92, 0.3);
+  --warm: #E3A15C;
+  --red: #F2928A;
+  --orange: #F0B860;
+  --blue: #8FBAEA;
+  --green: #86C2AE;
+  --red-dim: #3A2428;
+  --orange-dim: #3A3020;
+  --blue-dim: #1E3048;
+  --green-dim: #1C3530;
+  --overlay: rgba(0, 0, 0, 0.6);
+  --shadow: rgba(0, 0, 0, 0.35);
 }
 
 * { box-sizing: border-box; }

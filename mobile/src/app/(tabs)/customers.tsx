@@ -1,6 +1,6 @@
 // Müşteriler (web: app/customers). Arama, istatistik, arama/WhatsApp, KVKK silme, CSV paylaşımı.
 import { useMemo, useState } from "react";
-import { FlatList, Linking, Platform, RefreshControl, StyleSheet, View } from "react-native";
+import { FlatList, Linking, Platform, RefreshControl, View } from "react-native";
 import { useQueryClient } from "@tanstack/react-query";
 import { File, Paths } from "expo-file-system";
 import * as Sharing from "expo-sharing";
@@ -13,7 +13,8 @@ import { useCustomers, type CustomerRow } from "@/lib/queries";
 import { PickerSheet } from "@/components/sheets";
 import { AppText, Button, Card, EmptyState, ErrorBanner, HeroHeader, Input } from "@/components/ui";
 import { useToast } from "@/components/toast";
-import { colors, spacing } from "@/theme";
+import { spacing } from "@/theme";
+import { useColors, makeStyles } from "@/lib/theme";
 
 function csvCell(value: unknown) {
   const text = value == null ? "" : String(value);
@@ -45,6 +46,8 @@ function buildCsv(rows: CustomerRow[]) {
 const waNumber = (phone: string) => phone.replace(/\D/g, "").replace(/^0/, "90");
 
 export default function CustomersScreen() {
+  const colors = useColors();
+  const styles = useStyles();
   const { shop } = useAuth();
   const queryClient = useQueryClient();
   const toast = useToast();
@@ -196,11 +199,11 @@ export default function CustomersScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = makeStyles((colors) => ({
   screen: { flex: 1, backgroundColor: colors.bg },
   csvBtn: { minHeight: 38, paddingHorizontal: spacing.lg },
   list: { paddingHorizontal: spacing.xl, paddingBottom: spacing.xxl, gap: spacing.md },
   card: { gap: spacing.xs },
   stats: { flexDirection: "row", justifyContent: "space-between", marginTop: spacing.xs },
   moreBtn: { minHeight: 36, paddingHorizontal: spacing.md },
-});
+}));

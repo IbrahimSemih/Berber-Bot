@@ -1,5 +1,6 @@
 "use client";
 
+import ThemeSwitch from "@/components/ThemeSwitch";
 import { useState } from "react";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
@@ -93,6 +94,7 @@ export default function LandingPage() {
           {navLinks.map((l) => (
             <a key={l.href} href={l.href} className="text-sm font-medium hover:text-[var(--text)] transition-colors" style={{ color: "var(--text3)" }}>{l.label}</a>
           ))}
+          <ThemeSwitch />
           <Link href="/login"
             className="text-sm px-5 py-2 rounded-lg border font-medium transition-all hover:bg-[var(--bg3)]"
             style={{ borderColor: "var(--border2)", color: "var(--text2)" }}>
@@ -104,7 +106,8 @@ export default function LandingPage() {
             Ücretsiz Dene
           </Link>
         </div>
-        <button className="md:hidden ml-auto p-2" onClick={() => setMobileMenuOpen(!mobileMenuOpen)} aria-label="Menüyü aç/kapat" aria-expanded={mobileMenuOpen}>
+        <div className="md:hidden ml-auto"><ThemeSwitch /></div>
+        <button className="md:hidden p-2" onClick={() => setMobileMenuOpen(!mobileMenuOpen)} aria-label="Menüyü aç/kapat" aria-expanded={mobileMenuOpen}>
           {mobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
         </button>
       </motion.nav>
@@ -242,7 +245,7 @@ export default function LandingPage() {
           <motion.div
             animate={{ y: [0, -10, 0] }} transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
             className="absolute -left-[220px] top-32 p-4 rounded-2xl shadow-2xl backdrop-blur-md border w-[240px] z-30 hidden xl:block"
-            style={{ background: "rgba(255,255,255,0.97)", borderColor: "var(--accent)" }}>
+            style={{ background: "var(--bg2)", borderColor: "var(--accent)" }}>
             <div className="flex items-center gap-4">
               <div className="w-12 h-12 rounded-full flex-shrink-0 bg-[var(--green-dim)] flex items-center justify-center text-[var(--green)]">
                 <CheckCircle2 size={24} />
@@ -425,30 +428,31 @@ export default function LandingPage() {
 
       {/* ── FINAL CTA ── */}
       <section className="px-6 md:px-20 py-20 relative overflow-hidden">
-        <div className="absolute inset-0 z-0" style={{ background: "linear-gradient(135deg, var(--bg) 0%, #E6F0EA 100%)" }} />
-        <div className="absolute -top-[50%] -right-[10%] w-[800px] h-[800px] rounded-full blur-[120px] pointer-events-none opacity-20"
-          style={{ background: "radial-gradient(circle, var(--accent) 0%, transparent 70%)" }} />
-
+        {/* Başlık bandı renginde kart: açık temada orman yeşili, koyu temada gece mavisi */}
         <motion.div initial="hidden" whileInView="visible" viewport={{ once: true, amount: 0.4 }} variants={fadeIn}
-          className="relative z-10 max-w-4xl mx-auto text-center border p-10 md:p-20 rounded-[3rem] shadow-[0_20px_60px_var(--accent-dim2)]"
-          style={{ background: "rgba(255,255,255,0.7)", borderColor: "var(--border)", backdropFilter: "blur(20px)" }}>
-          <h2 className="font-heading font-black text-4xl md:text-6xl mb-6 tracking-tight text-[var(--text)]">
-            Dükkanınızı <span style={{ color: "var(--accent)" }}>Geleceğe</span> Taşıyın
+          className="relative z-10 max-w-4xl mx-auto text-center p-10 md:p-20 rounded-[3rem] overflow-hidden shadow-[0_24px_60px_var(--shadow)]"
+          style={{ background: "var(--hero)" }}>
+          <div className="absolute -top-40 -right-32 w-[420px] h-[420px] rounded-full pointer-events-none"
+            style={{ background: "var(--on-hero-dim)" }} aria-hidden />
+          <div className="absolute -bottom-48 -left-24 w-[360px] h-[360px] rounded-full pointer-events-none"
+            style={{ background: "var(--on-hero-dim)" }} aria-hidden />
+          <h2 className="relative font-heading font-black text-4xl md:text-6xl mb-6 tracking-tight" style={{ color: "var(--on-hero)" }}>
+            Dükkanınızı Geleceğe Taşıyın
           </h2>
-          <p className="text-xl mb-10 font-light max-w-2xl mx-auto" style={{ color: "var(--text3)" }}>
+          <p className="relative text-xl mb-10 max-w-2xl mx-auto" style={{ color: "var(--on-hero2)" }}>
             Bugün kurun, bu akşam ilk online randevunuzu alın.
           </p>
-          <div className="flex flex-col sm:flex-row justify-center items-center gap-5">
-            <Link href="/signup" className="px-10 py-5 rounded-2xl text-lg font-bold transition-all hover:scale-105 shadow-[0_0_30px_var(--accent-dim3)] w-full sm:w-auto"
-              style={{ background: "var(--accent)", color: "var(--on-accent)" }}>
+          <div className="relative flex flex-col sm:flex-row justify-center items-center gap-5">
+            <Link href="/signup" className="px-10 py-5 rounded-2xl text-lg font-bold transition-all hover:scale-105 shadow-lg w-full sm:w-auto"
+              style={{ background: "var(--hero-cta)", color: "var(--on-hero-cta)" }}>
               Ücretsiz Başla
             </Link>
-            <Link href="/iletisim" className="px-10 py-5 rounded-2xl text-lg font-medium border transition-colors hover:bg-[var(--bg3)] w-full sm:w-auto"
-              style={{ borderColor: "var(--border2)", color: "var(--text2)" }}>
+            <Link href="/iletisim" className="px-10 py-5 rounded-2xl text-lg font-semibold border transition-colors hover:bg-[var(--on-hero-dim)] w-full sm:w-auto"
+              style={{ borderColor: "color-mix(in srgb, var(--on-hero) 35%, transparent)", color: "var(--on-hero)" }}>
               Bizimle İletişime Geç
             </Link>
           </div>
-          <p className="mt-8 text-sm" style={{ color: "var(--text3)" }}>Kredi kartı gerekmez. {TRIAL_DAYS} gün ücretsiz deneme.</p>
+          <p className="relative mt-8 text-sm" style={{ color: "var(--on-hero2)" }}>Kredi kartı gerekmez. {TRIAL_DAYS} gün ücretsiz deneme.</p>
         </motion.div>
       </section>
 

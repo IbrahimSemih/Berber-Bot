@@ -7,6 +7,7 @@ import { useEffect, useState } from "react";
 import NotificationListener from "@/app/(panel)/dashboard/components/NotificationListener";
 import { SUPPORT, supportWhatsappLink } from "@/lib/site-config";
 import { ShopContext, type PanelShop } from "@/components/layout/ShopContext";
+import ThemeToggle from "@/components/ThemeToggle";
 
 const supportWhatsapp = supportWhatsappLink();
 const supportIsWhatsapp = !!supportWhatsapp;
@@ -139,7 +140,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                 <div className="flex-1 flex items-center justify-between">
                   <span>{item.label}</span>
                   {item.href === "/notifications" && unreadCount > 0 && (
-                    <span className="bg-[var(--red)] text-white text-[10px] font-bold px-2 py-0.5 rounded-full">
+                    <span className="text-[10px] font-bold px-2 py-0.5 rounded-full" style={{ background: "var(--red)", color: "var(--bg2)" }}>
                       {unreadCount}
                     </span>
                   )}
@@ -164,7 +165,8 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         </nav>
 
         {/* User */}
-        <div className="p-4" style={{ borderTop: "1px solid var(--on-hero-dim)" }}>
+        <div className="p-4 flex flex-col gap-3" style={{ borderTop: "1px solid var(--on-hero-dim)" }}>
+          <ThemeToggle />
           <div className="flex items-center gap-3 p-2 rounded-lg transition-opacity">
             <Link href="/profile" className="flex items-center gap-3 flex-1 hover:opacity-80">
               <div className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-black font-heading"

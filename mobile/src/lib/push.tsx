@@ -1,6 +1,7 @@
 // Push bildirimleri: izin isteme, Expo push token'ını sunucuya kaydetme ve
 // bildirime dokununca ilgili günün randevularını açma. Sunucu tarafı:
 // lib/notify.ts (gönderim) ve /api/mobile/v1/push-tokens (kayıt).
+import { lightColors } from "@/theme";
 import { useEffect, useRef } from "react";
 import { Platform } from "react-native";
 import Constants from "expo-constants";
@@ -11,7 +12,6 @@ import { useQueryClient } from "@tanstack/react-query";
 import { isValidDateString } from "@shared/time";
 import type { PushData, PushTokenRequest, RemovePushTokenRequest } from "@shared/api-types";
 import { apiFetch } from "./api";
-import { colors } from "@/theme";
 
 // Uygulama açıkken gelen bildirim de üstte görünsün
 if (Platform.OS !== "web") {
@@ -35,7 +35,7 @@ async function ensureAndroidChannel() {
     name: "Randevu bildirimleri",
     // eslint-disable-next-line import/namespace -- enum, `export *` ile geliyor (tsc doğruluyor)
     importance: Notifications.AndroidImportance.HIGH,
-    lightColor: colors.accent,
+    lightColor: lightColors.accent,
     vibrationPattern: [0, 250, 250, 250],
   });
 }

@@ -1,8 +1,9 @@
 import { useAuth } from "@/lib/auth";
+import { useColors } from "@/lib/theme";
 import { AppText, Button, Card, Screen } from "@/components/ui";
-import { colors } from "@/theme";
 
 export default function BannedScreen() {
+  const colors = useColors();
   const { signOut, refreshShop } = useAuth();
   return (
     <Screen contentStyle={{ justifyContent: "center" }}>

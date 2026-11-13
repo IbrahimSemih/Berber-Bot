@@ -272,7 +272,7 @@ export default function ProfilePage() {
           </div>
           
           <div className="md:col-span-2">
-            <Card className="border-[rgba(185,60,52,0.25)]">
+            <Card className="border-[color-mix(in_srgb,var(--red)_25%,transparent)]">
               <div className="p-6 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
                 <div className="flex items-start gap-3">
                   <Trash2 className="w-5 h-5 text-[var(--red)] shrink-0 mt-0.5" />

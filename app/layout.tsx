@@ -1,4 +1,5 @@
 import type { Metadata, Viewport } from "next";
+import { THEME_SCRIPT } from "@/components/ThemeToggle";
 import { Toaster } from "react-hot-toast";
 import { SITE } from "@/lib/site-config";
 // Yazı tipleri npm paketinden kendi sunucumuzdan sunulur (build Google'a bağlı değil;
@@ -36,14 +37,21 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: "#EDE5D8",
+  themeColor: [
+    { media: "(prefers-color-scheme: light)", color: "#EDE5D8" },
+    { media: "(prefers-color-scheme: dark)", color: "#18222E" },
+  ],
   width: "device-width",
   initialScale: 1,
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="tr">
+    // suppressHydrationWarning: data-theme ilk boyamadan önce betikle eklenir
+    <html lang="tr" suppressHydrationWarning>
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: THEME_SCRIPT }} />
+      </head>
       <body className="font-dm bg-bg text-txt antialiased">
         {children}
         <Toaster 
@@ -57,7 +65,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             success: {
               iconTheme: {
                 primary: 'var(--accent)',
-                secondary: '#FFFFFF',
+                secondary: 'var(--on-accent)',
               },
             },
           }}
